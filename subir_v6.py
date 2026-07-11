@@ -59,7 +59,7 @@ def main():
 
     # Push
     print("\n⬆️  Subiendo a GitHub...")
-    run("git push origin main")
+    run("git push origin HEAD:main --force")
 
     print("\n✅ ¡Listo! V6 subida a GitHub.")
     print("👁  Cloudflare Pages debería iniciar el build en ~30 segundos.")

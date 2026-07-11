@@ -315,8 +315,8 @@ export function ReservarPage() {
           </div>
 
           {reservado ? (
-            <div className="rxp-success" style={{ textAlign: 'left', padding: 0 }}>
-              <div className="rxp-check-ring" style={{ margin: '0 0 12px' }}>
+            <div className="rxp-aside-ok">
+              <div className="rxp-check-ring">
                 <svg viewBox="0 0 28 28"><path d="M6 14l6 6 10-10"/></svg>
               </div>
               <div className="rxp-aside-title">¡Reservado!</div>
