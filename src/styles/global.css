@@ -660,7 +660,7 @@ a { color: var(--color-ink); text-decoration: none; }
 .rxp-cat-arr { font-size:13px;transition:transform .3s cubic-bezier(.22,.61,.36,1) }
 .rxp-cat.open .rxp-cat-arr { transform:rotate(90deg);color:var(--rx-primary) }
 .rxp-cat-bd { max-height:0;overflow:hidden;transition:max-height .38s cubic-bezier(.22,.61,.36,1) }
-.rxp-cat.open .rxp-cat-bd { max-height:400px }
+.rxp-cat.open .rxp-cat-bd { max-height:9999px }
 .rxp-serv-list { display:flex;flex-direction:column;gap:3px;padding:6px 0 }
 
 /* Service card — barra lateral animada */
@@ -708,7 +708,7 @@ a { color: var(--color-ink); text-decoration: none; }
 .rxp-pc-sub  { font-size:11px;color:var(--rx-muted);margin-top:2px }
 
 /* Calendar */
-.rxp-cal-wrap { display:grid;grid-template-columns:1fr 130px;gap:14px }
+.rxp-cal-wrap { display:grid;grid-template-columns:minmax(0,420px) 130px;gap:14px;max-width:620px }
 @media (max-width:600px) { .rxp-cal-wrap { grid-template-columns:1fr } }
 .rxp-cal-nav { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px }
 .rxp-cal-month { font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--rx-ink) }
