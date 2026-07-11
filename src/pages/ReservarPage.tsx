@@ -522,8 +522,9 @@ export function ReservarPage() {
                       ) : (
                         <>
                           <div className="rxp-hrs-lbl">
-                            {new Date(fechaElegida+'T00:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'})}
+                            {new Date(fechaElegida+'T00:00:00').toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'})}
                           </div>
+                          <div className="rxp-hrs-grid">
                           {horasDelDia.map((h, i) => (
                             <button key={h} className={`rxp-hp ${horaElegida === h ? 'sel' : ''}`}
                               style={{ animationDelay: `${i * 35}ms` }}
@@ -531,6 +532,7 @@ export function ReservarPage() {
                               {h}
                             </button>
                           ))}
+                          </div>
                         </>
                       )}
                     </div>
