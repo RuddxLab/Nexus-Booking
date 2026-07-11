@@ -1,0 +1,20 @@
+import { ReactNode } from 'react'
+
+export function Modal({
+  title,
+  onClose,
+  children
+}: {
+  title: string
+  onClose: () => void
+  children: ReactNode
+}) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h3 style={{ marginBottom: 16 }}>{title}</h3>
+        {children}
+      </div>
+    </div>
+  )
+}
