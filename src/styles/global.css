@@ -533,7 +533,7 @@ a { color: var(--color-ink); text-decoration: none; }
 .rxp-step-line.done { background:var(--rx-ok) }
 
 /* ── Body grid ── */
-.rxp-body { flex:1;display:grid;grid-template-columns:210px 1fr;position:relative;z-index:1;overflow:hidden;min-height:0 }
+.rxp-body { flex:1;display:grid;grid-template-columns:210px 1fr;position:relative;z-index:1;overflow:hidden;min-height:0;align-self:stretch }
 @media (max-width:700px) { .rxp-body { grid-template-columns:1fr } }
 
 /* ── Aside glassmorphism ── */
@@ -548,8 +548,7 @@ a { color: var(--color-ink); text-decoration: none; }
   gap: 20px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  height: 0;
-  flex: 1;
+  min-height: 0;
   animation: rxAsideIn .6s cubic-bezier(.22,.61,.36,1) .05s both;
 }
 @media (max-width:700px) { .rxp-aside { display:none } }
@@ -605,8 +604,7 @@ a { color: var(--color-ink); text-decoration: none; }
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 22px 20px;
-  height: 0;
-  flex: 1;
+  min-height: 0;
   animation: rxMainIn .55s cubic-bezier(.22,.61,.36,1) .12s both;
 }
 .rxp-panel { display:none }
