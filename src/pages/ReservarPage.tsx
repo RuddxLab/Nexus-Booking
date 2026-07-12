@@ -168,7 +168,7 @@ export function ReservarPage() {
       setHorasDelDia(generarHorasDisponibles({
         horaInicio: hDia.hora_inicio!, horaFin: hDia.hora_fin!,
         duracionMin: servicioElegido.duracion, fecha: iso,
-        ocupados: ocu, ausencias: [...ausD, ...bloqP], pasoMin: servicioElegido.duracion,
+        ocupados: ocu, ausencias: [...ausD, ...bloqP], pasoMin: 15,
       }))
     } finally { setCargandoHoras(false) }
   }
@@ -194,18 +194,18 @@ export function ReservarPage() {
         horaInicio:     horaElegida,
         nombreCliente:  nombre,
         telefono,
-        email,
+        email:          email.trim().toLowerCase(),
         rut: rut ? limpiarRut(rut) : null,
       })
       // Reserva guardada exitosamente — marcar como reservado ANTES de enviar correo
-      guardarDatos({ nombre, rut, telefono, email })
+      guardarDatos({ nombre, rut, telefono, email: email.trim().toLowerCase() })
       setReservado(true)
       // Enviar correo en background (si falla no afecta la reserva)
       const [h, m] = horaElegida.split(':').map(Number)
       const t = h*60 + m + servicioElegido.duracion
       const horaFin = `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`
       enviarCorreoReserva({
-        token, id_agendamiento: id, nombre_cliente: nombre, email, telefono,
+        token, id_agendamiento: id, nombre_cliente: nombre, email: email.trim().toLowerCase(), telefono,
         nombre_prestador: prestadorElegido.nombre_prestador,
         nombre_servicio:  servicioElegido.nombre_servicio,
         duracion: servicioElegido.duracion, fecha: fechaElegida,
