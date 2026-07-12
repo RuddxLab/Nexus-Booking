@@ -51,6 +51,9 @@ export interface Prestador {
   comuna: string | null
   comision: number | null
   reserva_online: number // 1 = sí, 0 = no
+  paso_agenda:    number | null
+  buffer_min:     number
+  dias_agenda:    number
   activo: boolean
 }
 
