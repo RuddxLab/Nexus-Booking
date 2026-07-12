@@ -133,7 +133,7 @@ export function CorreoConfigPage() {
 
       const payload: any = {
         id_empresa:  empresaId,
-        id_sucursal: sucursalId ?? null,   // null = config de empresa, número = config de sucursal
+        id_sucursal: (sucursalId && sucursalesDeEmpresa.length > 1) ? sucursalId : null,
         proveedor:   config.proveedor,
         from_email:  config.from_email.trim(),
         from_name:   config.from_name.trim(),
