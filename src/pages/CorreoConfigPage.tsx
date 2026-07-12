@@ -64,34 +64,23 @@ export function CorreoConfigPage() {
 
     const cargar = async () => {
       try {
-        let q = supabase
+        // Buscar cualquier config activa de esta empresa, priorizando la sucursal actual
+        const { data } = await supabase
           .from('empresa_correo_config')
           .select('*')
           .eq('id_empresa', empresaId)
+          .eq('activo', true)
+          .order('id_sucursal', { ascending: true })
+          .limit(10)
 
-        // Si hay sucursal seleccionada, buscar config específica de esa sucursal
-        // Si no tiene, buscar la config genérica de la empresa (id_sucursal IS NULL)
-        if (sucursalId) {
-          // Intentar config de sucursal específica primero
-          const { data: dataSuc } = await supabase
-            .from('empresa_correo_config')
-            .select('*')
-            .eq('id_empresa', empresaId)
-            .eq('id_sucursal', sucursalId)
-            .maybeSingle()
+        if (!data || data.length === 0) return
 
-          if (dataSuc) {
-            cargarDesdeData(dataSuc)
-            return
-          }
-          // Fallback: config genérica de empresa
-          q = q.is('id_sucursal', null)
-        } else {
-          q = q.is('id_sucursal', null)
-        }
+        // Preferir la que coincide con la sucursal actual
+        const match = sucursalId
+          ? (data.find(r => r.id_sucursal === sucursalId) ?? data[0])
+          : data[0]
 
-        const { data } = await q.maybeSingle()
-        if (data) cargarDesdeData(data)
+        cargarDesdeData(match)
       } finally {
         setCargando(false)
       }
@@ -139,7 +128,7 @@ export function CorreoConfigPage() {
 
       const payload: any = {
         id_empresa:  empresaId,
-        id_sucursal: (porSucursal && sucursalId) ? sucursalId : (sucursalesDeEmpresa[0]?.id_sucursal ?? null),
+        id_sucursal: sucursalId ?? sucursalesDeEmpresa[0]?.id_sucursal ?? null,
         proveedor:   config.proveedor,
         from_email:  config.from_email.trim(),
         from_name:   config.from_name.trim(),
