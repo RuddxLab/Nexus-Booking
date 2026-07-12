@@ -9,13 +9,13 @@
   display: grid;
   grid-template-columns: 52px 1fr;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(0,0,0,.07);
   border-radius: var(--radius-md);
   overflow: hidden;
 }
 @media (max-width: 900px) { .calendar { min-width: 720px; } }
 
-.calendar__gutter { border-right: 1px solid var(--color-border); }
+.calendar__gutter { border-right: 1px solid rgba(0,0,0,.07); }
 .calendar__gutter-cell {
   height: 60px;
   font-family: var(--font-body);
@@ -32,8 +32,8 @@
   min-height: 58px;
   box-sizing: border-box;
   padding: 9px 7px 8px;
-  border-bottom: 1px solid var(--color-border);
-  border-left: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(0,0,0,.07);
+  border-left: 1px solid rgba(0,0,0,.07);
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -58,13 +58,13 @@
 }
 
 .calendar__day-column {
-  border-left: 1px solid var(--color-border);
+  border-left: 1px solid rgba(0,0,0,.07);
   position: relative;
   overflow: hidden;
 }
 .calendar__hour-line {
   height: 60px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(0,0,0,.07);
   cursor: pointer;
   transition: background var(--transition);
 }
@@ -135,13 +135,13 @@
   font-size: 12.5px; font-weight: 700;
   text-transform: capitalize; color: var(--color-ink);
   padding: 16px 16px 8px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(0,0,0,.07);
 }
 
 .lista-citas__item {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 16px;
-  border: none; border-bottom: 1px solid var(--color-border);
+  border: none; border-bottom: 1px solid rgba(0,0,0,.07);
   background: transparent; width: 100%; text-align: left;
   cursor: pointer; color: var(--color-ink);
   transition: background var(--transition);
@@ -172,15 +172,15 @@
   font-size: 10.5px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.04em;
   color: var(--color-ink-soft);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(0,0,0,.07);
 }
 .mes-grilla__dia {
   aspect-ratio: 1;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 3px;
   border: none;
-  border-right: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
+  border-right: 1px solid rgba(0,0,0,.07);
+  border-bottom: 1px solid rgba(0,0,0,.07);
   background: transparent; color: var(--color-ink);
   font-size: 13px; font-weight: 500;
   cursor: pointer;
