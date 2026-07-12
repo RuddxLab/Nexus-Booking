@@ -11,6 +11,8 @@ interface Props {
   onSucursalChange: (id: number) => void
   /** Si false, oculta el selector de sucursal aunque haya sucursales disponibles */
   mostrarSucursal?: boolean
+  /** Fuerza mostrar la sucursal sin restricción de rol */
+  forzarSucursal?: boolean
 }
 
 const SEL: React.CSSProperties = {
@@ -30,10 +32,12 @@ export function SelectorFiltro({
   empresaId, sucursalId,
   onEmpresaChange, onSucursalChange,
   mostrarSucursal = true,
+  forzarSucursal = false,
 }: Props) {
   const mostrarEmpresa  = esAdmin && empresas.length > 1
   const mostrarSucursalFinal = mostrarSucursal &&
-    (esAdmin || esSupervisor) && sucursalesDeEmpresa.length > 1
+    sucursalesDeEmpresa.length > 1 &&
+    (forzarSucursal || esAdmin || esSupervisor)
 
   if (!mostrarEmpresa && !mostrarSucursalFinal) return null
 

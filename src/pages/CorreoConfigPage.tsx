@@ -230,6 +230,7 @@ export function CorreoConfigPage() {
         onEmpresaChange={setEmpresaId}
         onSucursalChange={setSucursalId}
         mostrarSucursal={sucursalesDeEmpresa.length > 1}
+        forzarSucursal={true}
       />
 
       {/* Contexto actual */}
