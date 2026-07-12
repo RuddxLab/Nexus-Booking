@@ -21,9 +21,12 @@ export function HorariosPage() {
   const [prestadores, setPrestadores] = useState<Prestador[]>([])
   const [idPrestador, setIdPrestador] = useState<number | null>(null)
   const [filas, setFilas] = useState<DiaHorarioForm[]>([])
-  const [cargando, setCargando] = useState(false)
-  const [guardando, setGuardando] = useState(false)
-  const [mensaje, setMensaje] = useState<string | null>(null)
+  const [cargando,    setCargando]    = useState(false)
+  const [guardando,   setGuardando]   = useState(false)
+  const [mensaje,     setMensaje]     = useState<string | null>(null)
+  const [bufferMin,   setBufferMin]   = useState<number>(0)
+  const [diasAgenda,  setDiasAgenda]  = useState<number>(30)
+  const [guardandoCfg, setGuardandoCfg] = useState(false)
 
   useEffect(() => {
     if (!empresaId) return
@@ -36,6 +39,11 @@ export function HorariosPage() {
 
   useEffect(() => {
     if (!idPrestador) return
+    const p = prestadores.find(p => p.id_prestador === idPrestador)
+    if (p) {
+      setBufferMin(p.buffer_min ?? 0)
+      setDiasAgenda(p.dias_agenda ?? 30)
+    }
     setCargando(true)
     setMensaje(null)
     listHorariosPrestador(idPrestador)
@@ -57,6 +65,24 @@ export function HorariosPage() {
 
   function actualizarFila(dia: number, cambios: Partial<DiaHorarioForm>) {
     setFilas((prev) => prev.map((f) => (f.dia === dia ? { ...f, ...cambios } : f)))
+  }
+
+  async function guardarConfig() {
+    const prestador = prestadores.find((p) => p.id_prestador === idPrestador)
+    if (!prestador) return
+    setGuardandoCfg(true)
+    setMensaje(null)
+    try {
+      await prestadoresService.update(prestador.id_prestador, {
+        buffer_min:  bufferMin,
+        dias_agenda: diasAgenda,
+      } as any)
+      setMensaje('Configuración guardada.')
+    } catch {
+      setMensaje('No se pudo guardar la configuración.')
+    } finally {
+      setGuardandoCfg(false)
+    }
   }
 
   async function guardarTodo() {
@@ -114,6 +140,40 @@ export function HorariosPage() {
             <option key={p.id_prestador} value={p.id_prestador}>{p.nombre_prestador}</option>
           ))}
         </select>
+      </div>
+
+      {/* ── Configuración de agenda ── */}
+      <div className="card" style={{ padding: '16px 20px', marginBottom: 24 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-ink-soft)', marginBottom: 16 }}>
+          Configuración de agenda
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label>Buffer entre citas (min)</label>
+            <input
+              type="number" min={0} max={60} step={5}
+              value={bufferMin}
+              onChange={(e) => setBufferMin(Number(e.target.value))}
+            />
+            <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', marginTop: 4 }}>
+              Tiempo de descanso entre reservas
+            </span>
+          </div>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label>Días de agenda abierta</label>
+            <input
+              type="number" min={1} max={365} step={1}
+              value={diasAgenda}
+              onChange={(e) => setDiasAgenda(Number(e.target.value))}
+            />
+            <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', marginTop: 4 }}>
+              Días hacia adelante disponibles para reservar
+            </span>
+          </div>
+        </div>
+        <button className="btn btn--primary" onClick={guardarConfig} disabled={guardandoCfg}>
+          {guardandoCfg ? 'Guardando…' : 'Guardar configuración'}
+        </button>
       </div>
 
       {cargando ? (

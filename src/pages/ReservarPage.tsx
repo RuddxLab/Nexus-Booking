@@ -169,7 +169,8 @@ export function ReservarPage() {
         horaInicio: hDia.hora_inicio!, horaFin: hDia.hora_fin!,
         duracionMin: servicioElegido.duracion, fecha: iso,
         ocupados: ocu, ausencias: [...ausD, ...bloqP],
-        pasoMin: prestadorElegido.paso_agenda ?? undefined,
+        pasoMin:    prestadorElegido.paso_agenda  ?? undefined,
+        bufferMin:  prestadorElegido.buffer_min   ?? 0,
       }))
     } finally { setCargandoHoras(false) }
   }
@@ -254,6 +255,13 @@ export function ReservarPage() {
   const diasGrilla = useMemo(() => getMonthGrid(mesAnchor), [mesAnchor])
   const mesNum     = mesAnchor.getMonth()
   const hoyISO     = toISODate(new Date())
+  const fechaMaxISO = useMemo(() => {
+    if (!prestadorElegido) return null
+    const dias = prestadorElegido.dias_agenda ?? 30
+    const max  = new Date()
+    max.setDate(max.getDate() + dias)
+    return toISODate(max)
+  }, [prestadorElegido])
   const pasoLabel  = ['Servicio','Profesional','Fecha & Hora','Tus datos']
 
   // ── Estados de carga / error del tenant ───────────────────────────────────
@@ -524,7 +532,8 @@ export function ReservarPage() {
                           const esDelMes   = d.getMonth() === mesNum
                           const esPasado   = iso < hoyISO
                           const esBloq     = fechasBloqueadas.has(iso)
-                          const habilitado = esDelMes && !esPasado && !esBloq && diasDisponibles.has(diaISO(d))
+                          const esFuturoLejano = fechaMaxISO ? iso > fechaMaxISO : false
+                          const habilitado = esDelMes && !esPasado && !esBloq && !esFuturoLejano && diasDisponibles.has(diaISO(d))
                           const elegido    = fechaElegida === iso
                           return (
                             <button key={iso}
