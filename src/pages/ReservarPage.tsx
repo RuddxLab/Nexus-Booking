@@ -35,12 +35,12 @@ function cargarDatos(): DatosGuardados | null {
 function guardarDatos(d: DatosGuardados) { localStorage.setItem(CLAVE_STORAGE, JSON.stringify(d)) }
 
 export function ReservarPage() {
-  const { tenant, loading: cargandoTenant, error: errorTenant } = useTenant()
+  const { tenant, loading: cargandoTenant, error: errorTenant, setSucursal } = useTenant()
   const [searchParams] = useSearchParams()
   const paramServicio    = searchParams.get('servicio') ? Number(searchParams.get('servicio')) : null
   const esReagendamiento = searchParams.get('reagendar') === '1'
 
-  const [paso, setPaso]   = useState<1|2|3|4>(1)
+  const [paso, setPaso]   = useState<0|1|2|3|4>(1)
   const [animDir, setAnimDir] = useState<'in'|'out'>('in')
   const [cargandoBase, setCargandoBase] = useState(true)
 
@@ -78,19 +78,28 @@ export function ReservarPage() {
 
   // Datos pre-rellenados desde localStorage (guardado al confirmar reserva anterior)
 
-  // Cargar datos base una vez que el tenant esté resuelto
+  // Cuando el tenant carga, decidir si mostrar selector de sucursal o cargar catálogo directo
   useEffect(() => {
     if (!tenant) return
-    const { idEmpresa } = tenant
+    const { idEmpresa, sucursales, idSucursal } = tenant
+
+    // Más de una sucursal → mostrar selector (paso 0), no cargar catálogo aún
+    if (sucursales.length > 1) {
+      setPaso(0)
+      setCargandoBase(false)
+      return
+    }
+
+    // Una sola sucursal → cargar catálogo directo filtrado por esa sucursal
     Promise.all([
       listServiciosPublico(idEmpresa),
       listCategoriasPublico(idEmpresa),
       listPrestadoresPublico(idEmpresa),
     ]).then(([servs, cats, prests]) => {
-      const sa = servs.filter(s => s.activo)
+      const sa = servs.filter(s => s.activo && s.id_sucursal === idSucursal)
       setServicios(sa)
-      setCategorias(cats.filter(c => c.activo))
-      setPrestadores(prests.filter(p => Number(p.reserva_online) === 1))
+      setCategorias(cats.filter(c => c.activo && c.id_sucursal === idSucursal))
+      setPrestadores(prests.filter(p => Number(p.reserva_online) === 1 && p.id_sucursal === idSucursal))
       if (paramServicio) {
         const sp = sa.find(s => s.id_servicio === paramServicio)
         if (sp) {
@@ -116,7 +125,7 @@ export function ReservarPage() {
     idsPrestServ ? prestadores.filter(p => idsPrestServ.includes(p.id_prestador)) : prestadores
   , [prestadores, idsPrestServ])
 
-  function irPaso(n: 1|2|3|4) {
+  function irPaso(n: 0|1|2|3|4) {
     setAnimDir(n > paso ? 'in' : 'out')
     setPaso(n)
   }
@@ -249,7 +258,8 @@ export function ReservarPage() {
 
   function reiniciar() {
     setServicioElegido(null); setPrestadorElegido(null); setFechaElegida(null)
-    setHoraElegida(null); setReservado(false); irPaso(1)
+    setHoraElegida(null); setReservado(false)
+    irPaso(tenant && tenant.sucursales.length > 1 ? 0 : 1)
   }
 
   const diasGrilla = useMemo(() => getMonthGrid(mesAnchor), [mesAnchor])
@@ -262,9 +272,15 @@ export function ReservarPage() {
     max.setDate(max.getDate() + dias)
     return toISODate(max)
   }, [prestadorElegido])
-  const pasoLabel  = ['Servicio','Profesional','Fecha & Hora','Tus datos']
-
-  // ── Estados de carga / error del tenant ───────────────────────────────────
+  const tieneSucursales = (tenant?.sucursales.length ?? 0) > 1
+  const pasoLabel  = tieneSucursales
+    ? ['Sede', 'Servicio','Profesional','Fecha & Hora','Tus datos']
+    : ['Servicio','Profesional','Fecha & Hora','Tus datos']
+  const stepLabels = tieneSucursales
+    ? ['Sede', 'Servicio', 'Profesional', 'Fecha & Hora', 'Datos']
+    : ['Servicio', 'Profesional', 'Fecha & Hora', 'Datos']
+  // Índice visual del paso actual (0-based relativo a stepLabels)
+  const pasoVisual = tieneSucursales ? paso : paso - 1
   if (cargandoTenant) return (
     <div className="rxp-shell">
       <div className="rxp-loader">
@@ -291,8 +307,9 @@ export function ReservarPage() {
     </div>
   )
 
-  const stepLabels = ['Servicio', 'Profesional', 'Fecha & Hora', 'Datos']
   const adminPath  = '/admin/login'
+
+  // ── Estados de carga / error del tenant ───────────────────────────────────
 
   return (
     <div className="rxp-shell">
@@ -312,12 +329,12 @@ export function ReservarPage() {
         <div className="rxp-steps">
           {stepLabels.map((l, i) => (
             <div key={i} style={{ display: 'contents' }}>
-              <div className={`rxp-step ${reservado || paso > i+1 ? 'done' : paso === i+1 ? 'active' : ''}`}>
-                <div className="rxp-step-n">{reservado || paso > i+1 ? '✓' : i+1}</div>
+              <div className={`rxp-step ${reservado || pasoVisual > i ? 'done' : pasoVisual === i ? 'active' : ''}`}>
+                <div className="rxp-step-n">{reservado || pasoVisual > i ? '✓' : i+1}</div>
                 <span>{l}</span>
               </div>
               {i < stepLabels.length - 1 && (
-                <div className={`rxp-step-line ${reservado || paso > i+1 ? 'done' : ''}`}/>
+                <div className={`rxp-step-line ${reservado || pasoVisual > i ? 'done' : ''}`}/>
               )}
             </div>
           ))}
@@ -330,11 +347,11 @@ export function ReservarPage() {
         <div className="rxp-mobile-steps">
           {stepLabels.map((l, i) => (
             <div key={i} style={{ display: 'contents' }}>
-              <div className={`rxp-mobile-step ${reservado || paso > i+1 ? 'done' : paso === i+1 ? 'active' : ''}`}>
-                {reservado || paso > i+1 ? '✓' : i+1}
+              <div className={`rxp-mobile-step ${reservado || pasoVisual > i ? 'done' : pasoVisual === i ? 'active' : ''}`}>
+                {reservado || pasoVisual > i ? '✓' : i+1}
               </div>
               {i < stepLabels.length - 1 && (
-                <div className={`rxp-mobile-line ${reservado || paso > i+1 ? 'done' : ''}`}/>
+                <div className={`rxp-mobile-line ${reservado || pasoVisual > i ? 'done' : ''}`}/>
               )}
             </div>
           ))}
@@ -367,8 +384,8 @@ export function ReservarPage() {
             <>
               <div className="rxp-aside-steps">
                 {pasoLabel.map((l, i) => (
-                  <div key={i} className={`rxp-as ${paso === i+1 ? 'active' : paso > i+1 ? 'done' : ''}`}>
-                    <div className="rxp-as-dot">{paso > i+1 ? '✓' : i+1}</div>
+                  <div key={i} className={`rxp-as ${pasoVisual === i ? 'active' : pasoVisual > i ? 'done' : ''}`}>
+                    <div className="rxp-as-dot">{pasoVisual > i ? '✓' : i+1}</div>
                     <span>{l}</span>
                   </div>
                 ))}
@@ -442,9 +459,50 @@ export function ReservarPage() {
           ) : (
             <div className="rxp-panel active" key={paso}>
 
+              {/* Paso 0: Selección de sucursal (solo si hay más de una) */}
+              {paso === 0 && tenant && (
+                <>
+                  <div className="rxp-title"><span>¿A qué sede vas?</span></div>
+                  <div className="rxp-sub">Selecciona la sucursal donde quieres reservar</div>
+                  <div className="rxp-pc-list">
+                    {tenant.sucursales.map((s, i) => (
+                      <button
+                        key={s.id_sucursal}
+                        className="rxp-pc"
+                        style={{ animationDelay: `${i * 70}ms` }}
+                        onClick={() => {
+                          setSucursal(s.id_sucursal)
+                          setCargandoBase(true)
+                          // Cargar catálogo para la sucursal elegida
+                          const { idEmpresa } = tenant
+                          Promise.all([
+                            listServiciosPublico(idEmpresa),
+                            listCategoriasPublico(idEmpresa),
+                            listPrestadoresPublico(idEmpresa),
+                          ]).then(([servs, cats, prests]) => {
+                            setServicios(servs.filter(sv => sv.activo && sv.id_sucursal === s.id_sucursal))
+                            setCategorias(cats.filter(c => c.activo && c.id_sucursal === s.id_sucursal))
+                            setPrestadores(prests.filter(p => Number(p.reserva_online) === 1 && p.id_sucursal === s.id_sucursal))
+                          }).finally(() => { setCargandoBase(false); irPaso(1) })
+                        }}
+                      >
+                        <div className="rxp-pc-av">{s.nombre_sucursal.charAt(0)}</div>
+                        <div>
+                          <div className="rxp-pc-name">{s.nombre_sucursal}</div>
+                        </div>
+                        <span className="rxp-sc-arr" style={{ marginLeft: 'auto' }}>›</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
               {/* Paso 1: Servicio */}
               {paso === 1 && (
                 <>
+                  {tieneSucursales && (
+                    <button className="rxp-back" onClick={() => irPaso(0)}>← Volver</button>
+                  )}
                   <div className="rxp-title"><span>¿Qué servicio necesitas?</span></div>
                   <div className="rxp-sub">Elige el servicio que mejor se adapte a ti</div>
                   <div className="rxp-search-wrap">

@@ -7,7 +7,7 @@ export type NombreRol = 'admin' | 'supervisor' | 'recepcionista' | 'agenda_opera
 interface RolUsuario {
   idEmpresa:   number | null
   idSucursal:  number | null
-  slugEmpresa: string | null   // slug de la sucursal principal (para link de reservas)
+  slugEmpresa: string | null   // slug de la empresa (para link de reservas en sidebar)
   idPrestador: number | null
   rol:         NombreRol | null
   loading:     boolean
@@ -34,7 +34,7 @@ export function useUserRole(): RolUsuario {
 
     supabase
       .from('usuario_roles')
-      .select('id_empresa, roles(nombre_rol)')
+      .select('id_empresa, roles(nombre_rol), empresas(slug)')
       .eq('id_usuario', session.user.id)
       .limit(1)
       .maybeSingle()
@@ -42,23 +42,22 @@ export function useUserRole(): RolUsuario {
         if (!activo) return
         const empresa   = data?.id_empresa ?? null
         const rolNombre = (data?.roles as any)?.nombre_rol ?? null
+        const slug      = (data?.empresas as any)?.slug ?? null
         setIdEmpresa(empresa)
+        setSlugEmpresa(slug)
         setRol(rolNombre)
 
-        // Obtener primera sucursal activa — usar su slug para el link de reservas
+        // Obtener primera sucursal activa de la empresa
         if (empresa) {
           const { data: suc } = await supabase
             .from('sucursales')
-            .select('id_sucursal, slug')
+            .select('id_sucursal')
             .eq('id_empresa', empresa)
             .eq('activo', true)
             .order('id_sucursal')
             .limit(1)
             .maybeSingle()
-          if (activo) {
-            setIdSucursal(suc?.id_sucursal ?? null)
-            setSlugEmpresa(suc?.slug ?? null)   // slug de sucursal, no de empresa
-          }
+          if (activo) setIdSucursal(suc?.id_sucursal ?? null)
         }
 
         if (rolNombre === 'prestador' && session) {
