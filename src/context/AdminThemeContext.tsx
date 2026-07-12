@@ -63,13 +63,14 @@ function aplicarTemaAdmin(cfg: AdminConfigUI) {
   r.setProperty('--adm-acc',          cfg.color_acento)
   r.setProperty('--adm-ok',           cfg.color_exito)
   r.setProperty('--adm-err',          cfg.color_peligro)
-  // También actualizar --color-* para que los componentes admin existentes reciban el tema
+  // Actualizar --color-* para componentes admin existentes
+  // NOTA: --color-border NO se sobreescribe — se mantiene neutro
+  // para evitar que el color del tema contamine bordes de tabla y calendario
   r.setProperty('--color-primary',      cfg.color_primario)
   r.setProperty('--color-primary-soft', cfg.color_primario_suave)
   r.setProperty('--color-bg',           cfg.color_fondo)
   r.setProperty('--color-surface',      cfg.color_superficie)
   r.setProperty('--color-surface-2',    cfg.color_superficie2)
-  r.setProperty('--color-border',       cfg.color_borde)
   r.setProperty('--color-ink',          cfg.color_texto)
   r.setProperty('--color-ink-soft',     cfg.color_texto_suave)
   r.setProperty('--color-accent',       cfg.color_acento)
