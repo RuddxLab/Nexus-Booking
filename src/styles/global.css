@@ -237,7 +237,7 @@ a { color: var(--color-ink); text-decoration: none; }
   background: color-mix(in srgb, var(--color-surface) 92%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border: 1px solid rgba(0,0,0,.08);
   border-radius: var(--radius-md);
   box-shadow: 0 1px 3px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.05);
   transition: box-shadow .2s;
@@ -284,12 +284,12 @@ a { color: var(--color-ink); text-decoration: none; }
 .table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .table th {
   text-align: left; color: var(--color-ink-soft); font-weight: 700;
-  padding: 11px 16px; border-bottom: 1px solid var(--color-border);
+  padding: 11px 16px; border-bottom: 1px solid rgba(0,0,0,.07);
   font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em;
   background: color-mix(in srgb, var(--color-surface-2) 60%, transparent);
 }
 .table td {
-  padding: 13px 16px; border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  padding: 13px 16px; border-bottom: 1px solid rgba(0,0,0,.05);
   transition: background .15s;
   color: var(--color-ink);
 }
