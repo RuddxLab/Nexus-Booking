@@ -15,7 +15,7 @@ export function PrestadoresPage() {
       service={prestadoresService}
       orderBy="nombre_prestador"
       busqueda={{ campos: ['nombre_prestador', 'rut'], placeholder: 'Buscar por nombre o RUT…' }}
-      defaults={{ activo: true, reserva_online: 1 } as any}
+      defaults={{ activo: true, reserva_online: 1, buffer_min: 0, dias_agenda: 30 } as any}
       columnas={[
         { key: 'nombre_prestador', label: 'Nombre' },
         { key: 'id_empresa',       label: 'Empresa',        render: r => nombreEmpresa(r.id_empresa) },
@@ -35,9 +35,11 @@ export function PrestadoresPage() {
         { key: 'ciudad',           label: 'Región',         type: 'region' },
         { key: 'comuna',           label: 'Comuna',         type: 'comuna', dependsOn: 'ciudad' },
         { key: 'comision',         label: 'Comisión (%)',   type: 'number' },
-        { key: 'reserva_online',   label: 'Reserva online', type: 'sino' },
-        { key: 'paso_agenda',       label: 'Paso agenda (min)', type: 'number' },
-        { key: 'activo',           label: 'Activo',         type: 'checkbox' },
+        { key: 'reserva_online',   label: 'Reserva online',    type: 'sino' },
+        { key: 'paso_agenda',      label: 'Paso agenda (min)', type: 'number' },
+        { key: 'buffer_min',       label: 'Buffer entre citas (min)', type: 'number' },
+        { key: 'dias_agenda',      label: 'Días hacia adelante', type: 'number' },
+        { key: 'activo',           label: 'Activo',            type: 'checkbox' },
       ]}
     />
   )
