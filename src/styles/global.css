@@ -969,7 +969,26 @@ a { color: var(--color-ink); text-decoration: none; }
 .rxp-inp::placeholder { color:var(--rx-muted2) }
 .rxp-inp:focus { border-color:var(--rx-bdr2);box-shadow:0 0 0 3px var(--rx-psft) }
 .rxp-tel { display:flex;gap:6px }
-.rxp-tel-pais { flex:0 0 auto;width:86px;padding:9px 8px;border:1px solid var(--rx-bdr);border-radius:8px;background:var(--rx-surf);color:var(--rx-ink);font-size:13px;font-family:var(--font-body);outline:none }
+.rxp-tel-pais {
+  flex:0 0 auto;
+  width:52px;
+  padding:9px 6px;
+  border:1px solid var(--rx-bdr);
+  border-radius:8px;
+  background:var(--rx-surf);
+  color:var(--rx-ink);
+  font-size:16px;
+  font-family:var(--font-body);
+  outline:none;
+  text-align:center;
+  cursor:pointer;
+}
+@media (min-width: 480px) {
+  .rxp-tel-pais {
+    width:88px;
+    font-size:13px;
+  }
+}
 
 /* CTA Button */
 .rxp-cta {

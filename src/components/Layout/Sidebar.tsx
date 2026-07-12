@@ -1,7 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { signOut } from '../../services/authService'
 import { useUserRole, PUEDE_GESTIONAR_CATALOGO } from '../../hooks/useUserRole'
-import { useTheme } from '../../hooks/useTheme'
 
 // ── Colores por sección ───────────────────────────────────────────────────────
 // Cada ítem tiene su propio glow/gradiente, igual al diseño de referencia
@@ -110,7 +109,6 @@ interface Props { abierto?: boolean; onNavegar?: () => void }
 
 export function Sidebar({ abierto = false, onNavegar }: Props) {
   const { rol, slugEmpresa, loading } = useUserRole()
-  const { tema, alternarTema } = useTheme()
 
   const puedeVerCatalogo = !loading && rol && PUEDE_GESTIONAR_CATALOGO.includes(rol)
   const esAdmin      = !loading && rol === 'admin'
@@ -147,13 +145,8 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
       <div className="sb-spacer"/>
 
       <div className="sb-links">
-        <ActionBtn label="Reservas" colorKey="reservas"   icon={Icons.reservas}
+        <ActionBtn label="Reservas" colorKey="reservas" icon={Icons.reservas}
           onClick={() => window.open(linkReservas, '_blank')}/>
-        <ActionBtn
-          label={tema === 'oscuro' ? 'Modo claro' : 'Modo oscuro'}
-          colorKey="toggletema"
-          icon={tema === 'oscuro' ? Icons.sol : Icons.luna}
-          onClick={alternarTema}/>
         <ActionBtn label="Salir" colorKey="salir" icon={Icons.salir} onClick={() => signOut()}/>
       </div>
     </aside>
