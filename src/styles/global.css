@@ -123,55 +123,63 @@ a { color: var(--color-ink); text-decoration: none; }
   transition: all .25s cubic-bezier(.34,1.56,.64,1);
 }
 
-/* Estado activo: fondo metalico + anillos */
-.sb-btn--active { color: var(--color-primary-ink); }
+/* Estado activo — usa variables CSS inyectadas por React */
+.sb-btn--active { color: #fff; }
 .sb-btn--active .sb-icon {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover, #5A6A4E));
-  box-shadow: 0 4px 14px var(--color-primary-soft), inset 0 1px 1px rgba(255,255,255,.25);
-  transform: scale(1.05);
+  background: var(--sb-grad, linear-gradient(135deg,#a5b4fc,#6366f1));
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--sb-glow, #6366f1) 40%, transparent),
+              inset 0 1px 1.5px rgba(255,255,255,.35);
+  transform: scale(1.08);
 }
 
-/* Anillos de pulso */
+/* Anillos de pulso — color dinámico */
 .sb-ping {
   position: absolute; border-radius: 50%;
   pointer-events: none; z-index: 1;
-  animation: sbPing 2s ease-in-out infinite;
+  animation: sbPing 2.2s ease-in-out infinite;
 }
-.sb-ping1 { width: 36px; height: 36px; background: var(--color-primary); opacity: .18; }
-.sb-ping2 { width: 44px; height: 44px; background: var(--color-primary); opacity: .08; animation-delay: .4s; }
+.sb-ping1 { width: 36px; height: 36px; background: var(--sb-glow, #6366f1); opacity: .22; }
+.sb-ping2 { width: 46px; height: 46px; background: var(--sb-glow, #6366f1); opacity: .10; animation-delay: .5s; }
 
-/* Glow posterior */
+/* Glow difuminado posterior */
 .sb-glow {
-  position: absolute; width: 44px; height: 44px;
-  background: var(--color-primary); border-radius: 50%;
-  filter: blur(14px); opacity: .2; pointer-events: none; z-index: 0;
+  position: absolute; width: 46px; height: 46px;
+  background: var(--sb-glow, #6366f1); border-radius: 50%;
+  filter: blur(16px); opacity: .25; pointer-events: none; z-index: 0;
 }
 
 /* Píldora tooltip flotante */
 .sb-pill {
   position: absolute;
-  left: calc(100% + 10px);
+  left: calc(100% + 12px);
   top: 50%; transform: translateY(-50%) translateX(-6px) scale(.95);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 1px solid color-mix(in srgb, var(--sb-pill, #6366f1) 30%, var(--color-border));
   border-radius: 8px;
-  padding: 5px 11px;
-  font-size: 11px; font-weight: 600; font-family: var(--font-body);
-  color: var(--color-ink);
+  padding: 5px 12px;
+  font-size: 11px; font-weight: 700; font-family: var(--font-body);
+  color: var(--sb-pill, var(--color-ink));
   white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(0,0,0,.1);
+  box-shadow: 0 4px 16px rgba(0,0,0,.1),
+              0 0 0 1px color-mix(in srgb, var(--sb-pill, #6366f1) 15%, transparent);
   opacity: 0; pointer-events: none;
-  transition: opacity .2s, transform .2s cubic-bezier(.22,.61,.36,1);
+  transition: opacity .18s, transform .18s cubic-bezier(.22,.61,.36,1);
   z-index: 100;
 }
 [data-theme="oscuro"] .sb-pill, .tema-oscuro .sb-pill {
   background: var(--color-surface-2);
-  box-shadow: 0 4px 16px rgba(0,0,0,.35);
+  box-shadow: 0 4px 20px rgba(0,0,0,.4),
+              0 0 0 1px color-mix(in srgb, var(--sb-pill, #6366f1) 20%, transparent);
+}
+
+/* Hover en botones de acción (no-NavLink) */
+.sb-action:hover .sb-icon {
+  background: color-mix(in srgb, var(--sb-glow, #64748b) 15%, transparent);
 }
 
 @keyframes sbPing {
-  0%, 100% { transform: scale(1); opacity: .18; }
-  50%       { transform: scale(1.25); opacity: 0; }
+  0%, 100% { transform: scale(1); opacity: .22; }
+  60%       { transform: scale(1.3); opacity: 0; }
 }
 
 /* Compatibilidad con clases viejas (mobile overlay) */
