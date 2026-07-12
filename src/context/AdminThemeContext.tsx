@@ -94,24 +94,26 @@ export function AdminThemeProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    supabase
-      .from('empresas')
-      .select('config_ui_admin')
-      .eq('id_empresa', idEmpresa)
-      .single()
-      .then(({ data }) => {
+    async function cargar() {
+      try {
+        const { data } = await supabase
+          .from('empresas')
+          .select('config_ui_admin')
+          .eq('id_empresa', idEmpresa)
+          .single()
         const cfg: AdminConfigUI = {
           ...ADMIN_CONFIG_DEFAULTS,
           ...(data?.config_ui_admin ?? {}),
         }
         setConfigAdmin(cfg)
         aplicarTemaAdmin(cfg)
-        setLoading(false)
-      })
-      .catch(() => {
+      } catch {
         aplicarTemaAdmin(ADMIN_CONFIG_DEFAULTS)
+      } finally {
         setLoading(false)
-      })
+      }
+    }
+    cargar()
   }, [idEmpresa, roleLoading])
 
   return (
