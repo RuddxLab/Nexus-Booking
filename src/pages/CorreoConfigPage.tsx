@@ -126,9 +126,23 @@ export function CorreoConfigPage() {
       const smtpEnc = config.proveedor === 'smtp' && config.smtp_pass
         ? await encriptarValor(config.smtp_pass) : undefined
 
+      // Resolver id_sucursal — siempre debe quedar con valor
+      let idSucursalFinal = sucursalId
+      if (!idSucursalFinal) {
+        const { data: suc } = await supabase
+          .from('sucursales')
+          .select('id_sucursal')
+          .eq('id_empresa', empresaId)
+          .eq('activo', true)
+          .order('id_sucursal')
+          .limit(1)
+          .single()
+        idSucursalFinal = suc?.id_sucursal ?? null
+      }
+
       const payload: any = {
         id_empresa:  empresaId,
-        id_sucursal: sucursalId ?? sucursalesDeEmpresa[0]?.id_sucursal ?? null,
+        id_sucursal: idSucursalFinal,
         proveedor:   config.proveedor,
         from_email:  config.from_email.trim(),
         from_name:   config.from_name.trim(),
