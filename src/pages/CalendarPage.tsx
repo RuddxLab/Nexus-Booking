@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { WeekView } from '../components/Calendar/WeekView'
 import { ListView } from '../components/Calendar/ListView'
 import { MonthView } from '../components/Calendar/MonthView'
@@ -32,6 +32,7 @@ export function CalendarPage() {
   const [citaSeleccionada, setCitaSeleccionada] = useState<Agendamiento | null>(null)
   const [cargando, setCargando] = useState(true)
   const [idPrestadorFiltro, setIdPrestadorFiltro] = useState<number | null>(null)
+  const resetandoPrestador = useRef(false)  // true mientras se resetea por cambio de sucursal
   const [diasBloqueados, setDiasBloqueados] = useState<DiaBloqueado[]>([])
   const [ausenciasRecurrentes, setAusenciasRecurrentes] = useState<PrestadorAusencia[]>([])
   const [horariosActivos, setHorariosActivos] = useState<import('../types').PrestadorHorario[]>([])
@@ -47,6 +48,8 @@ export function CalendarPage() {
 
   const cargarCitas = useCallback(async () => {
     if (!empresaId) return
+    // No cargar mientras se está reseteando el prestador por cambio de sucursal
+    if (resetandoPrestador.current) return
     setCargando(true)
     try {
       const filtroId = esPrestador ? idPrestador : idPrestadorFiltro
@@ -88,30 +91,32 @@ export function CalendarPage() {
     cargarCitas()
   }, [cargarCitas, empresaId, sucursalId])
 
-  // Recargar citas cuando admin cambia el prestador filtrado
-  useEffect(() => {
-    if (!empresaId || esPrestador) return
-    cargarCitas()
-  }, [idPrestadorFiltro])  // eslint-disable-line react-hooks/exhaustive-deps
+  // Nota: idPrestadorFiltro ya está en las deps de cargarCitas vía useCallback
+  // No se necesita un useEffect separado para él
 
   useEffect(() => {
     if (!empresaId) return
+    // Marcar que estamos reseteando — cargarCitas ignorará el estado null intermedio
+    resetandoPrestador.current = true
     setIdPrestadorFiltro(null)
     listPrestadoresPublico(empresaId)
       .then(data => {
-        // Filtrar por sucursal si está seleccionada
         const filtrados = sucursalId
           ? data.filter(p => p.id_sucursal === sucursalId)
           : data
         setPrestadores(filtrados)
         if (!esPrestador && filtrados.length > 0) {
+          // Setear el primer prestador — esto dispara cargarCitas con el valor correcto
+          resetandoPrestador.current = false
           setIdPrestadorFiltro(filtrados[0].id_prestador)
+        } else {
+          resetandoPrestador.current = false
         }
       })
-      .catch(() => setPrestadores([]))
+      .catch(() => { setPrestadores([]); resetandoPrestador.current = false })
     serviciosService.listAll('nombre_servicio', empresaId, sucursalId ?? undefined)
       .then(setServicios).catch(() => setServicios([]))
-  }, [empresaId, sucursalId])
+  }, [empresaId, sucursalId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const citasPorDia = useMemo(() => {
     const grupos: Record<string, Agendamiento[]> = {}

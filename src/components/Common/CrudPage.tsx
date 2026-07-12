@@ -113,22 +113,49 @@ export function CrudPage<T extends Record<string, any>>({
     return resultado
   })()
 
+  function resolverValorCampo(fila: T, campo: CrudField): string {
+    const val = (fila as any)[campo.key]
+    if (val === null || val === undefined || val === '') return ''
+
+    switch (campo.type) {
+      case 'checkbox':
+        return val ? 'Sí' : 'No'
+      case 'sino':
+        return Number(val) === 1 ? 'Sí' : 'No'
+      case 'select':
+        // Resolver el label de la opción seleccionada
+        return campo.options?.find(o => String(o.value) === String(val))?.label ?? String(val)
+      case 'date':
+        // Formatear fecha YYYY-MM-DD a DD/MM/YYYY
+        return String(val).substring(0, 10).split('-').reverse().join('/')
+      case 'rut':
+        // Formatear RUT si es necesario
+        return String(val)
+      default:
+        return String(val)
+    }
+  }
+
   function descargarCSV() {
     if (filasVisibles.length === 0) return
-    const headers = columnas.map(c => c.label)
+
+    // Usar campos del formulario como columnas del CSV
+    const camposCSV = campos.filter(c => !c.soloEdicion)
+    const headers   = camposCSV.map(c => c.label)
+
     const filas_csv = filasVisibles.map(fila =>
-      columnas.map(c => {
-        const val = c.render ? String(c.render(fila) ?? '') : String((fila as any)[c.key] ?? '')
-        // Escapar comillas y envolver en comillas si tiene comas
-        const escaped = val.replace(/"/g, '""')
-        return escaped.includes(',') || escaped.includes('\n') ? `"${escaped}"` : escaped
-      }).join(',')
+      camposCSV.map(campo => {
+        const val = resolverValorCampo(fila, campo)
+        // Siempre envolver en comillas para manejar comas, saltos de línea y caracteres especiales
+        return `"${val.replace(/"/g, '""')}"`
+      }).join(';')  // Usar ; como separador (estándar para Excel en es-CL)
     )
-    const csv = [headers.join(','), ...filas_csv].join('\n')
+
+    const csv  = [headers.map(h => `"${h}"`).join(';'), ...filas_csv].join('\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
-    a.href = url
+    a.href     = url
     a.download = `${titulo.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     URL.revokeObjectURL(url)
