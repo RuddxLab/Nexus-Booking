@@ -189,10 +189,44 @@ a { color: var(--color-ink); text-decoration: none; }
 .sidebar__brand { display: none; }
 .sidebar__link  { display: none; }
 
-.main { padding: 24px 32px; overflow-y: auto; }
-.main__header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 22px; }
+/* ══ Admin main area ══ */
+.adm-main {
+  background: var(--adm-bg, var(--color-bg, #F4F6F3));
+  min-height: 100vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Fondo decorativo sutil */
+.adm-main::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 10%, color-mix(in srgb, var(--adm-primary, #6B7A5E) 6%, transparent), transparent),
+    radial-gradient(ellipse 50% 35% at 10% 80%, color-mix(in srgb, var(--adm-acc, #C8A46A) 5%, transparent), transparent);
+}
+
+/* Contenido sobre el fondo */
+.adm-main > * { position: relative; z-index: 1; }
+
+/* Área de contenido con padding */
+.adm-content {
+  padding: 28px 32px;
+  max-width: 1400px;
+}
+
+/* Header de página */
+.main { padding: 28px 32px; overflow-y: auto; }
+.main__header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
 .page-header__eyebrow { font-size: 10px; color: var(--color-ink-soft); text-transform: uppercase; letter-spacing: 0.14em; margin-top: 2px; }
-.page-header__title { font-size: 22px; text-transform: uppercase; letter-spacing: 0.04em; }
+.page-header__title {
+  font-size: 22px; text-transform: uppercase; letter-spacing: 0.04em;
+  background: linear-gradient(135deg, var(--adm-ink, var(--color-ink)) 60%, var(--adm-primary, var(--color-primary)));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
 
 /* ═══ Components ═══ */
 .card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
@@ -269,6 +303,7 @@ a { color: var(--color-ink); text-decoration: none; }
   .sb-glow, .sb-ping { display: none; }
   .sb-btn--active { background: color-mix(in srgb, var(--sb-glow, var(--color-primary)) 12%, transparent); }
   .main { padding: 16px; }
+  .adm-content { padding: 16px; }
   .main__header { flex-direction: column; align-items: flex-start; gap: 10px; }
   .calendar__nav { flex-wrap: wrap; }
 }
