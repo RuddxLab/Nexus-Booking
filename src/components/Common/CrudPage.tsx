@@ -294,6 +294,8 @@ export function CrudPage<T extends Record<string, any>>({
           </span>
         </div>
       )}
+
+      {busqueda && (
         <div className="field" style={{ maxWidth: 360, marginBottom: 16 }}>
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ink-soft)', display: 'flex' }}>
