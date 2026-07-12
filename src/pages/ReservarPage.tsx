@@ -217,7 +217,8 @@ export function ReservarPage() {
       const t = h*60 + m + servicioElegido.duracion
       const horaFin = `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`
       enviarCorreoReserva({
-        token, id_agendamiento: id, nombre_cliente: nombre, email: email.trim().toLowerCase(), telefono,
+        token, id_agendamiento: id, id_empresa: tenant.idEmpresa,
+        nombre_cliente: nombre, email: email.trim().toLowerCase(), telefono,
         nombre_prestador: prestadorElegido.nombre_prestador,
         nombre_servicio:  servicioElegido.nombre_servicio,
         duracion: servicioElegido.duracion, fecha: fechaElegida,

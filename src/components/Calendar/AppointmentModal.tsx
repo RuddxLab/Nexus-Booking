@@ -102,7 +102,8 @@ export function AppointmentModal({
       if (email) {
         const prestador = prestadores.find(p => p.id_prestador === idPrestador)
         enviarCorreoReserva({
-          id_agendamiento: 0, nombre_cliente: nombreCliente, email, telefono,
+          id_agendamiento: 0, id_empresa: idEmpresa,
+          nombre_cliente: nombreCliente, email, telefono,
           nombre_prestador: prestador?.nombre_prestador ?? '',
           nombre_servicio: servicioSeleccionado?.nombre_servicio ?? '',
           duracion: servicioSeleccionado?.duracion ?? 0,
@@ -125,6 +126,7 @@ export function AppointmentModal({
         const prestador = prestadores.find(p => p.id_prestador === citaExistente.id_prestador)
         const servicio  = servicios.find(s => s.id_servicio === citaExistente.id_servicio)
         enviarCorreoCancelacion({
+          id_empresa: idEmpresa,
           nombre_cliente: citaExistente.nombre_cliente, email: citaExistente.email,
           nombre_prestador: prestador?.nombre_prestador ?? '',
           nombre_servicio: servicio?.nombre_servicio ?? '',
