@@ -76,8 +76,10 @@ a { color: var(--color-ink); text-decoration: none; }
 
 /* ══ Sidebar glassmorphism ══ */
 .sidebar {
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
   padding: 12px 10px;
   display: flex; flex-direction: column; align-items: flex-start;
   position: sticky; top: 0; height: 100vh; overflow-y: auto;
@@ -86,7 +88,7 @@ a { color: var(--color-ink); text-decoration: none; }
 }
 
 [data-theme="oscuro"] .sidebar, .tema-oscuro .sidebar {
-  background: rgba(255,255,255,.03);
+  background: rgba(15,15,20,.65);
   border-right-color: rgba(255,255,255,.06);
 }
 
