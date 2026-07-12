@@ -45,8 +45,14 @@ export function CorreoConfigPage() {
   const [guardando,  setGuardando]  = useState(false)
   const [probando,   setProbando]   = useState(false)
   const [mensaje,    setMensaje]    = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null)
+  const [porSucursal, setPorSucursal] = useState(false)
   const [mostrarKey, setMostrarKey] = useState(false)
   const [mostrarPass, setMostrarPass] = useState(false)
+
+  // Al cambiar empresa, resetear el toggle
+  useEffect(() => {
+    setPorSucursal(false)
+  }, [empresaId])
 
   // Cargar config cuando cambia empresa o sucursal
   useEffect(() => {
@@ -133,7 +139,7 @@ export function CorreoConfigPage() {
 
       const payload: any = {
         id_empresa:  empresaId,
-        id_sucursal: (sucursalId && sucursalesDeEmpresa.length > 1) ? sucursalId : null,
+        id_sucursal: (porSucursal && sucursalId) ? sucursalId : (sucursalesDeEmpresa[0]?.id_sucursal ?? null),
         proveedor:   config.proveedor,
         from_email:  config.from_email.trim(),
         from_name:   config.from_name.trim(),
@@ -220,18 +226,41 @@ export function CorreoConfigPage() {
         sucursalId={sucursalId}
         onEmpresaChange={setEmpresaId}
         onSucursalChange={setSucursalId}
-        mostrarSucursal={true}
+        mostrarSucursal={false}
       />
+
+      {/* Toggle: config por empresa o por sucursal específica */}
+      {sucursalesDeEmpresa.length > 1 && (
+        <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer', color: 'var(--color-ink-soft)' }}>
+            <input
+              type="checkbox"
+              checked={porSucursal}
+              onChange={e => setPorSucursal(e.target.checked)}
+            />
+            Configurar para una sucursal específica
+          </label>
+          {porSucursal && (
+            <select
+              value={sucursalId ?? ''}
+              onChange={e => setSucursalId(e.target.value ? Number(e.target.value) : null)}
+              style={{ padding: '5px 8px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 13 }}
+            >
+              <option value="">— Seleccionar sucursal —</option>
+              {sucursalesDeEmpresa.map(s => (
+                <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre_sucursal}</option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
 
       {/* Contexto actual */}
       <div style={{ fontSize: 12, color: 'var(--color-ink-soft)', marginBottom: 16, padding: '8px 12px', background: 'var(--color-surface-2)', borderRadius: 8, border: '1px solid var(--color-border)' }}>
-        {sucursalId
-          ? <>Configurando correo para la sucursal <strong>{scope}</strong>. Si no configuras nada aquí, se usa la configuración de la empresa.</>
-          : <>Configurando correo para toda la empresa <strong>{scope}</strong>. Las sucursales sin configuración propia usarán esta.</>
+        {porSucursal && sucursalId
+          ? <>Configurando correo solo para la sucursal <strong>{sucursalesDeEmpresa.find(s => s.id_sucursal === sucursalId)?.nombre_sucursal}</strong>. Sobreescribe la config de empresa para esa sucursal.</>
+          : <>Configurando correo para <strong>toda la empresa</strong>. Aplica a todas las sucursales que no tengan config propia.</>
         }
-        {!idConfig && !cargando && (
-          <span style={{ color: 'var(--color-ink-soft)', marginLeft: 6 }}>— Sin configuración propia aún (usa la cuenta global de Nexus Booking)</span>
-        )}
       </div>
 
       {cargando ? (
