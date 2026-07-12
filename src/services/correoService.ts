@@ -27,15 +27,18 @@ interface DatosCorreoCancelacion {
   hora_fin: string
 }
 
-export async function enviarCorreoReserva(datos: DatosCorreoReserva): Promise<void> {
+export async function enviarCorreoReserva(datos: DatosCorreoReserva): Promise<{ ok: boolean; error?: string } | null> {
   try {
-    await fetch(`${FUNCTIONS_URL}/enviar-correo-reserva`, {
+    const res = await fetch(`${FUNCTIONS_URL}/enviar-correo-reserva`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(datos)
     })
+    const data = await res.json().catch(() => ({}))
+    return { ok: data.ok === true, error: data.error }
   } catch (err) {
     console.warn('No se pudo enviar el correo de confirmación:', err)
+    return { ok: false, error: String(err) }
   }
 }
 

@@ -72,6 +72,7 @@ export function ReservarPage() {
   const [guardando, setGuardando] = useState(false)
   const confirmandoRef = React.useRef(false)
   const [reservado, setReservado] = useState(false)
+  const [correoEnviado, setCorreoEnviado] = useState(true)
   const [ripple,   setRipple]   = useState<string | null>(null)
 
   const telSep = separarTelefono(telefono)
@@ -224,7 +225,9 @@ export function ReservarPage() {
         duracion: servicioElegido.duracion, fecha: fechaElegida,
         hora_inicio: horaElegida, hora_fin: horaFin,
         slug: tenant.slug,
-      }).catch(console.error)
+      }).then(res => {
+        if (!res?.ok) setCorreoEnviado(false)
+      }).catch(() => setCorreoEnviado(false))
     } catch (err) {
       if (err instanceof DobleReservaError) {
         // Verificar si la reserva ya fue creada por este mismo cliente
@@ -446,7 +449,12 @@ export function ReservarPage() {
                 <svg viewBox="0 0 28 28"><path d="M6 14l6 6 10-10"/></svg>
               </div>
               <div className="rxp-suc-title">Tu hora está confirmada</div>
-              <div className="rxp-suc-sub">Recibirás un correo con los detalles en <strong>{email}</strong></div>
+              <div className="rxp-suc-sub">
+                {correoEnviado
+                  ? <>Recibirás un correo con los detalles en <strong>{email}</strong></>
+                  : <>Tu reserva está confirmada. <span style={{ color: 'var(--color-ink-soft)' }}>El correo de confirmación no pudo enviarse (sin configuración de correo).</span></>
+                }
+              </div>
               <div className="rxp-suc-card">
                 {servicioElegido && <div className="rxp-suc-row"><span className="rxp-suc-lbl">Servicio</span><span className="rxp-suc-val">{servicioElegido.nombre_servicio}</span></div>}
                 {prestadorElegido && <div className="rxp-suc-row"><span className="rxp-suc-lbl">Profesional</span><span className="rxp-suc-val">{prestadorElegido.nombre_prestador}</span></div>}
