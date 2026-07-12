@@ -7,14 +7,14 @@ interface Rango {
 }
 
 interface GenerarHorasDisponiblesOpts {
-  horaInicio: string
-  horaFin: string
+  horaInicio:  string
+  horaFin:     string
   duracionMin: number
-  fecha: string // 'YYYY-MM-DD', para descartar horas pasadas si la fecha es hoy
-  ocupados?: Rango[]
-  ausencias?: Rango[]
-  bufferMin?: number  // colchón entre citas
-  pasoMin?: number    // granularidad de PRESENTACIÓN (cada cuántos min mostrar slots)
+  fecha:       string    // 'YYYY-MM-DD'
+  ocupados?:   Rango[]
+  ausencias?:  Rango[]
+  bufferMin?:  number   // colchón entre citas
+  pasoMin?:    number   // granularidad de presentación (NULL = usar duración)
 }
 
 function aMinutos(hhmm: string): number {
@@ -32,24 +32,12 @@ function seSuperponen(inicioA: number, finA: number, inicioB: number, finB: numb
   return inicioA < finB && finA > inicioB
 }
 
-/**
- * Calcula el paso de presentación óptimo según la duración del servicio.
- * - Duraciones cortas (≤30 min): paso de 15 min
- * - Duraciones medias (31-60 min): paso de 30 min  
- * - Duraciones largas (>60 min): paso de 30 min
- * Siempre múltiplo de 5 para coincidir con la búsqueda interna.
- */
-function calcularPasoPresntacion(duracionMin: number): number {
-  if (duracionMin <= 30) return 15
-  return 30
-}
-
 export function generarHorasDisponibles({
   horaInicio,
   horaFin,
   duracionMin,
   fecha,
-  ocupados = [],
+  ocupados  = [],
   ausencias = [],
   bufferMin = 0,
   pasoMin,
@@ -66,14 +54,16 @@ export function generarHorasDisponibles({
   const esHoy = fecha === hoy.toISOString().slice(0, 10)
   const minutoActual = esHoy ? hoy.getHours() * 60 + hoy.getMinutes() : -1
 
-  // Paso de presentación: cuántos minutos entre slots visibles
-  const pasoDisplay = pasoMin ?? calcularPasoPresntacion(duracionMin)
+  // Paso de presentación:
+  // - Si pasoMin está definido → usarlo (configuración del prestador)
+  // - Si es null/undefined     → usar la duración del servicio
+  const pasoDisplay = (pasoMin != null && pasoMin > 0) ? pasoMin : duracionMin
 
-  // Paso interno de búsqueda: siempre 5 min para no perder huecos
-  // independientemente de la duración del servicio
-  const PASO_BUSQUEDA = 5
+  // Paso interno de búsqueda: MCD entre pasoDisplay y 5
+  // Siempre ≤5 min para no perder huecos post-ausencia
+  const PASO_BUSQUEDA = Math.min(pasoDisplay, 5)
 
-  // 1. Encontrar todos los slots válidos (cada 5 min)
+  // 1. Encontrar todos los slots válidos con búsqueda fina
   const slotsValidos = new Set<number>()
   for (let inicio = inicioJornada; inicio + duracionMin <= finJornada; inicio += PASO_BUSQUEDA) {
     const fin = inicio + duracionMin
@@ -82,23 +72,22 @@ export function generarHorasDisponibles({
     if (!choca) slotsValidos.add(inicio)
   }
 
-  // 2. Filtrar para mostrar solo slots en el paso de presentación,
-  //    EXCEPTO cuando un slot de presentación no está disponible pero
-  //    hay uno cercano válido (hueco post-ausencia)
+  // 2. Presentar slots en el paso configurado,
+  //    recuperando huecos post-ausencia que no caen en múltiplo del paso
   const horas: string[] = []
+  const mostrados = new Set<number>()
 
   for (let inicio = inicioJornada; inicio + duracionMin <= finJornada; inicio += pasoDisplay) {
     if (slotsValidos.has(inicio)) {
-      // El slot "redondo" está disponible — mostrarlo
       horas.push(minutosAHora(inicio))
+      mostrados.add(inicio)
     } else {
-      // Buscar el primer slot válido dentro de los próximos pasoDisplay minutos
-      // Esto captura huecos post-ausencia (ej: ausencia termina 15:00, jornada
-      // empezaba a mostrar 15:30, pero 15:00 es válido)
-      for (let offset = 0; offset < pasoDisplay; offset += PASO_BUSQUEDA) {
+      // Buscar primer slot válido dentro de esta ventana (hueco post-ausencia)
+      for (let offset = PASO_BUSQUEDA; offset < pasoDisplay; offset += PASO_BUSQUEDA) {
         const candidato = inicio + offset
-        if (slotsValidos.has(candidato) && !horas.includes(minutosAHora(candidato))) {
+        if (slotsValidos.has(candidato) && !mostrados.has(candidato)) {
           horas.push(minutosAHora(candidato))
+          mostrados.add(candidato)
           break
         }
       }

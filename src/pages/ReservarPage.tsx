@@ -169,6 +169,7 @@ export function ReservarPage() {
         horaInicio: hDia.hora_inicio!, horaFin: hDia.hora_fin!,
         duracionMin: servicioElegido.duracion, fecha: iso,
         ocupados: ocu, ausencias: [...ausD, ...bloqP],
+        pasoMin: prestadorElegido.paso_agenda ?? undefined,
       }))
     } finally { setCargandoHoras(false) }
   }

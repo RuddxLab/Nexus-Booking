@@ -36,6 +36,7 @@ export function PrestadoresPage() {
         { key: 'comuna',           label: 'Comuna',         type: 'comuna', dependsOn: 'ciudad' },
         { key: 'comision',         label: 'Comisión (%)',   type: 'number' },
         { key: 'reserva_online',   label: 'Reserva online', type: 'sino' },
+        { key: 'paso_agenda',       label: 'Paso agenda (min)', type: 'number' },
         { key: 'activo',           label: 'Activo',         type: 'checkbox' },
       ]}
     />

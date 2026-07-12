@@ -120,6 +120,7 @@ export interface PrestadorPublico {
   comuna: string | null
   activo: boolean
   reserva_online: number
+  paso_agenda: number | null  // null = usar duración del servicio
 }
 
 export interface DiaBloqueado {
