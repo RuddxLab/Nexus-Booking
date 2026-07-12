@@ -42,12 +42,13 @@ export function CorreoConfigPage() {
   useEffect(() => {
     if (!empresaId) return
     setCargando(true)
-    supabase
-      .from('empresa_correo_config')
-      .select('*')
-      .eq('id_empresa', empresaId)
-      .maybeSingle()
-      .then(({ data }) => {
+    const cargar = async () => {
+      try {
+        const { data } = await supabase
+          .from('empresa_correo_config')
+          .select('*')
+          .eq('id_empresa', empresaId)
+          .maybeSingle()
         if (data) {
           setIdConfig(data.id_config)
           setConfig({
@@ -62,9 +63,11 @@ export function CorreoConfigPage() {
             smtp_secure:   data.smtp_secure ?? false,
           })
         }
+      } finally {
         setCargando(false)
-      })
-      .catch(() => setCargando(false))
+      }
+    }
+    cargar()
   }, [empresaId])
 
   function set<K extends keyof Config>(key: K, val: Config[K]) {
