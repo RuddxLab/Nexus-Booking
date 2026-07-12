@@ -1,7 +1,8 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { signOut } from '../../services/authService'
 import { useUserRole, PUEDE_GESTIONAR_CATALOGO } from '../../hooks/useUserRole'
+import { supabase } from '../../services/supabaseClient'
 
 // ── Colores ───────────────────────────────────────────────────────────────────
 const COLORS: Record<string, { glow: string; grad: string; pill: string }> = {
@@ -148,7 +149,140 @@ function SidebarSection({ titulo, icono, colorKey, children, rutas }: {
   )
 }
 
-// ── Sidebar principal ─────────────────────────────────────────────────────────
+// ── Botón de Reservas con desplegable ────────────────────────────────────────
+interface EmpresaOpcion {
+  slug: string
+  nombre: string
+  sucursales: { slug: string; nombre: string }[]
+}
+
+function ReservasBtn({ slugEmpresa, esAdmin }: { slugEmpresa: string | null; esAdmin: boolean }) {
+  const [abierto, setAbierto]   = useState(false)
+  const [opciones, setOpciones] = useState<EmpresaOpcion[]>([])
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Cerrar al click fuera
+  useEffect(() => {
+    if (!abierto) return
+    const fn = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setAbierto(false)
+    }
+    document.addEventListener('mousedown', fn)
+    return () => document.removeEventListener('mousedown', fn)
+  }, [abierto])
+
+  // Cargar empresas y sucursales cuando se abre (solo admin ve todas)
+  useEffect(() => {
+    if (!abierto) return
+    const cargar = async () => {
+      const { data: empresas } = await supabase
+        .from('empresas')
+        .select('slug, nombre_empresa, id_empresa')
+        .eq('activo', true)
+        .order('nombre_empresa')
+
+      if (!empresas) return
+
+      const resultado: EmpresaOpcion[] = []
+      for (const emp of empresas) {
+        const { data: subs } = await supabase
+          .from('sucursales')
+          .select('slug, nombre_sucursal')
+          .eq('id_empresa', emp.id_empresa)
+          .eq('activo', true)
+          .order('id_sucursal')
+
+        resultado.push({
+          slug: emp.slug,
+          nombre: emp.nombre_empresa,
+          sucursales: (subs ?? []).map(s => ({ slug: s.slug ?? emp.slug, nombre: s.nombre_sucursal })),
+        })
+      }
+      setOpciones(resultado)
+    }
+    cargar()
+  }, [abierto])
+
+  // Si no es admin, abrir directo sin desplegable
+  const handleClick = () => {
+    if (!esAdmin) {
+      if (slugEmpresa) window.open(`/r/${slugEmpresa}`, '_blank')
+      return
+    }
+    setAbierto(v => !v)
+  }
+
+  const c = COLORS.reservas
+  return (
+    <div ref={ref} style={{ position: 'relative', width: '100%' }}>
+      <button
+        className="sb-btn sb-action"
+        onClick={handleClick}
+        style={{ '--sb-glow': c.glow, '--sb-grad': c.grad, '--sb-pill': c.pill } as React.CSSProperties}
+      >
+        <span className="sb-icon">{Icons.reservas}</span>
+        <span className="sb-pill">Reservas</span>
+        {esAdmin && <span style={{ fontSize: 9, opacity: .5, marginLeft: 'auto' }}>▾</span>}
+      </button>
+
+      {abierto && esAdmin && (
+        <div style={{
+          position: 'absolute', bottom: '100%', left: 0, marginBottom: 4,
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 10, boxShadow: 'var(--shadow-elevated)',
+          minWidth: 200, zIndex: 100, overflow: 'hidden',
+        }}>
+          {opciones.length === 0 && (
+            <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--color-ink-soft)' }}>Cargando…</div>
+          )}
+          {opciones.map(emp => (
+            <div key={emp.slug}>
+              {/* Si tiene 1 sucursal, mostrar directo. Si tiene varias, mostrar empresa + sucursales */}
+              {emp.sucursales.length === 1 ? (
+                <button
+                  onClick={() => { window.open(`/r/${emp.sucursales[0].slug}`, '_blank'); setAbierto(false) }}
+                  style={{
+                    display: 'block', width: '100%', textAlign: 'left',
+                    padding: '9px 14px', background: 'none', border: 'none',
+                    fontSize: 13, color: 'var(--color-ink)', cursor: 'pointer',
+                    borderBottom: '1px solid var(--color-border)',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-surface-2)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                >
+                  {emp.nombre}
+                </button>
+              ) : (
+                <>
+                  <div style={{ padding: '6px 14px 2px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-ink-soft)' }}>
+                    {emp.nombre}
+                  </div>
+                  {emp.sucursales.map(suc => (
+                    <button
+                      key={suc.slug}
+                      onClick={() => { window.open(`/r/${suc.slug}`, '_blank'); setAbierto(false) }}
+                      style={{
+                        display: 'block', width: '100%', textAlign: 'left',
+                        padding: '7px 14px 7px 22px', background: 'none', border: 'none',
+                        fontSize: 13, color: 'var(--color-ink)', cursor: 'pointer',
+                        borderBottom: '1px solid var(--color-border)',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-surface-2)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                    >
+                      → {suc.nombre}
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 interface Props { abierto?: boolean; onNavegar?: () => void }
 
 export function Sidebar({ abierto = false, onNavegar }: Props) {
@@ -233,8 +367,7 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
       <div className="sb-spacer"/>
 
       <div className="sb-links">
-        <ActionBtn label="Reservas" colorKey="reservas" icon={Icons.reservas}
-          onClick={() => window.open(linkReservas, '_blank')}/>
+        <ReservasBtn slugEmpresa={linkReservas.replace('/r/', '')} esAdmin={esAdmin} />
         <ActionBtn label="Salir" colorKey="salir" icon={Icons.salir} onClick={() => signOut()}/>
       </div>
     </aside>
