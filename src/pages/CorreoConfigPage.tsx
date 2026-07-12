@@ -243,7 +243,7 @@ export function CorreoConfigPage() {
           {porSucursal && (
             <select
               value={sucursalId ?? ''}
-              onChange={e => setSucursalId(e.target.value ? Number(e.target.value) : null)}
+              onChange={e => setSucursalId(Number(e.target.value) || sucursalesDeEmpresa[0]?.id_sucursal)}
               style={{ padding: '5px 8px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 13 }}
             >
               <option value="">— Seleccionar sucursal —</option>
