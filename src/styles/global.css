@@ -1088,18 +1088,7 @@ a { color: var(--color-ink); text-decoration: none; }
   background: color-mix(in srgb, var(--color-primary) 5%, transparent) !important;
 }
 
-/* Barra lateral de color al hover — igual al rxp-sc */
-.table tbody tr { position: relative; }
-.table tbody tr::before {
-  content: none; /* No se puede hacer en tr, lo hacemos en td:first-child */
-}
-.table tbody td:first-child {
-  border-left: 2.5px solid transparent;
-  transition: border-color .2s;
-}
-.table tbody tr:hover td:first-child {
-  border-left-color: var(--color-primary);
-}
+
 
 /* Badges mejorados */
 .badge-ok  { background: color-mix(in srgb, var(--color-success) 12%, transparent); color: var(--color-success); border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent); }
