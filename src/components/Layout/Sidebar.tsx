@@ -125,11 +125,11 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
         <SidebarBtn to="/admin" label="Agenda"    colorKey="agenda"    end onClick={onNavegar}/>
         {puedeVerCatalogo && <>
           <SidebarBtn to="/admin/clientes"            label="Clientes"        colorKey="clientes"   onClick={onNavegar}/>
-          <SidebarBtn to="/admin/prestadores"         label="Staff"           colorKey="staff"      onClick={onNavegar}/>
+          <SidebarBtn to="/admin/prestadores"         label="Prestadores"       colorKey="staff"      onClick={onNavegar}/>
           <SidebarBtn to="/admin/tipo-categorias"     label="Tipo Categ."     colorKey="tipocats"   onClick={onNavegar}/>
           <SidebarBtn to="/admin/categorias"          label="Categorías"      colorKey="categorias" onClick={onNavegar}/>
           <SidebarBtn to="/admin/servicios"           label="Catálogo"        colorKey="catalogo"   onClick={onNavegar}/>
-          <SidebarBtn to="/admin/prestador-servicios" label="Staff & Serv."   colorKey="staffserv"  onClick={onNavegar}/>
+          <SidebarBtn to="/admin/prestador-servicios" label="Prest. & Serv."    colorKey="staffserv"  onClick={onNavegar}/>
           <SidebarBtn to="/admin/horarios"            label="Horarios"        colorKey="horarios"   onClick={onNavegar}/>
           <SidebarBtn to="/admin/ausencias"           label="Ausencias"       colorKey="ausencias"  onClick={onNavegar}/>
           <SidebarBtn to="/admin/sucursales"          label="Sucursales"      colorKey="sucursales" onClick={onNavegar}/>

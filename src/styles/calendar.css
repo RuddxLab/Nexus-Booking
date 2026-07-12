@@ -50,11 +50,12 @@
   font-family: var(--font-display); font-weight: 600; font-size: 16px;
   line-height: 1;
   display: inline-flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: 50%;
+  width: 26px; height: 26px;
 }
 .calendar__day-header--today .calendar__day-number {
-  background: var(--color-primary); color: var(--color-primary-ink);
-  font-size: 13px;
+  color: var(--color-primary);
+  border-bottom: 2px solid var(--color-primary);
+  opacity: 0.7;
 }
 
 .calendar__day-column {

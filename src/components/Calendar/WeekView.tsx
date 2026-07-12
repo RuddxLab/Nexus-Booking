@@ -227,11 +227,12 @@ export function WeekView({
                     <div style={{
                       position: 'absolute', inset: 0,
                       background: 'var(--color-primary-soft)',
-                      borderLeft: '3px solid var(--color-primary)',
+                      borderTop: '2px solid var(--color-primary)',
                       zIndex: 1, pointerEvents: 'none',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 11, color: 'var(--color-primary)', fontWeight: 600,
-                      writingMode: 'vertical-rl', letterSpacing: '0.08em',
+                      display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+                      paddingTop: 8,
+                      fontSize: 10, color: 'var(--color-primary)', fontWeight: 600,
+                      letterSpacing: '0.08em', textTransform: 'uppercase',
                     }}>
                       No laborable
                     </div>
