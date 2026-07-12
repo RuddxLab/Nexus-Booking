@@ -137,7 +137,7 @@ export function TenantProvider({ slug, children }: { slug: string; children: Rea
 
       if (!activo) return
 
-      const empresa = sucursal.empresas as { nombre_empresa: string; config_ui: any } | null
+      const empresa = (sucursal.empresas as unknown) as { nombre_empresa: string; config_ui: any } | null
 
       // config_ui: sucursal tiene prioridad sobre empresa (permite personalización por sede)
       const configUI: TenantConfigUI = {
