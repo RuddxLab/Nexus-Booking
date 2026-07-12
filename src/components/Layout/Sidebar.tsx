@@ -1,10 +1,9 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { signOut } from '../../services/authService'
 import { useUserRole, PUEDE_GESTIONAR_CATALOGO } from '../../hooks/useUserRole'
 
-// ── Colores por sección ───────────────────────────────────────────────────────
-// Cada ítem tiene su propio glow/gradiente, igual al diseño de referencia
-
+// ── Colores ───────────────────────────────────────────────────────────────────
 const COLORS: Record<string, { glow: string; grad: string; pill: string }> = {
   agenda:        { glow: '#6366f1', grad: 'linear-gradient(135deg,#a5b4fc,#6366f1)', pill: '#6366f1' },
   clientes:      { glow: '#10b981', grad: 'linear-gradient(135deg,#6ee7b7,#10b981)', pill: '#10b981' },
@@ -20,12 +19,11 @@ const COLORS: Record<string, { glow: string; grad: string; pill: string }> = {
   usuarios:      { glow: '#fb923c', grad: 'linear-gradient(135deg,#fed7aa,#fb923c)', pill: '#fb923c' },
   tema:          { glow: '#e879f9', grad: 'linear-gradient(135deg,#f5d0fe,#e879f9)', pill: '#e879f9' },
   correo:        { glow: '#06b6d4', grad: 'linear-gradient(135deg,#67e8f9,#06b6d4)', pill: '#06b6d4' },
-  toggletema:    { glow: '#94a3b8', grad: 'linear-gradient(135deg,#e2e8f0,#94a3b8)', pill: '#94a3b8' },
+  reservas:      { glow: '#64748b', grad: 'linear-gradient(135deg,#cbd5e1,#64748b)', pill: '#64748b' },
   salir:         { glow: '#ef4444', grad: 'linear-gradient(135deg,#fca5a5,#ef4444)', pill: '#ef4444' },
 }
 
 // ── Iconos SVG ────────────────────────────────────────────────────────────────
-
 const Ico = ({ d, d2 }: { d: string; d2?: string }) => (
   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
     <path strokeLinecap="round" strokeLinejoin="round" d={d}/>
@@ -33,7 +31,7 @@ const Ico = ({ d, d2 }: { d: string; d2?: string }) => (
   </svg>
 )
 
-const Icons = {
+const Icons: Record<string, React.ReactNode> = {
   agenda:     <Ico d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>,
   clientes:   <Ico d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>,
   staff:      <Ico d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>,
@@ -50,26 +48,19 @@ const Icons = {
   correo:     <Ico d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>,
   reservas:   <Ico d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>,
   salir:      <Ico d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>,
-  sol:        <Ico d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>,
-  luna:       <Ico d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>,
+  chevron:    <Ico d="M19 9l-7 7-7-7"/>,
 }
 
-// ── Botón NavLink con color propio ────────────────────────────────────────────
-
-function SidebarBtn({
-  to, label, colorKey, end = false, onClick
-}: { to: string; label: string; colorKey: string; end?: boolean; onClick?: () => void }) {
+// ── Botón NavLink individual ──────────────────────────────────────────────────
+function SidebarBtn({ to, label, colorKey, end = false, onClick }: {
+  to: string; label: string; colorKey: string; end?: boolean; onClick?: () => void
+}) {
   const c = COLORS[colorKey] ?? COLORS.agenda
-
   return (
     <NavLink
       to={to} end={end} onClick={onClick}
       className={({ isActive }) => 'sb-btn' + (isActive ? ' sb-btn--active' : '')}
-      style={({ isActive }) => isActive ? ({
-        '--sb-glow':  c.glow,
-        '--sb-grad':  c.grad,
-        '--sb-pill':  c.pill,
-      } as React.CSSProperties) : {}}
+      style={({ isActive }) => isActive ? ({ '--sb-glow': c.glow, '--sb-grad': c.grad, '--sb-pill': c.pill } as React.CSSProperties) : {}}
     >
       {({ isActive }) => (
         <>
@@ -80,7 +71,7 @@ function SidebarBtn({
               <span className="sb-glow"/>
             </>
           )}
-          <span className="sb-icon">{Icons[colorKey as keyof typeof Icons] ?? Icons.agenda}</span>
+          <span className="sb-icon">{Icons[colorKey] ?? Icons.agenda}</span>
           <span className="sb-pill">{label}</span>
         </>
       )}
@@ -88,9 +79,10 @@ function SidebarBtn({
   )
 }
 
-function ActionBtn({
-  label, colorKey, icon, onClick
-}: { label: string; colorKey: string; icon: React.ReactNode; onClick?: () => void }) {
+// ── Botón de acción (sin NavLink) ─────────────────────────────────────────────
+function ActionBtn({ label, colorKey, icon, onClick }: {
+  label: string; colorKey: string; icon: React.ReactNode; onClick?: () => void
+}) {
   const c = COLORS[colorKey] ?? COLORS.salir
   return (
     <button
@@ -104,8 +96,59 @@ function ActionBtn({
   )
 }
 
-// ── Sidebar principal ─────────────────────────────────────────────────────────
+// ── Sección colapsable ────────────────────────────────────────────────────────
+function SidebarSection({ titulo, icono, colorKey, children, rutas }: {
+  titulo: string
+  icono: React.ReactNode
+  colorKey: string
+  children: React.ReactNode
+  rutas: string[]  // rutas que pertenecen a esta sección para auto-expandir
+}) {
+  const location = useLocation()
+  const activa = rutas.some(r => location.pathname.startsWith(r))
+  const [abierta, setAbierta] = useState(activa)
 
+  // Abrir automáticamente si la ruta activa es de esta sección
+  useEffect(() => {
+    if (activa) setAbierta(true)
+  }, [location.pathname]) // eslint-disable-line
+
+  const c = COLORS[colorKey] ?? COLORS.agenda
+
+  return (
+    <div className="sb-section">
+      <button
+        className={'sb-section-hd' + (abierta ? ' sb-section-hd--open' : '') + (activa ? ' sb-section-hd--active' : '')}
+        onClick={() => setAbierta(v => !v)}
+        style={activa ? ({ '--sb-glow': c.glow } as React.CSSProperties) : {}}
+      >
+        <span className="sb-icon" style={{ width: 28, height: 28, borderRadius: 8 }}>{icono}</span>
+        <span className="sb-pill" style={{ flex: 1 }}>{titulo}</span>
+        <span className="sb-section-arrow" style={{
+          transition: 'transform .25s cubic-bezier(.34,1.56,.64,1)',
+          transform: abierta ? 'rotate(180deg)' : 'rotate(0deg)',
+          display: 'flex', opacity: .5,
+        }}>
+          {Icons.chevron}
+        </span>
+      </button>
+      <div
+        className="sb-section-bd"
+        style={{
+          maxHeight: abierta ? 600 : 0,
+          overflow: 'hidden',
+          transition: 'max-height .3s cubic-bezier(.4,0,.2,1)',
+        }}
+      >
+        <div style={{ paddingLeft: 8, paddingTop: 2, paddingBottom: 4 }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Sidebar principal ─────────────────────────────────────────────────────────
 interface Props { abierto?: boolean; onNavegar?: () => void }
 
 export function Sidebar({ abierto = false, onNavegar }: Props) {
@@ -121,27 +164,70 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
       <div className="sb-brand">NX</div>
 
       <div className="sb-links">
-        <SidebarBtn to="/admin" label="Agenda"    colorKey="agenda"    end onClick={onNavegar}/>
-        {puedeVerCatalogo && <>
-          <SidebarBtn to="/admin/clientes"            label="Clientes"        colorKey="clientes"   onClick={onNavegar}/>
-          <SidebarBtn to="/admin/prestadores"         label="Prestadores"       colorKey="staff"      onClick={onNavegar}/>
-          <SidebarBtn to="/admin/tipo-categorias"     label="Tipo Categ."     colorKey="tipocats"   onClick={onNavegar}/>
-          <SidebarBtn to="/admin/categorias"          label="Categorías"      colorKey="categorias" onClick={onNavegar}/>
-          <SidebarBtn to="/admin/servicios"           label="Catálogo"        colorKey="catalogo"   onClick={onNavegar}/>
-          <SidebarBtn to="/admin/prestador-servicios" label="Prest. & Serv."    colorKey="staffserv"  onClick={onNavegar}/>
-          <SidebarBtn to="/admin/horarios"            label="Horarios"        colorKey="horarios"   onClick={onNavegar}/>
-          <SidebarBtn to="/admin/ausencias"           label="Ausencias"       colorKey="ausencias"  onClick={onNavegar}/>
-          <SidebarBtn to="/admin/sucursales"          label="Sucursales"      colorKey="sucursales" onClick={onNavegar}/>
-        </>}
-        {esAdmin && <>
-          <SidebarBtn to="/admin/empresas" label="Empresa"     colorKey="empresa"  onClick={onNavegar}/>
-          <SidebarBtn to="/admin/usuarios" label="Usuarios"    colorKey="usuarios" onClick={onNavegar}/>
-          <SidebarBtn to="/admin/tema"     label="Tema visual"   colorKey="tema"     onClick={onNavegar}/>
-          <SidebarBtn to="/admin/correo"   label="Correo"        colorKey="correo"   onClick={onNavegar}/>
-        </>}
-        {esSupervisor &&
+        {/* Agenda siempre visible */}
+        <SidebarBtn to="/admin" label="Agenda" colorKey="agenda" end onClick={onNavegar}/>
+
+        {/* Sección Clientes */}
+        {puedeVerCatalogo && (
+          <SidebarSection
+            titulo="Clientes"
+            icono={Icons.clientes}
+            colorKey="clientes"
+            rutas={['/admin/clientes']}
+          >
+            <SidebarBtn to="/admin/clientes" label="Clientes" colorKey="clientes" onClick={onNavegar}/>
+          </SidebarSection>
+        )}
+
+        {/* Sección Catálogo */}
+        {puedeVerCatalogo && (
+          <SidebarSection
+            titulo="Catálogo"
+            icono={Icons.catalogo}
+            colorKey="catalogo"
+            rutas={['/admin/tipo-categorias', '/admin/categorias', '/admin/servicios', '/admin/prestador-servicios']}
+          >
+            <SidebarBtn to="/admin/tipo-categorias"     label="Tipo categ."    colorKey="tipocats"   onClick={onNavegar}/>
+            <SidebarBtn to="/admin/categorias"          label="Categorías"     colorKey="categorias" onClick={onNavegar}/>
+            <SidebarBtn to="/admin/servicios"           label="Servicios"      colorKey="catalogo"   onClick={onNavegar}/>
+            <SidebarBtn to="/admin/prestador-servicios" label="Prest. & Serv." colorKey="staffserv"  onClick={onNavegar}/>
+          </SidebarSection>
+        )}
+
+        {/* Sección Prestadores */}
+        {puedeVerCatalogo && (
+          <SidebarSection
+            titulo="Prestadores"
+            icono={Icons.staff}
+            colorKey="staff"
+            rutas={['/admin/prestadores', '/admin/horarios', '/admin/ausencias']}
+          >
+            <SidebarBtn to="/admin/prestadores" label="Prestadores" colorKey="staff"     onClick={onNavegar}/>
+            <SidebarBtn to="/admin/horarios"    label="Horarios"    colorKey="horarios"  onClick={onNavegar}/>
+            <SidebarBtn to="/admin/ausencias"   label="Ausencias"   colorKey="ausencias" onClick={onNavegar}/>
+          </SidebarSection>
+        )}
+
+        {/* Sección Admin */}
+        {esAdmin && (
+          <SidebarSection
+            titulo="Administración"
+            icono={Icons.empresa}
+            colorKey="empresa"
+            rutas={['/admin/sucursales', '/admin/empresas', '/admin/usuarios', '/admin/tema', '/admin/correo']}
+          >
+            <SidebarBtn to="/admin/sucursales" label="Sucursales"   colorKey="sucursales" onClick={onNavegar}/>
+            <SidebarBtn to="/admin/empresas"   label="Empresa"      colorKey="empresa"    onClick={onNavegar}/>
+            <SidebarBtn to="/admin/usuarios"   label="Usuarios"     colorKey="usuarios"   onClick={onNavegar}/>
+            <SidebarBtn to="/admin/tema"       label="Tema visual"  colorKey="tema"       onClick={onNavegar}/>
+            <SidebarBtn to="/admin/correo"     label="Correo"       colorKey="correo"     onClick={onNavegar}/>
+          </SidebarSection>
+        )}
+
+        {/* Supervisor solo ve usuarios */}
+        {esSupervisor && (
           <SidebarBtn to="/admin/usuarios" label="Usuarios" colorKey="usuarios" onClick={onNavegar}/>
-        }
+        )}
       </div>
 
       <div className="sb-spacer"/>

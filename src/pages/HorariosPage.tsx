@@ -16,6 +16,26 @@ const DIAS = [
   { dia: 7, nombre: 'Domingo' }
 ]
 
+// Genera slots cada 30 min de 06:00 a 23:30
+function generarSlots() {
+  const slots: string[] = []
+  for (let h = 6; h <= 23; h++) {
+    slots.push(`${String(h).padStart(2, '0')}:00`)
+    if (h < 23) slots.push(`${String(h).padStart(2, '0')}:30`)
+  }
+  return slots
+}
+const SLOTS = generarSlots()
+
+const SEL: React.CSSProperties = {
+  padding: '6px 10px', borderRadius: 8,
+  border: '1px solid var(--color-border)',
+  background: 'var(--color-surface)',
+  color: 'var(--color-ink)', fontSize: 13,
+  cursor: 'pointer', minWidth: 90,
+}
+const SEL_DISABLED: React.CSSProperties = { ...SEL, opacity: 0.4, cursor: 'not-allowed' }
+
 export function HorariosPage() {
   const { empresaId, sucursalId, setEmpresaId, setSucursalId, esAdmin, esSupervisor, empresas, sucursalesDeEmpresa } = useFiltroEmpresa()
   const [prestadores, setPrestadores] = useState<Prestador[]>([])
@@ -193,19 +213,23 @@ export function HorariosPage() {
                   />
                   {nombre}
                 </label>
-                <input
-                  type="time"
+                <select
                   value={fila.hora_inicio}
                   disabled={!fila.activo}
+                  style={fila.activo ? SEL : SEL_DISABLED}
                   onChange={(e) => actualizarFila(dia, { hora_inicio: e.target.value })}
-                />
+                >
+                  {SLOTS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
                 <span style={{ color: 'var(--color-ink-soft)' }}>a</span>
-                <input
-                  type="time"
+                <select
                   value={fila.hora_fin}
                   disabled={!fila.activo}
+                  style={fila.activo ? SEL : SEL_DISABLED}
                   onChange={(e) => actualizarFila(dia, { hora_fin: e.target.value })}
-                />
+                >
+                  {SLOTS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
               </div>
             )
           })}

@@ -6,6 +6,7 @@ import { IconEditar, IconEliminar, IconNuevo, IconBuscar } from './icons'
 import { REGIONES, REGIONES_COMUNAS } from '../../data/chileRegionesComunas'
 import { formatearRut, limpiarRut, validarRut, validarEmail, EJEMPLO_RUT } from '../../utils/validators'
 import { PAISES_TELEFONO, separarTelefono, armarTelefono, validarTelefono } from '../../data/paisesTelefono'
+import { TelefonoPicker } from './TelefonoPicker'
 import { useFiltroEmpresa } from '../../hooks/useFiltroEmpresa'
 
 export interface CrudField {
@@ -492,10 +493,14 @@ export function CrudPage<T extends Record<string, any>>({
                   <div className={cls} key={campo.key}>
                     <label>{campo.label}</label>
                     <div style={{ display: 'flex', gap: 6, minWidth: 0 }}>
-                      <select value={codigo} style={{ flex: '0 0 auto', width: 80 }}
-                        onChange={e => setEditando({ ...editando, [campo.key]: armarTelefono(e.target.value, numero) })}>
-                        {PAISES_TELEFONO.map(p => <option key={p.codigo} value={p.codigo}>{p.bandera} {p.codigo}</option>)}
-                      </select>
+                      <TelefonoPicker
+                        value={valor ?? ''}
+                        onChange={nuevoVal => {
+                          // Solo actualizar el código, mantener el número
+                          const { codigo: nuevoCod } = separarTelefono(nuevoVal)
+                          setEditando({ ...editando, [campo.key]: armarTelefono(nuevoCod, numero) })
+                        }}
+                      />
                       <input style={{ flex: '1 1 0', minWidth: 0 }} value={numero}
                         placeholder={`${pais?.digitos ?? ''} dígitos`}
                         onChange={e => {

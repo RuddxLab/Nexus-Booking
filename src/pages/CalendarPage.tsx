@@ -54,7 +54,7 @@ export function CalendarPage() {
     try {
       const filtroId = esPrestador ? idPrestador : idPrestadorFiltro
       const [citas, bloqueados] = await Promise.all([
-        listAgendamientosPorRango(rango.desde, rango.hasta, filtroId, empresaId),
+        listAgendamientosPorRango(rango.desde, rango.hasta, filtroId, empresaId, sucursalId),
         listDiasBloqueadosPorRango(rango.desde, rango.hasta, filtroId, empresaId, sucursalId),
       ])
       setCitas(citas)

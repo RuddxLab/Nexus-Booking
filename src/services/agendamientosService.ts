@@ -16,10 +16,9 @@ export async function listAgendamientosPorRango(
   fechaInicio: string,
   fechaFin: string,
   idPrestador?: number | null,
-  idEmpresa?: number | null
+  idEmpresa?: number | null,
+  idSucursal?: number | null,
 ): Promise<Agendamiento[]> {
-  // Si viene idPrestador (vista admin filtrando por prestador), usar función SECURITY DEFINER
-  // que salta RLS y trae SOLO las citas de ese prestador
   if (idPrestador) {
     const { data, error } = await supabase.rpc('agendamientos_por_prestador', {
       p_id_prestador: idPrestador,
@@ -33,8 +32,6 @@ export async function listAgendamientosPorRango(
     })) as Agendamiento[]
   }
 
-  // Sin filtro de prestador: RLS filtra por empresa del usuario autenticado.
-  // idEmpresa se agrega como defensa adicional en frontend.
   let query = supabase
     .from('agendamientos')
     .select('*, servicios(nombre_servicio, duracion)')
@@ -43,7 +40,8 @@ export async function listAgendamientosPorRango(
     .order('fecha', { ascending: true })
     .order('hora_inicio', { ascending: true })
 
-  if (idEmpresa) query = query.eq('id_empresa', idEmpresa) as any
+  if (idEmpresa)   query = query.eq('id_empresa',  idEmpresa)  as any
+  if (idSucursal)  query = query.eq('id_sucursal', idSucursal) as any
 
   const { data, error } = await query
   if (error) throw error

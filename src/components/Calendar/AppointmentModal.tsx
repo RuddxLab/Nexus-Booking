@@ -5,6 +5,7 @@ import { enviarCorreoReserva, enviarCorreoCancelacion } from '../../services/cor
 import { validarEmail, formatearRut, validarRut, limpiarRut } from '../../utils/validators'
 import { formatearHora } from '../../utils/calendarUtils'
 import { PAISES_TELEFONO, separarTelefono, armarTelefono, validarTelefono } from '../../data/paisesTelefono'
+import { TelefonoPicker } from '../Common/TelefonoPicker'
 import type { Agendamiento, PrestadorPublico, Servicio } from '../../types'
 
 interface Props {
@@ -200,15 +201,13 @@ export function AppointmentModal({
               <div className="field">
                 <label>Teléfono</label>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <select
-                    value={telefonoSeparado.codigo}
-                    style={{ flex: '0 0 auto', width: 72, fontSize: 13, padding: '6px 4px', border: '1px solid var(--color-border)', borderRadius: 8, background: 'var(--color-surface)', color: 'var(--color-ink)' }}
-                    onChange={e => setTelefono(armarTelefono(e.target.value, telefonoSeparado.numero))}
-                  >
-                    {PAISES_TELEFONO.map(p => (
-                      <option key={p.codigo} value={p.codigo}>{p.bandera}</option>
-                    ))}
-                  </select>
+                  <TelefonoPicker
+                    value={telefono ?? ''}
+                    onChange={nuevoVal => {
+                      const { codigo: nuevoCod } = separarTelefono(nuevoVal)
+                      setTelefono(armarTelefono(nuevoCod, telefonoSeparado.numero))
+                    }}
+                  />
                   <input
                     style={{ flex: 1, minWidth: 0 }}
                     value={telefonoSeparado.numero}
