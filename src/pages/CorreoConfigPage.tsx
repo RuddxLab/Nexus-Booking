@@ -168,28 +168,37 @@ export function CorreoConfigPage() {
     setProbando(true)
     setMensaje(null)
     try {
-      const FUNCTIONS_URL = import.meta.env.VITE_SUPABASE_URL?.replace('.supabase.co', '.supabase.co/functions/v1') ?? ''
+      const SUPABASE_URL  = import.meta.env.VITE_SUPABASE_URL ?? ''
+      const ANON_KEY      = import.meta.env.VITE_SUPABASE_ANON_KEY ?? ''
+      const FUNCTIONS_URL = SUPABASE_URL.replace('.supabase.co', '.supabase.co/functions/v1')
       const res = await fetch(`${FUNCTIONS_URL}/enviar-correo-reserva`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': ANON_KEY,
+          'Authorization': `Bearer ${ANON_KEY}`,
+        },
         body: JSON.stringify({
-          id_empresa: empresaId,
-          email: config.from_email,
-          nombre_cliente: 'Prueba de conexión',
+          id_empresa:       empresaId,
+          id_agendamiento:  0,
+          email:            config.from_email,
+          nombre_cliente:   'Prueba de conexión',
           nombre_prestador: 'Sistema',
-          nombre_servicio: 'Test de correo',
-          duracion: 30,
-          fecha: new Date().toISOString().split('T')[0],
-          hora_inicio: '10:00', hora_fin: '10:30',
+          nombre_servicio:  'Test de correo',
+          duracion:         30,
+          fecha:            new Date().toISOString().split('T')[0],
+          hora_inicio:      '10:00',
+          hora_fin:         '10:30',
         })
       })
       const data = await res.json().catch(() => ({}))
-      setMensaje(data.ok
-        ? { tipo: 'ok', texto: `Correo de prueba enviado a ${config.from_email}` }
-        : { tipo: 'error', texto: 'No se pudo enviar. Verifica la configuración.' }
-      )
-    } catch {
-      setMensaje({ tipo: 'error', texto: 'Error al conectar con el servicio de correo.' })
+      if (res.ok && data.ok) {
+        setMensaje({ tipo: 'ok', texto: `Correo de prueba enviado a ${config.from_email}` })
+      } else {
+        setMensaje({ tipo: 'error', texto: `Error al enviar: ${data.error ?? 'Verifica la API key y el email remitente.'}` })
+      }
+    } catch (err: any) {
+      setMensaje({ tipo: 'error', texto: `Error de conexión: ${err.message ?? 'Intenta de nuevo.'}` })
     } finally { setProbando(false) }
   }
 
