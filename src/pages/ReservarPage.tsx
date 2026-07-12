@@ -168,7 +168,7 @@ export function ReservarPage() {
       setHorasDelDia(generarHorasDisponibles({
         horaInicio: hDia.hora_inicio!, horaFin: hDia.hora_fin!,
         duracionMin: servicioElegido.duracion, fecha: iso,
-        ocupados: ocu, ausencias: [...ausD, ...bloqP], pasoMin: 5,
+        ocupados: ocu, ausencias: [...ausD, ...bloqP],
       }))
     } finally { setCargandoHoras(false) }
   }
