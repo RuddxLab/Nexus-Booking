@@ -186,7 +186,7 @@ export function CrudPage<T extends Record<string, any>>({
   }
 
   return (
-    <div>
+    <div className="main">
       <PageHeader titulo={titulo}>
         <button className="btn btn--primary btn--icon" onClick={abrirNuevo} title="Nuevo registro">
           <IconNuevo /> Nuevo
