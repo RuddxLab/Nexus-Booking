@@ -125,7 +125,7 @@ export function AusenciasPage() {
     id ? prestadores.find(p => p.id_prestador === id)?.nombre_prestador ?? `#${id}` : 'Todos'
 
   return (
-    <div>
+    <div className="main">
       <PageHeader titulo="Ausencias y días bloqueados" />
       <SelectorFiltro
         esAdmin={esAdmin}

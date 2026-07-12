@@ -158,7 +158,7 @@ export function CalendarPage() {
   }
 
   return (
-    <div>
+    <div className="main">
       <PageHeader titulo={esPrestador ? 'Mi agenda' : 'Agenda'}>
         <div className="vista-switch">
           <button className={vista === 'semana' ? 'activo' : ''} onClick={() => setVista('semana')}>Semana</button>

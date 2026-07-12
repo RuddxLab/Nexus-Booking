@@ -149,7 +149,7 @@ export function PrestadorServiciosPage() {
   )
 
   return (
-    <div>
+    <div className="main">
       <PageHeader titulo="Servicios por Prestador" />
       <SelectorFiltro
         esAdmin={esAdmin}

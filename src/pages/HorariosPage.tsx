@@ -94,7 +94,7 @@ export function HorariosPage() {
   }
 
   return (
-    <div>
+    <div className="main">
       <PageHeader titulo="Horarios" />
       <SelectorFiltro
         esAdmin={esAdmin}

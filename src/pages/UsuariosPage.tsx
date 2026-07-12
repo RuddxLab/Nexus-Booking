@@ -199,7 +199,7 @@ export function UsuariosPage() {
     empresas.find(e => e.id_empresa === id)?.nombre_empresa ?? `Empresa ${id}`
 
   return (
-    <div>
+    <div className="main">
       <PageHeader titulo="Usuarios">
         <button className="btn btn--primary" onClick={abrirModalInvitar}>
           + Invitar usuario
