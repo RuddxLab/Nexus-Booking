@@ -219,7 +219,7 @@ export function CorreoConfigPage() {
     <div className="main" style={{ maxWidth: 640 }}>
       <PageHeader titulo="Configuración de correo" />
 
-      {/* Selector empresa + sucursal */}
+      {/* Selector empresa */}
       <SelectorFiltro
         esAdmin={esAdmin}
         esSupervisor={esSupervisor}
@@ -229,36 +229,16 @@ export function CorreoConfigPage() {
         sucursalId={sucursalId}
         onEmpresaChange={setEmpresaId}
         onSucursalChange={setSucursalId}
-        mostrarSucursal={false}
+        mostrarSucursal={sucursalesDeEmpresa.length > 1}
       />
 
-      {/* Toggle: config por empresa o por sucursal específica */}
-      {sucursalesDeEmpresa.length > 1 && (
-        <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer', color: 'var(--color-ink-soft)' }}>
-            <input
-              type="checkbox"
-              checked={porSucursal}
-              onChange={e => setPorSucursal(e.target.checked)}
-            />
-            Configurar para una sucursal específica
-          </label>
-          {porSucursal && (
-            <select
-              value={sucursalId ?? ''}
-              onChange={e => setSucursalId(Number(e.target.value) || sucursalesDeEmpresa[0]?.id_sucursal)}
-              style={{ padding: '5px 8px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 13 }}
-            >
-              <option value="">— Seleccionar sucursal —</option>
-              {sucursalesDeEmpresa.map(s => (
-                <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre_sucursal}</option>
-              ))}
-            </select>
-          )}
-        </div>
-      )}
-
       {/* Contexto actual */}
+      <div style={{ fontSize: 12, color: 'var(--color-ink-soft)', marginBottom: 16, padding: '8px 12px', background: 'var(--color-surface-2)', borderRadius: 8, border: '1px solid var(--color-border)' }}>
+        {sucursalesDeEmpresa.length > 1
+          ? <>Configurando correo para la sucursal <strong>{sucursalesDeEmpresa.find(s => s.id_sucursal === sucursalId)?.nombre_sucursal ?? scope}</strong>. Cada sucursal puede tener su propio Brevo.</>
+          : <>Configurando correo para toda la empresa <strong>{scope}</strong>.</>
+        }
+      </div>      {/* Contexto actual */}
       <div style={{ fontSize: 12, color: 'var(--color-ink-soft)', marginBottom: 16, padding: '8px 12px', background: 'var(--color-surface-2)', borderRadius: 8, border: '1px solid var(--color-border)' }}>
         {porSucursal && sucursalId
           ? <>Configurando correo solo para la sucursal <strong>{sucursalesDeEmpresa.find(s => s.id_sucursal === sucursalId)?.nombre_sucursal}</strong>. Sobreescribe la config de empresa para esa sucursal.</>
