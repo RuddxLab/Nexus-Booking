@@ -15,6 +15,7 @@ export function PrestadoresPage() {
       service={prestadoresService}
       orderBy="nombre_prestador"
       busqueda={{ campos: ['nombre_prestador', 'rut'], placeholder: 'Buscar por nombre o RUT…' }}
+      campoFecha="created_at"
       defaults={{ activo: true, reserva_online: 1, buffer_min: 0, dias_agenda: 30 } as any}
       columnas={[
         { key: 'nombre_prestador', label: 'Nombre' },

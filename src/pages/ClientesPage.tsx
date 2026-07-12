@@ -15,6 +15,7 @@ export function ClientesPage() {
       service={clientesService}
       orderBy="nombre_cliente"
       filtrarPorSucursal={false}
+      campoFecha="created_at"
       busqueda={{ campos: ['nombre_cliente', 'rut', 'telefono', 'email'], placeholder: 'Buscar por nombre, RUT, teléfono o correo…' }}
       defaults={{ activo: true } as any}
       columnas={[

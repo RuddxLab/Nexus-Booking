@@ -48,6 +48,8 @@ interface Props<T extends Record<string, any>> {
   /** Si false, no filtra por sucursal aunque haya una seleccionada (ej. tablas sin id_sucursal) */
   filtrarPorSucursal?: boolean
   recargarCuando?: unknown[]
+  /** Habilita filtro por rango de fecha y botón de descarga CSV */
+  campoFecha?: string  // ej: 'created_at' | 'fecha_creacion'
 }
 
 function coincideBusqueda(valor: unknown, query: string): boolean {
@@ -71,6 +73,7 @@ export function CrudPage<T extends Record<string, any>>({
   defaults, busqueda, filaExpandible, transformPayload,
   recargarCuando = [],
   filtrarPorSucursal = true,
+  campoFecha,
 }: Props<T>) {
 
   // ── Filtro empresa/sucursal integrado ────────────────────────────────────
@@ -87,10 +90,49 @@ export function CrudPage<T extends Record<string, any>>({
   const [error,           setError]           = useState<string | null>(null)
   const [query,           setQuery]           = useState('')
   const [filaExpandidaId, setFilaExpandidaId] = useState<any>(null)
+  const [fechaDesde,      setFechaDesde]      = useState('')
+  const [fechaHasta,      setFechaHasta]      = useState('')
 
-  const filasVisibles = busqueda && query.trim()
-    ? filas.filter(f => busqueda.campos.some(c => coincideBusqueda((f as any)[c], query)))
-    : filas
+  const filasVisibles = (() => {
+    let resultado = filas
+    if (busqueda && query.trim()) {
+      resultado = resultado.filter(f => busqueda.campos.some(c => coincideBusqueda((f as any)[c], query)))
+    }
+    if (campoFecha && fechaDesde) {
+      resultado = resultado.filter(f => {
+        const val = String((f as any)[campoFecha] ?? '').substring(0, 10)
+        return val >= fechaDesde
+      })
+    }
+    if (campoFecha && fechaHasta) {
+      resultado = resultado.filter(f => {
+        const val = String((f as any)[campoFecha] ?? '').substring(0, 10)
+        return val <= fechaHasta
+      })
+    }
+    return resultado
+  })()
+
+  function descargarCSV() {
+    if (filasVisibles.length === 0) return
+    const headers = columnas.map(c => c.label)
+    const filas_csv = filasVisibles.map(fila =>
+      columnas.map(c => {
+        const val = c.render ? String(c.render(fila) ?? '') : String((fila as any)[c.key] ?? '')
+        // Escapar comillas y envolver en comillas si tiene comas
+        const escaped = val.replace(/"/g, '""')
+        return escaped.includes(',') || escaped.includes('\n') ? `"${escaped}"` : escaped
+      }).join(',')
+    )
+    const csv = [headers.join(','), ...filas_csv].join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href = url
+    a.download = `${titulo.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   async function cargar() {
     if (!empresaId) return  // Esperar a que el filtro resuelva la empresa
@@ -165,7 +207,7 @@ export function CrudPage<T extends Record<string, any>>({
     let payload = prepararPayload()
     if (transformPayload) payload = transformPayload(payload, esNuevo)
     try {
-      if (!esNuevo) await service.update((editando as any)[idKey], payload)
+      if (!esNuevo) await service.update((editando as any)[idKey], payload, empresaId)
       else          await service.create(payload)
       setEditando(null)
       cargar()
@@ -180,8 +222,8 @@ export function CrudPage<T extends Record<string, any>>({
       ? '¿Desactivar este registro? Dejará de aparecer disponible, pero no se borra su historial.'
       : '¿Eliminar este registro? Esta acción no se puede deshacer.'
     if (!confirm(msg)) return
-    if (tieneActivo) await service.update((fila as any)[idKey], { activo: false } as any)
-    else             await service.remove((fila as any)[idKey])
+    if (tieneActivo) await service.update((fila as any)[idKey], { activo: false } as any, empresaId)
+    else             await service.remove((fila as any)[idKey], empresaId)
     cargar()
   }
 
@@ -190,6 +232,15 @@ export function CrudPage<T extends Record<string, any>>({
       <PageHeader titulo={titulo}>
         <button className="btn btn--primary btn--icon" onClick={abrirNuevo} title="Nuevo registro">
           <IconNuevo /> Nuevo
+        </button>
+        <button
+          className="btn btn--ghost btn--icon"
+          onClick={descargarCSV}
+          title="Descargar CSV"
+          disabled={filasVisibles.length === 0}
+          style={{ opacity: filasVisibles.length === 0 ? 0.4 : 1 }}
+        >
+          ↓ CSV
         </button>
       </PageHeader>
 
@@ -206,7 +257,43 @@ export function CrudPage<T extends Record<string, any>>({
         mostrarSucursal={filtrarPorSucursal}
       />
 
-      {busqueda && (
+      {campoFecha && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-ink-soft)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Fecha creación:
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <label style={{ fontSize: 12, color: 'var(--color-ink-soft)' }}>Desde</label>
+            <input
+              type="date"
+              value={fechaDesde}
+              onChange={e => setFechaDesde(e.target.value)}
+              style={{ ...SEL_STYLE, minWidth: 'auto', fontSize: 12, padding: '5px 8px' }}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <label style={{ fontSize: 12, color: 'var(--color-ink-soft)' }}>Hasta</label>
+            <input
+              type="date"
+              value={fechaHasta}
+              onChange={e => setFechaHasta(e.target.value)}
+              style={{ ...SEL_STYLE, minWidth: 'auto', fontSize: 12, padding: '5px 8px' }}
+            />
+          </div>
+          {(fechaDesde || fechaHasta) && (
+            <button
+              className="btn btn--ghost"
+              onClick={() => { setFechaDesde(''); setFechaHasta('') }}
+              style={{ fontSize: 11, padding: '4px 10px' }}
+            >
+              Limpiar
+            </button>
+          )}
+          <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', marginLeft: 4 }}>
+            {filasVisibles.length} registro{filasVisibles.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+      )}
         <div className="field" style={{ maxWidth: 360, marginBottom: 16 }}>
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ink-soft)', display: 'flex' }}>

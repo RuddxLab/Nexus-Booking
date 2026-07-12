@@ -21,6 +21,7 @@ import { PrestadorServiciosPage } from './pages/PrestadorServiciosPage'
 import { CategoriasPage } from './pages/CategoriasPage'
 import { TipoCategoriasPage } from './pages/TipoCategoriasPage'
 import { TemaEmpresaPage } from './pages/TemaEmpresaPage'
+import { CorreoConfigPage } from './pages/CorreoConfigPage'
 
 // Slug por defecto para rutas legacy (emails enviados antes del cambio de rutas)
 const SLUG_DEFAULT = 'polish-nail-bar'
@@ -91,6 +92,7 @@ function RutasProtegidas() {
         <Route path="/horarios"    element={<RutaSoloCatalogo><HorariosPage /></RutaSoloCatalogo>} />
         <Route path="/ausencias"   element={<RutaSoloCatalogo><AusenciasPage /></RutaSoloCatalogo>} />
         <Route path="/tema"        element={<RutaSoloAdmin><TemaEmpresaPage /></RutaSoloAdmin>} />
+        <Route path="/correo"      element={<RutaSoloAdmin><CorreoConfigPage /></RutaSoloAdmin>} />
       </Route>
       <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>

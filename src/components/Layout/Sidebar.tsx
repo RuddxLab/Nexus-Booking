@@ -19,7 +19,7 @@ const COLORS: Record<string, { glow: string; grad: string; pill: string }> = {
   empresa:       { glow: '#a78bfa', grad: 'linear-gradient(135deg,#ddd6fe,#a78bfa)', pill: '#a78bfa' },
   usuarios:      { glow: '#fb923c', grad: 'linear-gradient(135deg,#fed7aa,#fb923c)', pill: '#fb923c' },
   tema:          { glow: '#e879f9', grad: 'linear-gradient(135deg,#f5d0fe,#e879f9)', pill: '#e879f9' },
-  reservas:      { glow: '#64748b', grad: 'linear-gradient(135deg,#cbd5e1,#64748b)', pill: '#64748b' },
+  correo:        { glow: '#06b6d4', grad: 'linear-gradient(135deg,#67e8f9,#06b6d4)', pill: '#06b6d4' },
   toggletema:    { glow: '#94a3b8', grad: 'linear-gradient(135deg,#e2e8f0,#94a3b8)', pill: '#94a3b8' },
   salir:         { glow: '#ef4444', grad: 'linear-gradient(135deg,#fca5a5,#ef4444)', pill: '#ef4444' },
 }
@@ -47,7 +47,7 @@ const Icons = {
   empresa:    <Ico d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4z"/>,
   usuarios:   <Ico d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>,
   tema:       <Ico d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>,
-  reservas:   <Ico d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>,
+  correo:     <Ico d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>,
   salir:      <Ico d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>,
   sol:        <Ico d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>,
   luna:       <Ico d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>,
@@ -135,7 +135,8 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
         {esAdmin && <>
           <SidebarBtn to="/admin/empresas" label="Empresa"     colorKey="empresa"  onClick={onNavegar}/>
           <SidebarBtn to="/admin/usuarios" label="Usuarios"    colorKey="usuarios" onClick={onNavegar}/>
-          <SidebarBtn to="/admin/tema"     label="Tema visual" colorKey="tema"     onClick={onNavegar}/>
+          <SidebarBtn to="/admin/tema"     label="Tema visual"   colorKey="tema"     onClick={onNavegar}/>
+          <SidebarBtn to="/admin/correo"   label="Correo"        colorKey="correo"   onClick={onNavegar}/>
         </>}
         {esSupervisor &&
           <SidebarBtn to="/admin/usuarios" label="Usuarios" colorKey="usuarios" onClick={onNavegar}/>

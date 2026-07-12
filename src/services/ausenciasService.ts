@@ -78,11 +78,13 @@ export async function eliminarDiaBloqueado(id: number): Promise<void> {
 
 // ── Consultas para el calendario ─────────────────────────────────────────────
 
-/** Días bloqueados en un rango de fechas, opcionalmente filtrados por prestador */
+/** Días bloqueados en un rango de fechas, opcionalmente filtrados por prestador y empresa */
 export async function listDiasBloqueadosPorRango(
   desde: string,
   hasta: string,
-  idPrestador?: number | null
+  idPrestador?: number | null,
+  idEmpresa?: number | null,
+  idSucursal?: number | null,
 ): Promise<DiaBloqueado[]> {
   let q = supabase
     .from('dias_bloqueados')
@@ -90,9 +92,9 @@ export async function listDiasBloqueadosPorRango(
     .gte('fecha', desde)
     .lte('fecha', hasta)
 
-  if (idPrestador) {
-    q = q.or(`id_prestador.is.null,id_prestador.eq.${idPrestador}`)
-  }
+  if (idEmpresa)   q = q.eq('id_empresa', idEmpresa) as any
+  if (idSucursal)  q = q.or(`id_sucursal.is.null,id_sucursal.eq.${idSucursal}`) as any
+  if (idPrestador) q = q.or(`id_prestador.is.null,id_prestador.eq.${idPrestador}`) as any
 
   const { data, error } = await q.order('fecha')
   if (error) throw error

@@ -46,22 +46,26 @@ export function CalendarPage() {
   }, [vista, dias, mesGrilla])
 
   const cargarCitas = useCallback(async () => {
+    if (!empresaId) return
     setCargando(true)
     try {
-      // Admin filtra por prestador seleccionado; prestador usa su propio id (RLS ya filtra en DB)
       const filtroId = esPrestador ? idPrestador : idPrestadorFiltro
       const [citas, bloqueados] = await Promise.all([
-        listAgendamientosPorRango(rango.desde, rango.hasta, filtroId),
-        listDiasBloqueadosPorRango(rango.desde, rango.hasta, filtroId),
+        listAgendamientosPorRango(rango.desde, rango.hasta, filtroId, empresaId),
+        listDiasBloqueadosPorRango(rango.desde, rango.hasta, filtroId, empresaId, sucursalId),
       ])
       setCitas(citas)
       setDiasBloqueados(bloqueados)
 
-      // Siempre cargar horarios y ausencias de TODOS los prestadores de la empresa
-      // (no solo los que tienen citas esa semana, para mostrar días no laborables correctamente)
+      // Cargar horarios y ausencias filtrando por sucursal cuando corresponde
       const todosIds = esPrestador && idPrestador
         ? [idPrestador]
-        : await listPrestadoresPublico(empresaId ?? undefined).then(ps => ps.map(p => p.id_prestador)).catch(() => [])
+        : await listPrestadoresPublico(empresaId)
+            .then(ps => sucursalId
+              ? ps.filter(p => p.id_sucursal === sucursalId).map(p => p.id_prestador)
+              : ps.map(p => p.id_prestador)
+            )
+            .catch(() => [])
 
       if (todosIds.length > 0) {
         const [aus, horarios] = await Promise.all([
@@ -70,11 +74,14 @@ export function CalendarPage() {
         ])
         setAusenciasRecurrentes(aus)
         setHorariosActivos(horarios)
+      } else {
+        setAusenciasRecurrentes([])
+        setHorariosActivos([])
       }
     } finally {
       setCargando(false)
     }
-  }, [rango.desde, rango.hasta, idPrestador, idPrestadorFiltro, esPrestador])
+  }, [rango.desde, rango.hasta, idPrestador, idPrestadorFiltro, esPrestador, empresaId, sucursalId])
 
   useEffect(() => {
     if (!empresaId) return
