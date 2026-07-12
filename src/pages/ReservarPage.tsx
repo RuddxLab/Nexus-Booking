@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
   listPrestadoresPublico,
@@ -69,6 +69,7 @@ export function ReservarPage() {
   const [email,    setEmail]    = useState(saved?.email    ?? '')
   const [error,    setError]    = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
+  const confirmandoRef = React.useRef(false)
   const [reservado, setReservado] = useState(false)
   const [ripple,   setRipple]   = useState<string | null>(null)
 
@@ -174,6 +175,8 @@ export function ReservarPage() {
 
   async function handleConfirmar() {
     if (!tenant) return
+    if (confirmandoRef.current) return  // prevenir doble tap en móvil
+    confirmandoRef.current = true
     setError(null)
     if (!nombre.trim())              return setError('Tu nombre es obligatorio.')
     if (!email.trim() || !validarEmail(email)) return setError('Ingresa un correo válido.')
@@ -211,14 +214,35 @@ export function ReservarPage() {
       }).catch(console.error)
     } catch (err) {
       if (err instanceof DobleReservaError) {
-        setError('Esa hora ya fue tomada. Elige otro horario.')
-        setHoraElegida(null)
-        irPaso(3)
+        // Verificar si la reserva ya fue creada por este mismo cliente
+        // Ocurre en móvil cuando la red es lenta: el INSERT se ejecutó
+        // en Postgres pero el browser no recibió la respuesta a tiempo
+        const { data: yaExiste } = await supabase
+          .from('agendamientos')
+          .select('id_agendamiento, token_cancelacion')
+          .eq('id_empresa',   tenant.idEmpresa)
+          .eq('id_prestador', prestadorElegido!.id_prestador)
+          .eq('fecha',        fechaElegida!)
+          .eq('hora_inicio',  horaElegida!)
+          .ilike('email',     email.trim())
+          .neq('estado',      'CANCELADA')
+          .maybeSingle()
+
+        if (yaExiste) {
+          // La reserva ya existe y es del mismo cliente — mostrar confirmación
+          guardarDatos({ nombre, rut, telefono, email })
+          setReservado(true)
+        } else {
+          // Hora tomada por otro cliente
+          setError('Esa hora ya fue tomada. Elige otro horario.')
+          setHoraElegida(null)
+          irPaso(3)
+        }
       } else {
         console.error('Error al crear reserva:', err)
         setError('No se pudo confirmar la reserva. Intenta de nuevo.')
       }
-    } finally { setGuardando(false) }
+    } finally { setGuardando(false); confirmandoRef.current = false }
   }
 
   function reiniciar() {
@@ -595,7 +619,18 @@ export function ReservarPage() {
 
                   {error && <div className="rxp-error">{error}</div>}
 
-                  <button className="rxp-cta" disabled={guardando} onClick={handleConfirmar}>
+                  <button
+                    className="rxp-cta"
+                    disabled={guardando}
+                    onTouchStart={(e) => {
+                      e.preventDefault()  // previene el click sintético posterior
+                      if (!guardando && !confirmandoRef.current) handleConfirmar()
+                    }}
+                    onClick={(e) => {
+                      // Solo ejecutar en desktop (touch ya lo maneja onTouchStart)
+                      if (!('ontouchstart' in window)) handleConfirmar()
+                    }}
+                  >
                     {guardando ? (
                       <><span className="rxp-cta-txt" style={{ display: 'none' }}/><div className="rxp-dots" style={{ display: 'flex' }}><span/><span/><span/></div></>
                     ) : (
