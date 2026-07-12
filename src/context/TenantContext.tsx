@@ -122,42 +122,40 @@ export function TenantProvider({ slug, children }: { slug: string; children: Rea
     setTenant(null)
 
     async function resolver() {
-      try { await supabase.rpc('set_app_empresa_slug', { p_slug: slug }) } catch { /* no-op */ }
-
-      const { data: empresa, error: errEmp } = await supabase
-        .from('empresas')
-        .select('id_empresa, nombre_empresa, slug, config_ui')
+      // Buscar sucursal por su propio slug (con join a empresa para nombre y config_ui)
+      const { data: sucursal, error: errSuc } = await supabase
+        .from('sucursales')
+        .select('id_sucursal, id_empresa, nombre_sucursal, slug, config_ui, empresas(nombre_empresa, config_ui)')
         .eq('slug', slug)
+        .eq('activo', true)
         .maybeSingle()
 
-      if (errEmp || !empresa) {
+      if (errSuc || !sucursal) {
         if (activo) { setError('Negocio no encontrado.'); setLoading(false) }
         return
       }
 
-      const { data: sucursal } = await supabase
-        .from('sucursales')
-        .select('id_sucursal')
-        .eq('id_empresa', empresa.id_empresa)
-        .eq('activo', true)
-        .order('id_sucursal')
-        .limit(1)
-        .maybeSingle()
-
       if (!activo) return
 
+      const empresa = sucursal.empresas as { nombre_empresa: string; config_ui: any } | null
+
+      // config_ui: sucursal tiene prioridad sobre empresa (permite personalización por sede)
       const configUI: TenantConfigUI = {
         ...CONFIG_UI_DEFAULTS,
-        ...(empresa.config_ui ?? {}),
+        ...(empresa?.config_ui ?? {}),
+        ...(sucursal.config_ui ?? {}),
       }
+
+      // set_app_empresa_slug sigue siendo útil para RLS si lo tienes configurado
+      try { await supabase.rpc('set_app_empresa_slug', { p_slug: slug }) } catch { /* no-op */ }
 
       aplicarTema(configUI)
 
       setTenant({
-        idEmpresa:  empresa.id_empresa,
-        idSucursal: sucursal?.id_sucursal ?? 1,
-        slug:       empresa.slug,
-        nombre:     empresa.nombre_empresa,
+        idEmpresa:  sucursal.id_empresa,
+        idSucursal: sucursal.id_sucursal,
+        slug:       sucursal.slug!,
+        nombre:     sucursal.nombre_sucursal,
         configUI,
       })
       setLoading(false)

@@ -18,14 +18,14 @@ export function SucursalesPage() {
       columnas={[
         { key: 'nombre_sucursal', label: 'Nombre' },
         { key: 'id_empresa',      label: 'Empresa', render: r => nombreEmpresa(r.id_empresa) },
+        { key: 'slug',            label: 'Slug (URL)' },
         { key: 'ciudad',          label: 'Región' },
-        { key: 'comuna',          label: 'Comuna' },
-        { key: 'telefono1',       label: 'Teléfono' },
         { key: 'activo',          label: 'Activa',  render: r => r.activo ? 'Sí' : 'No' },
       ]}
       campos={[
         { key: 'nombre_sucursal', label: 'Nombre',     required: true, ancho: 'completo' },
         { key: 'id_empresa',      label: 'Empresa',    type: 'select', required: true, options: opcionesEmpresa },
+        { key: 'slug',            label: 'Slug (URL)', required: true, ancho: 'completo' },
         { key: 'direccion',       label: 'Dirección',  ancho: 'completo' },
         { key: 'ciudad',          label: 'Región',     type: 'region' },
         { key: 'comuna',          label: 'Comuna',     type: 'comuna', dependsOn: 'ciudad' },

@@ -24,6 +24,8 @@ export interface Sucursal {
   id_sucursal: number
   id_empresa: number
   nombre_sucursal: string
+  slug: string | null
+  config_ui: Record<string, string> | null
   activo: boolean
 }
 
