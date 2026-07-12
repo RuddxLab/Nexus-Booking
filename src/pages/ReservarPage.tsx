@@ -194,7 +194,10 @@ export function ReservarPage() {
         email,
         rut: rut ? limpiarRut(rut) : null,
       })
+      // Reserva guardada exitosamente — marcar como reservado ANTES de enviar correo
       guardarDatos({ nombre, rut, telefono, email })
+      setReservado(true)
+      // Enviar correo en background (si falla no afecta la reserva)
       const [h, m] = horaElegida.split(':').map(Number)
       const t = h*60 + m + servicioElegido.duracion
       const horaFin = `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`
@@ -205,11 +208,16 @@ export function ReservarPage() {
         duracion: servicioElegido.duracion, fecha: fechaElegida,
         hora_inicio: horaElegida, hora_fin: horaFin,
         slug: tenant.slug,
-      })
-      setReservado(true)
+      }).catch(console.error)
     } catch (err) {
-      if (err instanceof DobleReservaError) { setError(err.message); setHoraElegida(null); irPaso(3) }
-      else setError('No se pudo confirmar la reserva. Intenta de nuevo.')
+      if (err instanceof DobleReservaError) {
+        setError('Esa hora ya fue tomada. Elige otro horario.')
+        setHoraElegida(null)
+        irPaso(3)
+      } else {
+        console.error('Error al crear reserva:', err)
+        setError('No se pudo confirmar la reserva. Intenta de nuevo.')
+      }
     } finally { setGuardando(false) }
   }
 
