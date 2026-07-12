@@ -20,6 +20,7 @@ import { getMonthGrid, toISODate } from '../utils/calendarUtils'
 import { validarEmail, formatearRut, validarRut, limpiarRut } from '../utils/validators'
 import { enviarCorreoReserva } from '../services/correoService'
 import { PAISES_TELEFONO, separarTelefono, armarTelefono, validarTelefono } from '../data/paisesTelefono'
+import { TelefonoPicker } from '../components/Common/TelefonoPicker'
 import { useTenant } from '../context/TenantContext'
 import { ThemeToggle } from '../components/Common/ThemeToggle'
 import type { PrestadorPublico, Servicio, Categoria } from '../types'
@@ -666,11 +667,13 @@ export function ReservarPage() {
                     <div className="rxp-fl">
                       <label>Teléfono</label>
                       <div className="rxp-tel">
-                        <select className="rxp-tel-pais" value={telSep.codigo} onChange={e => setTelefono(armarTelefono(e.target.value, telSep.numero))}>
-                          {PAISES_TELEFONO.map(p => (
-                            <option key={p.codigo} value={p.codigo}>{p.bandera} {p.codigo}</option>
-                          ))}
-                        </select>
+                        <TelefonoPicker
+                          value={telefono}
+                          onChange={nuevoVal => {
+                            const { codigo: nuevoCod } = separarTelefono(nuevoVal)
+                            setTelefono(armarTelefono(nuevoCod, telSep.numero))
+                          }}
+                        />
                         <input className="rxp-inp" style={{ flex: 1, minWidth: 0 }} value={telSep.numero}
                           placeholder={`${pais?.digitos ?? ''} dígitos`}
                           onChange={e => {

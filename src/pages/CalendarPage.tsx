@@ -48,16 +48,22 @@ export function CalendarPage() {
 
   const cargarCitas = useCallback(async () => {
     if (!empresaId) return
-    // No cargar mientras se está reseteando el prestador por cambio de sucursal
     if (resetandoPrestador.current) return
     setCargando(true)
     try {
       const filtroId = esPrestador ? idPrestador : idPrestadorFiltro
+
+      // Si hay filtroId de prestador, SIEMPRE filtrar también por sucursal
+      // para evitar que citas de otro sucursal aparezcan al cambiar
       const [citas, bloqueados] = await Promise.all([
-        listAgendamientosPorRango(rango.desde, rango.hasta, filtroId, empresaId, sucursalId),
+        listAgendamientosPorRango(rango.desde, rango.hasta, null, empresaId, sucursalId),
         listDiasBloqueadosPorRango(rango.desde, rango.hasta, filtroId, empresaId, sucursalId),
       ])
-      setCitas(citas)
+      // Filtrar citas por prestador en frontend (ya vienen filtradas por sucursal)
+      const citasFiltradas = filtroId
+        ? citas.filter(c => c.id_prestador === filtroId)
+        : citas
+      setCitas(citasFiltradas)
       setDiasBloqueados(bloqueados)
 
       // Cargar horarios y ausencias filtrando por sucursal cuando corresponde
