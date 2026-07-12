@@ -30,8 +30,8 @@ export interface CrudColumn {
 interface CrudService<T> {
   listAll: (orderBy?: string, idEmpresa?: number, idSucursal?: number) => Promise<T[]>
   create:  (payload: Partial<T>) => Promise<T>
-  update:  (id: number | string, payload: Partial<T>) => Promise<T>
-  remove:  (id: number | string) => Promise<void>
+  update:  (id: number | string, payload: Partial<T>, idEmpresa?: number | null) => Promise<T>
+  remove:  (id: number | string, idEmpresa?: number | null) => Promise<void>
 }
 
 interface Props<T extends Record<string, any>> {

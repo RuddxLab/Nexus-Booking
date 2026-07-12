@@ -54,16 +54,17 @@ export function CorreoConfigPage() {
             proveedor:     data.proveedor ?? 'brevo',
             from_email:    data.from_email ?? '',
             from_name:     data.from_name ?? 'Nexus Booking',
-            brevo_api_key: '', // no se muestra la key encriptada
+            brevo_api_key: '',
             smtp_host:     data.smtp_host ?? '',
             smtp_port:     data.smtp_port ?? 587,
             smtp_user:     data.smtp_user ?? '',
-            smtp_pass:     '', // no se muestra la pass encriptada
+            smtp_pass:     '',
             smtp_secure:   data.smtp_secure ?? false,
           })
         }
+        setCargando(false)
       })
-      .finally(() => setCargando(false))
+      .catch(() => setCargando(false))
   }, [empresaId])
 
   function set<K extends keyof Config>(key: K, val: Config[K]) {

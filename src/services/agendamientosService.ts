@@ -15,7 +15,8 @@ export class DobleReservaError extends Error {
 export async function listAgendamientosPorRango(
   fechaInicio: string,
   fechaFin: string,
-  idPrestador?: number | null
+  idPrestador?: number | null,
+  idEmpresa?: number | null
 ): Promise<Agendamiento[]> {
   // Si viene idPrestador (vista admin filtrando por prestador), usar función SECURITY DEFINER
   // que salta RLS y trae SOLO las citas de ese prestador
@@ -26,15 +27,15 @@ export async function listAgendamientosPorRango(
       p_fecha_fin:     fechaFin,
     })
     if (error) throw error
-    // Mapear resultado plano al formato con join anidado { servicios: { nombre_servicio, duracion } }
     return ((data ?? []) as any[]).map(r => ({
       ...r,
       servicios: r.nombre_servicio ? { nombre_servicio: r.nombre_servicio, duracion: r.duracion } : null
     })) as Agendamiento[]
   }
 
-  // Sin filtro de prestador: la RLS decide qué ve el usuario (admin ve todo, prestador ve lo suyo)
-  const { data, error } = await supabase
+  // Sin filtro de prestador: RLS filtra por empresa del usuario autenticado.
+  // idEmpresa se agrega como defensa adicional en frontend.
+  let query = supabase
     .from('agendamientos')
     .select('*, servicios(nombre_servicio, duracion)')
     .gte('fecha', fechaInicio)
@@ -42,6 +43,9 @@ export async function listAgendamientosPorRango(
     .order('fecha', { ascending: true })
     .order('hora_inicio', { ascending: true })
 
+  if (idEmpresa) query = query.eq('id_empresa', idEmpresa) as any
+
+  const { data, error } = await query
   if (error) throw error
   return (data ?? []) as Agendamiento[]
 }
