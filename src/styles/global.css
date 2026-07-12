@@ -753,8 +753,8 @@ a { color: var(--color-ink); text-decoration: none; }
 .rxp-cat-hd {
   width:100%;display:flex;justify-content:space-between;align-items:center;
   background:none;border:none;padding:8px 0;
-  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
-  color:var(--rx-muted);cursor:pointer;border-bottom:1px solid var(--rx-bdr);
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--rx-ink);cursor:pointer;border-bottom:1px solid var(--rx-bdr);
   transition:color .2s;font-family:var(--font-body);
 }
 .rxp-cat-hd:hover { color:var(--rx-primary) }
