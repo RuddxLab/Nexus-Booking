@@ -59,23 +59,38 @@ const TenantContext = createContext<TenantCtx>({
 })
 
 /**
- * Aplica el config_ui de la empresa como variables CSS en modo CLARO.
- * El modo oscuro usa los colores del admin dark vía CSS con !important,
- * por lo que estas variables son ignoradas en ese modo.
+ * Aplica el config_ui de la empresa como variables CSS.
+ * El fondo de página viene de --color-bg (que el body usa).
+ * En modo oscuro el CSS con !important pisa las variables rx-*
+ * pero --color-bg se respeta porque el body siempre lo usa.
  */
 function aplicarTema(cfg: TenantConfigUI) {
   const r = document.documentElement.style
 
-  // ── Variables rx-* usadas por la página de reservas ──
+  // ── Fondo de página: el body hereda --color-bg ──
+  // Esto funciona en AMBOS modos porque el body usa var(--color-bg)
+  r.setProperty('--color-bg',           cfg.color_fondo)
+  r.setProperty('--color-surface',      cfg.color_superficie)
+  r.setProperty('--color-surface-2',    cfg.color_superficie2)
+  r.setProperty('--color-border',       cfg.color_borde)
+  r.setProperty('--color-ink',          cfg.color_texto)
+  r.setProperty('--color-ink-soft',     cfg.color_texto_suave)
+  r.setProperty('--color-primary',      cfg.color_primario)
+  r.setProperty('--color-primary-soft', cfg.color_primario_suave)
+  r.setProperty('--color-primary-ink',  '#FFFFFF')
+  r.setProperty('--color-accent',       cfg.color_acento)
+  r.setProperty('--color-success',      cfg.color_exito)
+  r.setProperty('--color-danger',       cfg.color_peligro)
+
+  // ── Variables rx-* para componentes de la página pública (modo claro) ──
+  // En modo oscuro el CSS las reemplaza con !important
   r.setProperty('--rx-primary',      cfg.color_primario)
   r.setProperty('--rx-psft',         cfg.color_primario_suave)
   r.setProperty('--rx-pglow',        cfg.color_primario + '33')
-  r.setProperty('--rx-bg',           cfg.color_fondo)
-  r.setProperty('--rx-bg2',          cfg.color_superficie2)
-  r.setProperty('--rx-glass',        'rgba(255,255,255,.80)')
-  r.setProperty('--rx-glass2',       cfg.color_superficie + 'EB')
   r.setProperty('--rx-surf',         cfg.color_superficie)
   r.setProperty('--rx-surf2',        cfg.color_superficie2)
+  r.setProperty('--rx-glass',        'rgba(255,255,255,.82)')
+  r.setProperty('--rx-glass2',       cfg.color_superficie + 'EB')
   r.setProperty('--rx-bdr',          cfg.color_borde)
   r.setProperty('--rx-bdr2',         cfg.color_primario)
   r.setProperty('--rx-bdr-soft',     cfg.color_primario + '40')
@@ -85,35 +100,15 @@ function aplicarTema(cfg: TenantConfigUI) {
   r.setProperty('--rx-acc',          cfg.color_acento)
   r.setProperty('--rx-ok',           cfg.color_exito)
   r.setProperty('--rx-err',          cfg.color_peligro)
-  r.setProperty('--rx-shadow',       '0 1px 3px rgba(44,44,40,.04), 0 4px 12px rgba(44,44,40,.05)')
-  r.setProperty('--rx-shadow-hover', '0 4px 24px rgba(44,44,40,.08), 0 12px 48px rgba(44,44,40,.06)')
   r.setProperty('--rx-grid-line',    cfg.color_primario + '10')
-  r.setProperty('--rx-orb1',         cfg.color_acento + '28')
-  r.setProperty('--rx-orb2',         cfg.color_primario + '1A')
-  r.setProperty('--rx-orb3',         cfg.color_exito + '12')
-
-  // ── Variables --color-* que también usan algunos componentes compartidos ──
-  r.setProperty('--color-primary',      cfg.color_primario)
-  r.setProperty('--color-primary-soft', cfg.color_primario_suave)
-  r.setProperty('--color-bg',           cfg.color_fondo)
-  r.setProperty('--color-surface',      cfg.color_superficie)
-  r.setProperty('--color-surface-2',    cfg.color_superficie2)
-  r.setProperty('--color-border',       cfg.color_borde)
-  r.setProperty('--color-ink',          cfg.color_texto)
-  r.setProperty('--color-ink-soft',     cfg.color_texto_suave)
-  r.setProperty('--color-accent',       cfg.color_acento)
-  r.setProperty('--color-success',      cfg.color_exito)
-  r.setProperty('--color-danger',       cfg.color_peligro)
-  r.setProperty('--color-primary-ink',  '#FFFFFF')
 }
 
 function limpiarTema() {
   const vars = [
-    '--rx-primary','--rx-psft','--rx-pglow','--rx-bg','--rx-bg2',
+    '--rx-primary','--rx-psft','--rx-pglow',
     '--rx-glass','--rx-glass2','--rx-surf','--rx-surf2',
     '--rx-bdr','--rx-bdr2','--rx-bdr-soft','--rx-ink','--rx-muted','--rx-muted2',
-    '--rx-acc','--rx-ok','--rx-err','--rx-shadow','--rx-shadow-hover',
-    '--rx-grid-line','--rx-orb1','--rx-orb2','--rx-orb3',
+    '--rx-acc','--rx-ok','--rx-err','--rx-grid-line',
     '--color-primary','--color-primary-soft','--color-bg','--color-surface',
     '--color-surface-2','--color-border','--color-ink','--color-ink-soft',
     '--color-accent','--color-success','--color-danger','--color-primary-ink',

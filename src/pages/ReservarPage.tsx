@@ -225,6 +225,12 @@ export function ReservarPage() {
         duracion: servicioElegido.duracion, fecha: fechaElegida,
         hora_inicio: horaElegida, hora_fin: horaFin,
         slug: tenant.slug,
+        color_primario:   tenant.configUI.color_primario,
+        color_acento:     tenant.configUI.color_acento,
+        color_fondo:      tenant.configUI.color_fondo,
+        color_superficie: tenant.configUI.color_superficie,
+        color_borde:      tenant.configUI.color_borde,
+        color_texto:      tenant.configUI.color_texto,
       }).then(res => {
         if (!res?.ok) setCorreoEnviado(false)
       }).catch(() => setCorreoEnviado(false))
@@ -318,10 +324,7 @@ export function ReservarPage() {
 
   return (
     <div className="rxp-shell">
-      {/* Orbes y grid decorativo */}
-      <div className="rxp-orb rxp-orb1"/>
-      <div className="rxp-orb rxp-orb2"/>
-      <div className="rxp-orb rxp-orb3"/>
+      {/* Grid decorativo */}
       <div className="rxp-grid"/>
 
       {/* ── Topbar glassmorphism ── */}

@@ -4,7 +4,7 @@ interface DatosCorreoReserva {
   token?: string
   id_agendamiento: number
   id_empresa?: number
-  id_sucursal?: number      // para resolver config de correo por sucursal
+  id_sucursal?: number
   nombre_cliente: string
   email: string
   telefono: string
@@ -15,6 +15,13 @@ interface DatosCorreoReserva {
   hora_inicio: string
   hora_fin: string
   slug?: string
+  // Colores de la empresa para el template del correo
+  color_primario?:   string
+  color_acento?:     string
+  color_fondo?:      string
+  color_superficie?: string
+  color_borde?:      string
+  color_texto?:      string
 }
 
 interface DatosCorreoCancelacion {

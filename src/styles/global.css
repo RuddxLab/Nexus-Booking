@@ -632,12 +632,12 @@ a { color: var(--color-ink); text-decoration: none; }
    Respetan data-theme claro/oscuro automáticamente
    ══════════════════════════════════════════════════════ */
 
-/* Modo CLARO (default) — paleta base idéntica al admin light (Sage & Cream) */
+/* Modo CLARO (default) — paleta base Sage & Cream (admin light) */
 :root {
-  --rx-bg:       #FAFAF5;
+  --rx-bg:       transparent;
   --rx-bg2:      #F0EDE4;
-  --rx-glass:    rgba(255,255,255,.80);
-  --rx-glass2:   rgba(250,250,245,.92);
+  --rx-glass:    rgba(255,255,255,.82);
+  --rx-glass2:   rgba(250,250,245,.94);
   --rx-surf:     #FFFFFF;
   --rx-surf2:    #F0EDE4;
   --rx-bdr:      #DDD9CE;
@@ -662,10 +662,10 @@ a { color: var(--color-ink); text-decoration: none; }
 
 /* Modo OSCURO — paleta idéntica al admin dark (Sage & Cream dark) */
 [data-theme="oscuro"], .tema-oscuro {
-  --rx-bg:       #1A1A17 !important;
+  --rx-bg:       transparent !important;
   --rx-bg2:      #2A2A27 !important;
-  --rx-glass:    rgba(34,34,32,.80) !important;
-  --rx-glass2:   rgba(26,26,23,.92) !important;
+  --rx-glass:    rgba(34,34,32,.88) !important;
+  --rx-glass2:   rgba(26,26,23,.94) !important;
   --rx-surf:     #222220 !important;
   --rx-surf2:    #2A2A27 !important;
   --rx-bdr:      #3A3A36 !important;
@@ -703,7 +703,6 @@ a { color: var(--color-ink); text-decoration: none; }
 /* ── Shell ── */
 .rxp-shell {
   height: 100dvh;
-  background: var(--rx-bg);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -712,18 +711,7 @@ a { color: var(--color-ink); text-decoration: none; }
   color: var(--rx-ink);
 }
 
-/* Orbes de fondo */
-.rxp-orb {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  filter: blur(70px);
-}
-.rxp-orb1 { width:320px;height:320px;background:var(--rx-orb1);top:-120px;right:-80px }
-.rxp-orb2 { width:200px;height:200px;background:var(--rx-orb2);bottom:-60px;left:-40px }
-.rxp-orb3 { width:160px;height:160px;background:var(--rx-orb3);top:40%;left:35% }
-
-/* Grid decorativo */
+/* Grid decorativo sutil */
 .rxp-grid {
   position: absolute;
   inset: 0;
