@@ -330,7 +330,7 @@ a { color: var(--color-ink); text-decoration: none; }
 .vista-switch button.activo, .vista-switch .activo { background: var(--color-surface); color: var(--color-ink); box-shadow: 0 1px 4px rgba(0,0,0,.10); }
 
 /* Table */
-.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .table th {
   text-align: left; color: var(--color-ink-soft); font-weight: 700;
   padding: 11px 16px; border-bottom: 1px solid rgba(0,0,0,.07);
