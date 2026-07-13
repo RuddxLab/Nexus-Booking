@@ -310,11 +310,18 @@ a { color: var(--color-ink); text-decoration: none; }
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
-/* Icono con transición */
+/* Icono con transición — soporta SVG y Tabler <i class="ti"> */
 .btn--icon    { display: inline-flex; align-items: center; gap: 8px; }
-.btn--icon svg { transition: transform .2s cubic-bezier(.34,1.56,.64,1); flex-shrink: 0; }
-.btn--icon:hover svg { transform: scale(1.2); }
-.btn--icon-only { display: inline-flex; align-items: center; justify-content: center; padding: 7px; width: 32px; height: 32px; }
+.btn--icon svg,
+.btn--icon i.ti { transition: transform .25s cubic-bezier(.34,1.56,.64,1); flex-shrink: 0; }
+.btn--icon:hover svg,
+.btn--icon:hover i.ti { transform: scale(1.2) rotate(-5deg); }
+.btn--icon-only { display: inline-flex; align-items: center; justify-content: center; padding: 7px; width: 34px; height: 34px; border-radius: var(--radius-sm); }
+.btn--icon-only:hover { transform: scale(1.1); }
+.btn--icon-only svg,
+.btn--icon-only i.ti { transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+.btn--icon-only:hover svg,
+.btn--icon-only:hover i.ti { transform: scale(1.15); }
 
 /* Vista switch */
 .vista-switch { display: inline-flex; background: color-mix(in srgb, var(--color-surface-2) 80%, transparent); border-radius: var(--radius-sm); padding: 3px; gap: 2px; border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent); }
