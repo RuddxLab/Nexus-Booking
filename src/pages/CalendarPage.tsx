@@ -46,20 +46,21 @@ export function CalendarPage() {
     return { desde: toISODate(mesGrilla[0]), hasta: toISODate(mesGrilla[41]) }
   }, [vista, dias, mesGrilla])
 
-  const cargarCitas = useCallback(async () => {
+  const cargarCitas = useCallback(async (overrideFiltroId?: number | null) => {
     if (!empresaId) return
     if (resetandoPrestador.current) return
     setCargando(true)
     try {
-      const filtroId = esPrestador ? idPrestador : idPrestadorFiltro
+      // Usar el override si se pasa explícitamente (al resetear sucursal)
+      const filtroId = overrideFiltroId !== undefined
+        ? overrideFiltroId
+        : (esPrestador ? idPrestador : idPrestadorFiltro)
 
-      // Si hay filtroId de prestador, SIEMPRE filtrar también por sucursal
-      // para evitar que citas de otro sucursal aparezcan al cambiar
       const [citas, bloqueados] = await Promise.all([
         listAgendamientosPorRango(rango.desde, rango.hasta, null, empresaId, sucursalId),
         listDiasBloqueadosPorRango(rango.desde, rango.hasta, filtroId, empresaId, sucursalId),
       ])
-      // Filtrar citas por prestador en frontend (ya vienen filtradas por sucursal)
+      // Filtrar por prestador en frontend (citas ya vienen filtradas por sucursal)
       const citasFiltradas = filtroId
         ? citas.filter(c => c.id_prestador === filtroId)
         : citas
@@ -102,7 +103,6 @@ export function CalendarPage() {
 
   useEffect(() => {
     if (!empresaId) return
-    // Marcar que estamos reseteando — cargarCitas ignorará el estado null intermedio
     resetandoPrestador.current = true
     setIdPrestadorFiltro(null)
     listPrestadoresPublico(empresaId)
@@ -111,15 +111,19 @@ export function CalendarPage() {
           ? data.filter(p => p.id_sucursal === sucursalId)
           : data
         setPrestadores(filtrados)
+        resetandoPrestador.current = false
         if (!esPrestador && filtrados.length > 0) {
-          // Setear el primer prestador — esto dispara cargarCitas con el valor correcto
-          resetandoPrestador.current = false
-          setIdPrestadorFiltro(filtrados[0].id_prestador)
+          const primero = filtrados[0].id_prestador
+          setIdPrestadorFiltro(primero)
+          // Pasar el id directamente para evitar race condition con el estado
+          cargarCitas(primero)
         } else {
-          resetandoPrestador.current = false
+          cargarCitas(null)
         }
       })
       .catch(() => { setPrestadores([]); resetandoPrestador.current = false })
+    serviciosService.listAll('nombre_servicio', empresaId, sucursalId ?? undefined)
+      .then(setServicios).catch(() => setServicios([]))
     serviciosService.listAll('nombre_servicio', empresaId, sucursalId ?? undefined)
       .then(setServicios).catch(() => setServicios([]))
   }, [empresaId, sucursalId]) // eslint-disable-line react-hooks/exhaustive-deps

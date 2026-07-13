@@ -3,7 +3,8 @@ const FUNCTIONS_URL = import.meta.env.VITE_SUPABASE_URL?.replace('.supabase.co',
 interface DatosCorreoReserva {
   token?: string
   id_agendamiento: number
-  id_empresa?: number      // para resolver la config de correo de la empresa
+  id_empresa?: number
+  id_sucursal?: number      // para resolver config de correo por sucursal
   nombre_cliente: string
   email: string
   telefono: string
@@ -17,7 +18,8 @@ interface DatosCorreoReserva {
 }
 
 interface DatosCorreoCancelacion {
-  id_empresa?: number      // para resolver la config de correo de la empresa
+  id_empresa?: number
+  id_sucursal?: number
   nombre_cliente: string
   email: string
   nombre_prestador: string

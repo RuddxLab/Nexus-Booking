@@ -102,7 +102,7 @@ export function AppointmentModal({
       if (email) {
         const prestador = prestadores.find(p => p.id_prestador === idPrestador)
         enviarCorreoReserva({
-          id_agendamiento: 0, id_empresa: idEmpresa,
+          id_agendamiento: 0, id_empresa: idEmpresa, id_sucursal: idSucursal,
           nombre_cliente: nombreCliente, email, telefono,
           nombre_prestador: prestador?.nombre_prestador ?? '',
           nombre_servicio: servicioSeleccionado?.nombre_servicio ?? '',
