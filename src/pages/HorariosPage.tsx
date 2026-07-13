@@ -4,7 +4,7 @@ import { prestadoresService } from '../services/entityServices'
 import { listHorariosPrestador, guardarDiaHorario, DiaHorarioForm } from '../services/horariosAdminService'
 import { useFiltroEmpresa } from '../hooks/useFiltroEmpresa'
 import { SelectorFiltro } from '../components/Common/SelectorFiltro'
-import { IconHorario } from '../components/Common/icons'
+import { IconHorario, IconGuardar } from '../components/Common/icons'
 import type { Prestador } from '../types'
 
 const DIAS = [
