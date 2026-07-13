@@ -3,6 +3,7 @@ import { supabase } from '../services/supabaseClient'
 import { useFiltroEmpresa } from '../hooks/useFiltroEmpresa'
 import { SelectorFiltro } from '../components/Common/SelectorFiltro'
 import { PageHeader } from '../components/Common/PageHeader'
+import { IconGuardar, IconCorreo } from '../components/Common/icons'
 
 type Proveedor = 'brevo' | 'smtp'
 
@@ -352,11 +353,11 @@ export function CorreoConfigPage() {
         )}
 
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn--primary" onClick={guardar} disabled={guardando}>
-            {guardando ? 'Guardando…' : 'Guardar configuración'}
+          <button className="btn btn--primary btn--icon" onClick={guardar} disabled={guardando}>
+            <IconGuardar /> {guardando ? 'Guardando…' : 'Guardar configuración'}
           </button>
-          <button className="btn btn--ghost" onClick={probarConexion} disabled={probando || !config.from_email}>
-            {probando ? 'Enviando…' : 'Enviar correo de prueba'}
+          <button className="btn btn--ghost btn--icon" onClick={probarConexion} disabled={probando || !config.from_email}>
+            <IconCorreo /> {probando ? 'Enviando…' : 'Enviar correo de prueba'}
           </button>
         </div>
       </>)}

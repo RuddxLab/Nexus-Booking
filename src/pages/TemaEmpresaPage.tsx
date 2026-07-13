@@ -4,6 +4,7 @@ import { useFiltroEmpresa } from '../hooks/useFiltroEmpresa'
 import { PageHeader } from '../components/Common/PageHeader'
 import { CONFIG_UI_DEFAULTS, type TenantConfigUI } from '../context/TenantContext'
 import { ADMIN_CONFIG_DEFAULTS, type AdminConfigUI, useAdminTheme } from '../context/AdminThemeContext'
+import { IconGuardar } from '../components/Common/icons'
 
 // ── Campos editables ──────────────────────────────────────────────────────────
 
@@ -247,7 +248,7 @@ export function TemaEmpresaPage() {
       <PageHeader titulo="Tema visual">
         <button className="btn btn--ghost" onClick={resetear}>Restaurar</button>
         <button className={`btn ${guardado ? 'btn--ghost' : 'btn--primary'} btn--icon`} onClick={guardar} disabled={guardando}>
-          {guardando ? 'Guardando…' : guardado ? '✓ Guardado' : 'Guardar cambios'}
+          {guardando ? 'Guardando…' : guardado ? '✓ Guardado' : <><IconGuardar /> Guardar cambios</>}
         </button>
       </PageHeader>
 

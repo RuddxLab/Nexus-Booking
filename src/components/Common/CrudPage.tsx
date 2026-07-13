@@ -2,7 +2,7 @@ import { useEffect, useState, ReactNode, Fragment } from 'react'
 import { Modal } from './Modal'
 import { PageHeader } from './PageHeader'
 import { SelectorFiltro } from './SelectorFiltro'
-import { IconEditar, IconEliminar, IconNuevo, IconBuscar } from './icons'
+import { IconEditar, IconEliminar, IconNuevo, IconBuscar, IconCSV, IconGuardar } from './icons'
 import { REGIONES, REGIONES_COMUNAS } from '../../data/chileRegionesComunas'
 import { formatearRut, limpiarRut, validarRut, validarEmail, EJEMPLO_RUT } from '../../utils/validators'
 import { PAISES_TELEFONO, separarTelefono, armarTelefono, validarTelefono } from '../../data/paisesTelefono'
@@ -268,7 +268,7 @@ export function CrudPage<T extends Record<string, any>>({
           disabled={filasVisibles.length === 0}
           style={{ opacity: filasVisibles.length === 0 ? 0.4 : 1 }}
         >
-          ↓ CSV
+          <IconCSV /> CSV
         </button>
       </PageHeader>
 
@@ -526,7 +526,7 @@ export function CrudPage<T extends Record<string, any>>({
           </div>
           {error && <div className="error-text">{error}</div>}
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <button className="btn btn--primary" onClick={guardar}>Guardar</button>
+            <button className="btn btn--primary btn--icon" onClick={guardar}><IconGuardar /> Guardar</button>
             <button className="btn btn--ghost" onClick={() => setEditando(null)}>Cancelar</button>
           </div>
         </Modal>

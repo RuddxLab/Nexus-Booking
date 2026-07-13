@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../services/supabaseClient'
 import { PageHeader } from '../components/Common/PageHeader'
 import type { NombreRol } from '../hooks/useUserRole'
+import { IconInvitar, IconGuardar } from '../components/Common/icons'
 
 const FUNCTIONS_URL = (import.meta.env.VITE_SUPABASE_URL as string)
   ?.replace('.supabase.co', '.supabase.co/functions/v1') ?? ''
@@ -201,8 +202,8 @@ export function UsuariosPage() {
   return (
     <div className="main">
       <PageHeader titulo="Usuarios">
-        <button className="btn btn--primary" onClick={abrirModalInvitar}>
-          + Invitar usuario
+        <button className="btn btn--primary btn--icon" onClick={abrirModalInvitar}>
+          <IconInvitar /> Invitar usuario
         </button>
       </PageHeader>
 

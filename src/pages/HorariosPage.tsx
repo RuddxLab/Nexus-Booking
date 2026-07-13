@@ -4,6 +4,7 @@ import { prestadoresService } from '../services/entityServices'
 import { listHorariosPrestador, guardarDiaHorario, DiaHorarioForm } from '../services/horariosAdminService'
 import { useFiltroEmpresa } from '../hooks/useFiltroEmpresa'
 import { SelectorFiltro } from '../components/Common/SelectorFiltro'
+import { IconHorario } from '../components/Common/icons'
 import type { Prestador } from '../types'
 
 const DIAS = [
@@ -238,8 +239,8 @@ export function HorariosPage() {
 
       {mensaje && <p style={{ color: 'var(--color-success)', marginTop: 12 }}>{mensaje}</p>}
 
-      <button className="btn btn--primary" style={{ marginTop: 16 }} disabled={guardando || cargando} onClick={guardarTodo}>
-        {guardando ? 'Guardando…' : 'Guardar horario'}
+      <button className="btn btn--primary btn--icon" style={{ marginTop: 16 }} disabled={guardando || cargando} onClick={guardarTodo}>
+        <IconHorario /> {guardando ? 'Guardando…' : 'Guardar horario'}
       </button>
     </div>
   )
