@@ -632,60 +632,60 @@ a { color: var(--color-ink); text-decoration: none; }
    Respetan data-theme claro/oscuro automáticamente
    ══════════════════════════════════════════════════════ */
 
-/* Modo CLARO (default) */
+/* Modo CLARO (default) — paleta base idéntica al admin light (Sage & Cream) */
 :root {
-  --rx-bg:       var(--color-bg);
-  --rx-bg2:      var(--color-surface-2);
-  --rx-glass:    rgba(255,255,255,.72);
-  --rx-glass2:   rgba(250,246,240,.90);
-  --rx-surf:     var(--color-surface);
-  --rx-surf2:    var(--color-surface-2);
-  --rx-bdr:      var(--color-border);
-  --rx-bdr2:     var(--color-primary);
-  --rx-bdr-soft: rgba(138,146,120,.25);
-  --rx-ink:      var(--color-ink);
-  --rx-muted:    var(--color-ink-soft);
-  --rx-muted2:   #B5A898;
-  --rx-primary:  var(--color-primary);
-  --rx-psft:     var(--color-primary-soft);
-  --rx-pglow:    rgba(138,146,120,.2);
-  --rx-acc:      var(--color-accent);
-  --rx-ok:       var(--color-success);
-  --rx-err:      var(--color-danger);
-  --rx-shadow:   0 1px 4px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.06);
-  --rx-shadow-hover: 0 6px 24px rgba(138,146,120,.18);
-  --rx-grid-line: rgba(138,146,120,.06);
+  --rx-bg:       #FAFAF5;
+  --rx-bg2:      #F0EDE4;
+  --rx-glass:    rgba(255,255,255,.80);
+  --rx-glass2:   rgba(250,250,245,.92);
+  --rx-surf:     #FFFFFF;
+  --rx-surf2:    #F0EDE4;
+  --rx-bdr:      #DDD9CE;
+  --rx-bdr2:     #6B7A5E;
+  --rx-bdr-soft: rgba(107,122,94,.25);
+  --rx-ink:      #2C2C28;
+  --rx-muted:    #7A776E;
+  --rx-muted2:   #A8A49C;
+  --rx-primary:  #6B7A5E;
+  --rx-psft:     rgba(107,122,94,.10);
+  --rx-pglow:    rgba(107,122,94,.20);
+  --rx-acc:      #C8A46A;
+  --rx-ok:       #4A8B62;
+  --rx-err:      #C0453E;
+  --rx-shadow:   0 1px 3px rgba(44,44,40,.04), 0 4px 12px rgba(44,44,40,.05);
+  --rx-shadow-hover: 0 4px 24px rgba(44,44,40,.08), 0 12px 48px rgba(44,44,40,.06);
+  --rx-grid-line: rgba(107,122,94,.06);
   --rx-orb1:     rgba(200,164,106,.16);
-  --rx-orb2:     rgba(138,146,120,.10);
-  --rx-orb3:     rgba(74,124,89,.07);
+  --rx-orb2:     rgba(107,122,94,.10);
+  --rx-orb3:     rgba(74,139,98,.07);
 }
 
-/* Modo OSCURO — usa .tema-oscuro para ganar sobre inline styles del tenant */
+/* Modo OSCURO — paleta idéntica al admin dark (Sage & Cream dark) */
 [data-theme="oscuro"], .tema-oscuro {
-  --rx-bg:       #09090f !important;
-  --rx-bg2:      #111410 !important;
-  --rx-glass:    rgba(18,22,16,.75) !important;
-  --rx-glass2:   rgba(14,17,12,.88) !important;
-  --rx-surf:     rgba(255,255,255,.04) !important;
-  --rx-surf2:    rgba(255,255,255,.07) !important;
-  --rx-bdr:      rgba(255,255,255,.08) !important;
-  --rx-bdr2:     rgba(138,146,120,.5) !important;
-  --rx-bdr-soft: rgba(138,146,120,.25) !important;
-  --rx-ink:      #e8ede4 !important;
-  --rx-muted:    #7a8a72 !important;
-  --rx-muted2:   #4a5a42 !important;
+  --rx-bg:       #1A1A17 !important;
+  --rx-bg2:      #2A2A27 !important;
+  --rx-glass:    rgba(34,34,32,.80) !important;
+  --rx-glass2:   rgba(26,26,23,.92) !important;
+  --rx-surf:     #222220 !important;
+  --rx-surf2:    #2A2A27 !important;
+  --rx-bdr:      #3A3A36 !important;
+  --rx-bdr2:     rgba(138,146,120,.50) !important;
+  --rx-bdr-soft: rgba(138,146,120,.20) !important;
+  --rx-ink:      #F0EDE4 !important;
+  --rx-muted:    #9A978E !important;
+  --rx-muted2:   #6A6860 !important;
   --rx-primary:  #8A9278 !important;
-  --rx-psft:     rgba(138,146,120,.15) !important;
+  --rx-psft:     rgba(138,146,120,.12) !important;
   --rx-pglow:    rgba(138,146,120,.25) !important;
   --rx-acc:      #C8A46A !important;
-  --rx-ok:       #5a9e72 !important;
-  --rx-err:      #b05a4a !important;
-  --rx-shadow:   0 1px 4px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25) !important;
-  --rx-shadow-hover: 0 8px 28px rgba(0,0,0,.4) !important;
+  --rx-ok:       #5BA87A !important;
+  --rx-err:      #E5584F !important;
+  --rx-shadow:   0 1px 3px rgba(0,0,0,.20), 0 4px 12px rgba(0,0,0,.15) !important;
+  --rx-shadow-hover: 0 4px 24px rgba(0,0,0,.25), 0 12px 48px rgba(0,0,0,.20) !important;
   --rx-grid-line: rgba(138,146,120,.04) !important;
-  --rx-orb1:     rgba(200,164,106,.14) !important;
-  --rx-orb2:     rgba(138,146,120,.10) !important;
-  --rx-orb3:     rgba(74,124,89,.07) !important;
+  --rx-orb1:     rgba(200,164,106,.10) !important;
+  --rx-orb2:     rgba(138,146,120,.07) !important;
+  --rx-orb3:     rgba(91,168,122,.05) !important;
 }
 
 /* ── Keyframes premium ── */

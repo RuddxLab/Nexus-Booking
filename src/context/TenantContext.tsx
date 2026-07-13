@@ -18,17 +18,17 @@ export interface TenantConfigUI {
 }
 
 export const CONFIG_UI_DEFAULTS: TenantConfigUI = {
-  color_primario:       '#8A9278',
-  color_primario_suave: '#8A927820',
-  color_fondo:          '#F5EFE8',
+  color_primario:       '#6B7A5E',
+  color_primario_suave: 'rgba(107,122,94,0.10)',
+  color_fondo:          '#FAFAF5',
   color_superficie:     '#FFFFFF',
-  color_superficie2:    '#F0EAE2',
-  color_borde:          '#E8E0D5',
-  color_texto:          '#2C2416',
-  color_texto_suave:    '#8A7E6E',
+  color_superficie2:    '#F0EDE4',
+  color_borde:          '#DDD9CE',
+  color_texto:          '#2C2C28',
+  color_texto_suave:    '#7A776E',
   color_acento:         '#C8A46A',
-  color_exito:          '#4A7C59',
-  color_peligro:        '#C0392B',
+  color_exito:          '#4A8B62',
+  color_peligro:        '#C0453E',
   font_display:         'Space Grotesk',
   font_body:            'Inter',
 }
@@ -59,20 +59,21 @@ const TenantContext = createContext<TenantCtx>({
 })
 
 /**
- * Aplica el config_ui como variables --rx-* en modo CLARO solamente.
- * El modo oscuro lo maneja CSS puro via [data-theme="oscuro"].
- * Las variables --color-* del admin NO se tocan aquí.
+ * Aplica el config_ui de la empresa como variables CSS en modo CLARO.
+ * El modo oscuro usa los colores del admin dark vía CSS con !important,
+ * por lo que estas variables son ignoradas en ese modo.
  */
 function aplicarTema(cfg: TenantConfigUI) {
   const r = document.documentElement.style
 
+  // ── Variables rx-* usadas por la página de reservas ──
   r.setProperty('--rx-primary',      cfg.color_primario)
   r.setProperty('--rx-psft',         cfg.color_primario_suave)
   r.setProperty('--rx-pglow',        cfg.color_primario + '33')
   r.setProperty('--rx-bg',           cfg.color_fondo)
   r.setProperty('--rx-bg2',          cfg.color_superficie2)
-  r.setProperty('--rx-glass',        'rgba(255,255,255,.72)')
-  r.setProperty('--rx-glass2',       cfg.color_superficie + 'E6')
+  r.setProperty('--rx-glass',        'rgba(255,255,255,.80)')
+  r.setProperty('--rx-glass2',       cfg.color_superficie + 'EB')
   r.setProperty('--rx-surf',         cfg.color_superficie)
   r.setProperty('--rx-surf2',        cfg.color_superficie2)
   r.setProperty('--rx-bdr',          cfg.color_borde)
@@ -84,9 +85,14 @@ function aplicarTema(cfg: TenantConfigUI) {
   r.setProperty('--rx-acc',          cfg.color_acento)
   r.setProperty('--rx-ok',           cfg.color_exito)
   r.setProperty('--rx-err',          cfg.color_peligro)
-  r.setProperty('--rx-shadow',       '0 1px 4px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.06)')
-  r.setProperty('--rx-shadow-hover', '0 6px 24px ' + cfg.color_primario + '30')
+  r.setProperty('--rx-shadow',       '0 1px 3px rgba(44,44,40,.04), 0 4px 12px rgba(44,44,40,.05)')
+  r.setProperty('--rx-shadow-hover', '0 4px 24px rgba(44,44,40,.08), 0 12px 48px rgba(44,44,40,.06)')
+  r.setProperty('--rx-grid-line',    cfg.color_primario + '10')
+  r.setProperty('--rx-orb1',         cfg.color_acento + '28')
+  r.setProperty('--rx-orb2',         cfg.color_primario + '1A')
+  r.setProperty('--rx-orb3',         cfg.color_exito + '12')
 
+  // ── Variables --color-* que también usan algunos componentes compartidos ──
   r.setProperty('--color-primary',      cfg.color_primario)
   r.setProperty('--color-primary-soft', cfg.color_primario_suave)
   r.setProperty('--color-bg',           cfg.color_fondo)
@@ -107,6 +113,7 @@ function limpiarTema() {
     '--rx-glass','--rx-glass2','--rx-surf','--rx-surf2',
     '--rx-bdr','--rx-bdr2','--rx-bdr-soft','--rx-ink','--rx-muted','--rx-muted2',
     '--rx-acc','--rx-ok','--rx-err','--rx-shadow','--rx-shadow-hover',
+    '--rx-grid-line','--rx-orb1','--rx-orb2','--rx-orb3',
     '--color-primary','--color-primary-soft','--color-bg','--color-surface',
     '--color-surface-2','--color-border','--color-ink','--color-ink-soft',
     '--color-accent','--color-success','--color-danger','--color-primary-ink',
