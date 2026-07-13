@@ -2,12 +2,12 @@
 // Usan currentColor para heredar el color del botón que los contiene.
 
 const base = {
-  width: 16,
-  height: 16,
+  width: 17,
+  height: 17,
   viewBox: '0 0 24 24',
   fill: 'none' as const,
   stroke: 'currentColor',
-  strokeWidth: 2,
+  strokeWidth: 2.2,
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const
 }

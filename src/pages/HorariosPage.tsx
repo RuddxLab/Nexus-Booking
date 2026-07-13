@@ -192,8 +192,8 @@ export function HorariosPage() {
             </span>
           </div>
         </div>
-        <button className="btn btn--primary" onClick={guardarConfig} disabled={guardandoCfg}>
-          {guardandoCfg ? 'Guardando…' : 'Guardar configuración'}
+        <button className="btn btn--primary btn--icon" onClick={guardarConfig} disabled={guardandoCfg}>
+          <IconGuardar /> {guardandoCfg ? 'Guardando…' : 'Guardar configuración'}
         </button>
       </div>
 

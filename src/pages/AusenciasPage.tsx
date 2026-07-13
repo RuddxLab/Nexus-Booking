@@ -8,6 +8,7 @@ import {
 import { useFiltroEmpresa } from '../hooks/useFiltroEmpresa'
 import { SelectorFiltro } from '../components/Common/SelectorFiltro'
 import type { Prestador, PrestadorAusencia, DiaBloqueado } from '../types'
+import { IconAgregar, IconGuardar } from '../components/Common/icons'
 
 const DIAS_SEMANA = [
   { valor: 'LUNES',     label: 'Lunes' },
@@ -183,8 +184,8 @@ export function AusenciasPage() {
                 <label>Hasta</label>
                 <input type="time" value={nuevoAusenciaFin} onChange={e => setNuevoAusenciaFin(e.target.value)} />
               </div>
-              <button className="btn btn--primary" onClick={handleAgregarAusencia} disabled={guardando}>
-                + Agregar
+              <button className="btn btn--primary btn--icon" onClick={handleAgregarAusencia} disabled={guardando}>
+                <IconAgregar /> Agregar
               </button>
             </div>
           </div>
@@ -276,8 +277,8 @@ export function AusenciasPage() {
                   </div>
                 </>
               )}
-              <button className="btn btn--primary" onClick={handleAgregarBloqueado} disabled={guardando}>
-                + Agregar
+              <button className="btn btn--primary btn--icon" onClick={handleAgregarBloqueado} disabled={guardando}>
+                <IconAgregar /> Agregar
               </button>
             </div>
           </div>
