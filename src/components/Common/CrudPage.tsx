@@ -258,9 +258,38 @@ export function CrudPage<T extends Record<string, any>>({
   return (
     <div className="main">
       <PageHeader titulo={titulo}>
-        <button className="btn btn--primary btn--icon" onClick={abrirNuevo} title="Nuevo registro">
-          <IconNuevo /> Nuevo
-        </button>
+        {campoFecha && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-ink-soft)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+              Fecha:
+            </span>
+            <input
+              type="date"
+              value={fechaDesde}
+              onChange={e => setFechaDesde(e.target.value)}
+              title="Desde"
+              style={{ ...SEL_STYLE, minWidth: 'auto', fontSize: 12, padding: '5px 8px' }}
+            />
+            <span style={{ fontSize: 11, color: 'var(--color-ink-soft)' }}>—</span>
+            <input
+              type="date"
+              value={fechaHasta}
+              onChange={e => setFechaHasta(e.target.value)}
+              title="Hasta"
+              style={{ ...SEL_STYLE, minWidth: 'auto', fontSize: 12, padding: '5px 8px' }}
+            />
+            {(fechaDesde || fechaHasta) && (
+              <button
+                className="btn btn--ghost"
+                onClick={() => { setFechaDesde(''); setFechaHasta('') }}
+                style={{ fontSize: 11, padding: '4px 8px' }}
+                title="Limpiar filtro de fechas"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        )}
         <button
           className="btn btn--ghost btn--icon"
           onClick={descargarCSV}
@@ -269,6 +298,9 @@ export function CrudPage<T extends Record<string, any>>({
           style={{ opacity: filasVisibles.length === 0 ? 0.4 : 1 }}
         >
           <IconCSV /> CSV
+        </button>
+        <button className="btn btn--primary btn--icon" onClick={abrirNuevo} title="Nuevo registro">
+          <IconNuevo /> Nuevo
         </button>
       </PageHeader>
 
@@ -284,44 +316,6 @@ export function CrudPage<T extends Record<string, any>>({
         onSucursalChange={setSucursalId}
         mostrarSucursal={filtrarPorSucursal}
       />
-
-      {campoFecha && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-ink-soft)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Fecha creación:
-          </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <label style={{ fontSize: 12, color: 'var(--color-ink-soft)' }}>Desde</label>
-            <input
-              type="date"
-              value={fechaDesde}
-              onChange={e => setFechaDesde(e.target.value)}
-              style={{ ...SEL_STYLE, minWidth: 'auto', fontSize: 12, padding: '5px 8px' }}
-            />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <label style={{ fontSize: 12, color: 'var(--color-ink-soft)' }}>Hasta</label>
-            <input
-              type="date"
-              value={fechaHasta}
-              onChange={e => setFechaHasta(e.target.value)}
-              style={{ ...SEL_STYLE, minWidth: 'auto', fontSize: 12, padding: '5px 8px' }}
-            />
-          </div>
-          {(fechaDesde || fechaHasta) && (
-            <button
-              className="btn btn--ghost"
-              onClick={() => { setFechaDesde(''); setFechaHasta('') }}
-              style={{ fontSize: 11, padding: '4px 10px' }}
-            >
-              Limpiar
-            </button>
-          )}
-          <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', marginLeft: 4 }}>
-            {filasVisibles.length} registro{filasVisibles.length !== 1 ? 's' : ''}
-          </span>
-        </div>
-      )}
 
       {busqueda && (
         <div className="field" style={{ maxWidth: 360, marginBottom: 16 }}>

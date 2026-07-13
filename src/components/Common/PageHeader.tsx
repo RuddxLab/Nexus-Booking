@@ -12,7 +12,11 @@ export function PageHeader({ titulo, children }: Props) {
         <h1 className="page-header__title">{titulo}</h1>
         <div className="page-header__eyebrow">Nexus Booking · Admin Core</div>
       </div>
-      {children}
+      {children && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {children}
+        </div>
+      )}
     </div>
   )
 }
