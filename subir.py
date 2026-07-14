@@ -54,15 +54,25 @@ IGNORAR_SCAN = re.compile(r"(^|/)(subir\.py|subir_v\d+\.py|\.env\.example)$")
 
 
 def run(args, check=True, quiet=False):
-    """Ejecuta git sin shell=True (evita sorpresas con la ruta que tiene espacios)."""
+    """Ejecuta git sin shell=True (la ruta tiene espacios).
+
+    encoding/errors explícitos: sin esto, Python usa la codificación del
+    sistema (cp1252 en Windows) y revienta con UnicodeDecodeError al leer
+    archivos UTF-8 con acentos o emojis.
+    """
     if not quiet:
         print(f"  $ {' '.join(args)}")
-    r = subprocess.run(args, capture_output=True, text=True, cwd=RUTA_PROYECTO)
+    r = subprocess.run(
+        args, capture_output=True, cwd=RUTA_PROYECTO,
+        encoding="utf-8", errors="replace",
+    )
+    out = r.stdout or ""
+    err = r.stderr or ""
     if not quiet:
-        if r.stdout.strip():
-            print("    " + r.stdout.strip().replace("\n", "\n    "))
-        if r.stderr.strip():
-            print("    " + r.stderr.strip().replace("\n", "\n    "))
+        if out.strip():
+            print("    " + out.strip().replace("\n", "\n    "))
+        if err.strip():
+            print("    " + err.strip().replace("\n", "\n    "))
     if check and r.returncode != 0:
         print(f"\n❌ Falló: {' '.join(args)}")
         sys.exit(1)
@@ -107,12 +117,18 @@ def escanear_secretos(archivos):
         if IGNORAR_SCAN.search(f):
             continue
 
-        r = run(["git", "show", f":{f}"], check=False, quiet=True)
-        if r.returncode != 0:
-            continue  # borrado o binario
-        contenido = r.stdout
-        if "\0" in contenido[:1024]:
+        # Leemos BYTES a propósito: el contenido stageado puede tener
+        # cualquier codificación. Decodificar antes de saber si es binario
+        # es justo lo que rompía en Windows.
+        raw = subprocess.run(
+            ["git", "show", f":{f}"], capture_output=True, cwd=RUTA_PROYECTO
+        )
+        if raw.returncode != 0 or not raw.stdout:
+            continue  # borrado, vacío o submódulo
+        datos = raw.stdout
+        if b"\0" in datos[:1024]:
             continue  # binario
+        contenido = datos.decode("utf-8", errors="replace")
 
         for etiqueta, patron in PATRONES_SECRETOS:
             m = patron.search(contenido)

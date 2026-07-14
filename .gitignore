@@ -8,6 +8,7 @@ dist/
 dist-ssr/
 build/
 *.local
+*.tsbuildinfo
 
 # ── Variables de entorno ──────────────────────
 # .env NUNCA se versiona. Solo .env.example (con placeholders).
