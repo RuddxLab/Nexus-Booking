@@ -183,10 +183,27 @@ export function CrudPage<T extends Record<string, any>>({
 
   function abrirNuevo() {
     setError(null)
-    // Prerellenar empresa y sucursal del filtro actual
+    // Prerellenar empresa y sucursal del filtro actual.
+    //
+    // Dos guardas, cada una por un motivo distinto:
+    //
+    // 1) idKey !== 'id_*' — NUNCA inyectar la PK de la propia tabla. CrudPage
+    //    usa editando[idKey] para distinguir alta de edición (ver guardar()),
+    //    el título del modal y el filtro de campos soloEdicion. Inyectarla
+    //    convertía un "Nuevo" en un UPDATE silencioso de la fila filtrada:
+    //    pasaba en EmpresasPage (idKey='id_empresa') y SucursalesPage
+    //    (idKey='id_sucursal').
+    //
+    // 2) filtrarPorSucursal — hay tablas sin columna id_sucursal (empresas,
+    //    clientes). Inyectarla ahí reventaba con
+    //    "Could not find the 'id_sucursal' column ... in the schema cache".
     const extra: any = {}
-    if (empresaId) extra.id_empresa  = empresaId
-    if (sucursalId) extra.id_sucursal = sucursalId
+    if (empresaId && idKey !== 'id_empresa') {
+      extra.id_empresa = empresaId
+    }
+    if (sucursalId && idKey !== 'id_sucursal' && filtrarPorSucursal) {
+      extra.id_sucursal = sucursalId
+    }
     setEditando({ ...(defaults ?? {}), ...extra } as Partial<T>)
   }
 
