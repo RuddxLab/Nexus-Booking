@@ -7,7 +7,7 @@ import {
   ALTO_HORA_PX
 } from '../../utils/calendarUtils'
 import { diaISO } from '../../utils/disponibilidad'
-import { AppointmentBlock } from './AppointmentBlock'
+import { AppointmentBlock, asignarColumnas } from './AppointmentBlock'
 
 const DEFAULT_HORA_INICIO = 8
 const DEFAULT_HORA_FIN    = 20
@@ -256,12 +256,14 @@ export function WeekView({
                     <BloqueAusencia key={i} bloque={b} horaInicioDia={horaInicio} />
                   ))}
 
-                  {/* Citas encima */}
-                  {citas.map(cita => (
+                  {/* Citas con columnas anti-solapamiento */}
+                  {asignarColumnas(citas).map(({ cita, col, totalCols }) => (
                     <AppointmentBlock
                       key={cita.id_agendamiento}
                       cita={cita}
                       horaInicioDia={horaInicio}
+                      col={col}
+                      totalCols={totalCols}
                       onClick={onCitaClick}
                     />
                   ))}
