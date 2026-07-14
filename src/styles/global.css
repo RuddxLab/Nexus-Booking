@@ -711,16 +711,7 @@ a { color: var(--color-ink); text-decoration: none; }
   color: var(--rx-ink);
 }
 
-/* Grid decorativo sutil */
-.rxp-grid {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(var(--rx-grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--rx-grid-line) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
+
 
 /* ── Topbar glassmorphism ── */
 .rxp-topbar {

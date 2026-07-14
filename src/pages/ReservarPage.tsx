@@ -324,8 +324,6 @@ export function ReservarPage() {
 
   return (
     <div className="rxp-shell">
-      {/* Grid decorativo */}
-      <div className="rxp-grid"/>
 
       {/* ── Topbar glassmorphism ── */}
       <div className="rxp-topbar">

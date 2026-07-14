@@ -47,25 +47,71 @@ const GRUPOS = ['Marca', 'Superficies', 'Tipografía', 'Estados']
 
 // ── Paletas ───────────────────────────────────────────────────────────────────
 
-interface Paleta<T> { nombre: string; emoji: string; config: Partial<T> }
+interface Paleta<T> { nombre: string; emoji: string; seccion: string; config: Partial<T> }
 
 const PALETAS_PUBLICO: Paleta<TenantConfigUI>[] = [
-  { nombre: 'Sage & Cream',  emoji: '🌿', config: { color_primario:'#8A9278', color_primario_suave:'#8A927820', color_fondo:'#F5EFE8', color_superficie:'#FFFFFF', color_superficie2:'#F0EAE2', color_borde:'#E8E0D5', color_texto:'#2C2416', color_texto_suave:'#8A7E6E', color_acento:'#C8A46A', color_exito:'#4A7C59', color_peligro:'#C0392B' }},
-  { nombre: 'Índigo',        emoji: '💙', config: { color_primario:'#4F46E5', color_primario_suave:'#4F46E520', color_fondo:'#F5F3FF', color_superficie:'#FFFFFF', color_superficie2:'#EDE9FE', color_borde:'#DDD6FE', color_texto:'#1E1B4B', color_texto_suave:'#6D28D9', color_acento:'#EC4899', color_exito:'#059669', color_peligro:'#DC2626' }},
-  { nombre: 'Blush',         emoji: '🌸', config: { color_primario:'#C4687A', color_primario_suave:'#C4687A18', color_fondo:'#FFF8F8', color_superficie:'#FFFFFF', color_superficie2:'#FFF0F2', color_borde:'#F9D0D7', color_texto:'#2A1018', color_texto_suave:'#9B5967', color_acento:'#D4A574', color_exito:'#4A7C59', color_peligro:'#B91C1C' }},
-  { nombre: 'Midnight',      emoji: '🌃', config: { color_primario:'#7C3AED', color_primario_suave:'#7C3AED18', color_fondo:'#0D0D14', color_superficie:'#16161F', color_superficie2:'#1E1E2C', color_borde:'#2A2A3D', color_texto:'#EDEDF5', color_texto_suave:'#9090B0', color_acento:'#F59E0B', color_exito:'#22C55E', color_peligro:'#EF4444' }},
-  { nombre: 'Copper',        emoji: '🥉', config: { color_primario:'#B5651D', color_primario_suave:'#B5651D18', color_fondo:'#FDFAF6', color_superficie:'#FFFFFF', color_superficie2:'#F7F0E8', color_borde:'#EAD9C5', color_texto:'#2C1A08', color_texto_suave:'#8C6840', color_acento:'#6B8F71', color_exito:'#4A7C59', color_peligro:'#C0392B' }},
-  { nombre: 'Arctic',        emoji: '🧊', config: { color_primario:'#0891B2', color_primario_suave:'#0891B218', color_fondo:'#F0FAFB', color_superficie:'#FFFFFF', color_superficie2:'#E0F5F8', color_borde:'#BAE8F0', color_texto:'#0C2D35', color_texto_suave:'#3F7A87', color_acento:'#F97316', color_exito:'#16A34A', color_peligro:'#DC2626' }},
+  // ── Barberías ────────────────────────────────────────────────────────────
+  {
+    nombre: 'Cuero Clásico',
+    emoji: '💈',
+    seccion: 'Barberías',
+    config: { color_primario:'#D4A373', color_primario_suave:'#D4A37320', color_fondo:'#FDFBF7', color_superficie:'#FFFFFF', color_superficie2:'#F5F1EA', color_borde:'#E8DED0', color_texto:'#1E1A17', color_texto_suave:'#4A5759', color_acento:'#D4A373', color_exito:'#4A7C59', color_peligro:'#C0392B' },
+  },
+  {
+    nombre: 'Cyber Obsidiana',
+    emoji: '⚡',
+    seccion: 'Barberías',
+    config: { color_primario:'#66FCF1', color_primario_suave:'#66FCF120', color_fondo:'#0B0C10', color_superficie:'#1F2833', color_superficie2:'#151920', color_borde:'#2E3A46', color_texto:'#FFFFFF', color_texto_suave:'#A0AEB8', color_acento:'#66FCF1', color_exito:'#45A049', color_peligro:'#EF4444' },
+  },
+  {
+    nombre: 'Bosque Ejecutivo',
+    emoji: '♟️',
+    seccion: 'Barberías',
+    config: { color_primario:'#D4AF37', color_primario_suave:'#D4AF3720', color_fondo:'#111E15', color_superficie:'#1A2B1E', color_superficie2:'#162019', color_borde:'#2A3D2E', color_texto:'#FAF6F0', color_texto_suave:'#8FA896', color_acento:'#D4AF37', color_exito:'#3E9B5E', color_peligro:'#E05252' },
+  },
+  // ── Salones & Estética ───────────────────────────────────────────────────
+  {
+    nombre: 'Rose Gold',
+    emoji: '🌹',
+    seccion: 'Salones & Estética',
+    config: { color_primario:'#C4848A', color_primario_suave:'#C4848A18', color_fondo:'#FFF8F6', color_superficie:'#FFFFFF', color_superficie2:'#FFF0EE', color_borde:'#D4A5A5', color_texto:'#2B1B17', color_texto_suave:'#8A5E62', color_acento:'#E5B3B3', color_exito:'#4A7C59', color_peligro:'#B91C1C' },
+  },
+  {
+    nombre: 'Esmeralda Orgánico',
+    emoji: '🌿',
+    seccion: 'Salones & Estética',
+    config: { color_primario:'#0A231C', color_primario_suave:'#0A231C18', color_fondo:'#FAF8F5', color_superficie:'#FFFFFF', color_superficie2:'#F2EEE8', color_borde:'#D9C9B0', color_texto:'#0A231C', color_texto_suave:'#1E352F', color_acento:'#D9B48F', color_exito:'#2D6E4F', color_peligro:'#B91C1C' },
+  },
+  {
+    nombre: 'Matte Onyx',
+    emoji: '🖤',
+    seccion: 'Salones & Estética',
+    config: { color_primario:'#111111', color_primario_suave:'#11111114', color_fondo:'#FCFBF9', color_superficie:'#FFFFFF', color_superficie2:'#F4F2EF', color_borde:'#D5C3BE', color_texto:'#111111', color_texto_suave:'#8E7C77', color_acento:'#D5C3BE', color_exito:'#4A7C59', color_peligro:'#C0392B' },
+  },
 ]
 
 const PALETAS_ADMIN: Paleta<AdminConfigUI>[] = [
-  { nombre: 'Forest',        emoji: '🌲', config: { color_primario:'#6B7A5E', color_primario_suave:'#6B7A5E20', color_fondo:'#F4F6F3', color_superficie:'#FFFFFF', color_superficie2:'#EDEEE9', color_borde:'#D8DDD2', color_texto:'#1E2419', color_texto_suave:'#6B7265', color_acento:'#C8A46A', color_exito:'#4A7C59', color_peligro:'#C0453E' }},
-  { nombre: 'Índigo',        emoji: '💙', config: { color_primario:'#4F46E5', color_primario_suave:'#4F46E520', color_fondo:'#F5F3FF', color_superficie:'#FFFFFF', color_superficie2:'#EDE9FE', color_borde:'#DDD6FE', color_texto:'#1E1B4B', color_texto_suave:'#6D28D9', color_acento:'#EC4899', color_exito:'#059669', color_peligro:'#DC2626' }},
-  { nombre: 'Carbon',        emoji: '🖤', config: { color_primario:'#374151', color_primario_suave:'#37415118', color_fondo:'#F9FAFB', color_superficie:'#FFFFFF', color_superficie2:'#F3F4F6', color_borde:'#E5E7EB', color_texto:'#111827', color_texto_suave:'#6B7280', color_acento:'#F59E0B', color_exito:'#10B981', color_peligro:'#EF4444' }},
-  { nombre: 'Violet',        emoji: '🔮', config: { color_primario:'#7C3AED', color_primario_suave:'#7C3AED18', color_fondo:'#FAF5FF', color_superficie:'#FFFFFF', color_superficie2:'#F3E8FF', color_borde:'#E9D5FF', color_texto:'#2E1065', color_texto_suave:'#7E22CE', color_acento:'#F59E0B', color_exito:'#059669', color_peligro:'#DC2626' }},
-  { nombre: 'Teal',          emoji: '🩵', config: { color_primario:'#0D9488', color_primario_suave:'#0D948818', color_fondo:'#F0FDFA', color_superficie:'#FFFFFF', color_superficie2:'#CCFBF1', color_borde:'#99F6E4', color_texto:'#042F2E', color_texto_suave:'#0F766E', color_acento:'#F97316', color_exito:'#16A34A', color_peligro:'#DC2626' }},
-  { nombre: 'Obsidian',      emoji: '🌑', config: { color_primario:'#8B5CF6', color_primario_suave:'#8B5CF618', color_fondo:'#09090B', color_superficie:'#18181B', color_superficie2:'#27272A', color_borde:'#3F3F46', color_texto:'#FAFAFA', color_texto_suave:'#A1A1AA', color_acento:'#F59E0B', color_exito:'#22C55E', color_peligro:'#EF4444' }},
+  { nombre: 'Forest',    emoji: '🌲', seccion: 'General', config: { color_primario:'#6B7A5E', color_primario_suave:'#6B7A5E20', color_fondo:'#F4F6F3', color_superficie:'#FFFFFF', color_superficie2:'#EDEEE9', color_borde:'#D8DDD2', color_texto:'#1E2419', color_texto_suave:'#6B7265', color_acento:'#C8A46A', color_exito:'#4A7C59', color_peligro:'#C0453E' }},
+  { nombre: 'Índigo',    emoji: '💙', seccion: 'General', config: { color_primario:'#4F46E5', color_primario_suave:'#4F46E520', color_fondo:'#F5F3FF', color_superficie:'#FFFFFF', color_superficie2:'#EDE9FE', color_borde:'#DDD6FE', color_texto:'#1E1B4B', color_texto_suave:'#6D28D9', color_acento:'#EC4899', color_exito:'#059669', color_peligro:'#DC2626' }},
+  { nombre: 'Carbon',    emoji: '🖤', seccion: 'General', config: { color_primario:'#374151', color_primario_suave:'#37415118', color_fondo:'#F9FAFB', color_superficie:'#FFFFFF', color_superficie2:'#F3F4F6', color_borde:'#E5E7EB', color_texto:'#111827', color_texto_suave:'#6B7280', color_acento:'#F59E0B', color_exito:'#10B981', color_peligro:'#EF4444' }},
+  { nombre: 'Violet',    emoji: '🔮', seccion: 'General', config: { color_primario:'#7C3AED', color_primario_suave:'#7C3AED18', color_fondo:'#FAF5FF', color_superficie:'#FFFFFF', color_superficie2:'#F3E8FF', color_borde:'#E9D5FF', color_texto:'#2E1065', color_texto_suave:'#7E22CE', color_acento:'#F59E0B', color_exito:'#059669', color_peligro:'#DC2626' }},
+  { nombre: 'Teal',      emoji: '🩵', seccion: 'General', config: { color_primario:'#0D9488', color_primario_suave:'#0D948818', color_fondo:'#F0FDFA', color_superficie:'#FFFFFF', color_superficie2:'#CCFBF1', color_borde:'#99F6E4', color_texto:'#042F2E', color_texto_suave:'#0F766E', color_acento:'#F97316', color_exito:'#16A34A', color_peligro:'#DC2626' }},
+  { nombre: 'Obsidian',  emoji: '🌑', seccion: 'General', config: { color_primario:'#8B5CF6', color_primario_suave:'#8B5CF618', color_fondo:'#09090B', color_superficie:'#18181B', color_superficie2:'#27272A', color_borde:'#3F3F46', color_texto:'#FAFAFA', color_texto_suave:'#A1A1AA', color_acento:'#F59E0B', color_exito:'#22C55E', color_peligro:'#EF4444' }},
 ]
+
+// ── Tipos de empresa ──────────────────────────────────────────────────────────
+
+const TIPOS_EMPRESA = [
+  { id: 'todos',    label: 'Todas',               emoji: '✦' },
+  { id: 'barberia', label: 'Barberías',            emoji: '💈' },
+  { id: 'salon',    label: 'Salones & Estética',   emoji: '✨' },
+]
+
+const SECCION_POR_TIPO: Record<string, string[]> = {
+  todos:    ['Barberías', 'Salones & Estética'],
+  barberia: ['Barberías'],
+  salon:    ['Salones & Estética'],
+}
 
 // ── Preview público ───────────────────────────────────────────────────────────
 
@@ -198,6 +244,7 @@ export function TemaEmpresaPage() {
   const [configAdmin,    setConfigAdmin]    = useState<AdminConfigUI>({ ...ADMIN_CONFIG_DEFAULTS })
   const [grupoPublico,   setGrupoPublico]   = useState('Marca')
   const [grupoAdmin,     setGrupoAdmin]     = useState('Marca')
+  const [tipoEmpresa,    setTipoEmpresa]    = useState('todos')
   const [guardando,      setGuardando]      = useState(false)
   const [guardado,       setGuardado]       = useState(false)
   const [error,          setError]          = useState<string | null>(null)
@@ -271,26 +318,72 @@ export function TemaEmpresaPage() {
           {/* Paletas */}
           <div className="card" style={{ padding: '16px 20px', marginBottom: 20 }}>
             <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-ink-soft)', marginBottom: 12 }}>
-              Paletas predefinidas {tab === 'admin' ? '— Admin' : '— Público'}
+              Paletas — {tab === 'publico' ? 'Página pública' : 'Panel admin'}
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {(tab === 'publico' ? PALETAS_PUBLICO : PALETAS_ADMIN).map(p => (
-                <button key={p.nombre}
-                  onClick={() => tab === 'publico'
-                    ? setConfigPublico(prev => ({ ...prev, ...p.config }))
-                    : setConfigAdmin(prev => ({ ...prev, ...p.config }))
-                  }
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: (p.config as any).color_fondo ?? 'var(--color-surface)', color: (p.config as any).color_texto ?? 'var(--color-ink)', fontSize: 12, fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
-                  <span>{p.emoji}</span>
-                  <span>{p.nombre}</span>
-                  <span style={{ display: 'flex', gap: 2, marginLeft: 2 }}>
-                    {[(p.config as any).color_primario, (p.config as any).color_acento, (p.config as any).color_fondo].map((c: string, i: number) => (
-                      <span key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c, border: '1px solid rgba(0,0,0,0.1)' }} />
-                    ))}
-                  </span>
-                </button>
-              ))}
-            </div>
+
+            {/* Filtro por tipo de empresa (solo tab público) */}
+            {tab === 'publico' && (
+              <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+                {TIPOS_EMPRESA.map(t => (
+                  <button key={t.id} onClick={() => setTipoEmpresa(t.id)}
+                    className={tipoEmpresa === t.id ? 'btn btn--primary' : 'btn btn--ghost'}
+                    style={{ fontSize: 12, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span>{t.emoji}</span> {t.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Paletas agrupadas por sección */}
+            {tab === 'publico' ? (
+              SECCION_POR_TIPO[tipoEmpresa].map(seccion => {
+                const paletas = PALETAS_PUBLICO.filter(p => p.seccion === seccion)
+                return (
+                  <div key={seccion} style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-ink-soft)', marginBottom: 8, paddingBottom: 4, borderBottom: '1px solid var(--color-border)' }}>
+                      {seccion === 'Barberías' ? '💈 Barberías' : '✨ Salones & Estética'}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(176px, 1fr))', gap: 8 }}>
+                      {paletas.map(p => {
+                        const cfg = p.config as any
+                        const esDark = cfg.color_fondo && parseInt(cfg.color_fondo.replace('#','').slice(0,2), 16) < 80
+                        return (
+                          <button key={p.nombre}
+                            onClick={() => setConfigPublico(prev => ({ ...prev, ...p.config }))}
+                            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: cfg.color_fondo ?? 'var(--color-surface)', cursor: 'pointer', textAlign: 'left', transition: 'box-shadow 0.15s' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
+                              <div style={{ width: 18, height: 10, borderRadius: 3, background: cfg.color_primario }} />
+                              <div style={{ width: 18, height: 10, borderRadius: 3, background: cfg.color_acento }} />
+                              <div style={{ width: 18, height: 10, borderRadius: 3, background: cfg.color_superficie ?? '#fff', border: '1px solid rgba(0,0,0,0.08)' }} />
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: esDark ? (cfg.color_texto ?? '#fff') : (cfg.color_texto ?? '#111'), lineHeight: 1.3 }}>{p.emoji} {p.nombre}</div>
+                              <div style={{ fontSize: 10, color: cfg.color_texto_suave ?? '#888', marginTop: 1 }}>{p.seccion}</div>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {PALETAS_ADMIN.map(p => (
+                  <button key={p.nombre}
+                    onClick={() => setConfigAdmin(prev => ({ ...prev, ...p.config }))}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: (p.config as any).color_fondo ?? 'var(--color-surface)', color: (p.config as any).color_texto ?? 'var(--color-ink)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+                    <span>{p.emoji}</span>
+                    <span>{p.nombre}</span>
+                    <span style={{ display: 'flex', gap: 2, marginLeft: 2 }}>
+                      {[(p.config as any).color_primario, (p.config as any).color_acento].map((c: string, i: number) => (
+                        <span key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c, border: '1px solid rgba(0,0,0,0.1)' }} />
+                      ))}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Campos */}
