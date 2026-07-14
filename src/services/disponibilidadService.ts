@@ -32,12 +32,13 @@ export async function listHorasOcupadas(
   idPrestador: number,
   fecha: string
 ): Promise<{ hora_inicio: string; hora_fin: string }[]> {
-  const { data, error } = await supabase
-    .from('agendamientos')
-    .select('hora_inicio, hora_fin')
-    .eq('id_prestador', idPrestador)
-    .eq('fecha', fecha)
-    .neq('estado', 'CANCELADA')
+  // RPC SECURITY DEFINER: RLS bloquea el SELECT anónimo directo sobre
+  // agendamientos (devuelve 0 filas en silencio y el calendario ofrece
+  // horas ya tomadas). La función expone SOLO hora_inicio/hora_fin.
+  const { data, error } = await supabase.rpc('horas_ocupadas_publico', {
+    p_id_prestador: idPrestador,
+    p_fecha:        fecha,
+  })
   if (error) throw error
   return (data ?? []) as { hora_inicio: string; hora_fin: string }[]
 }
@@ -67,6 +68,8 @@ export interface DatosReservaPublica {
 export interface ResultadoReserva {
   id: number
   token: string
+  /** true si la reserva ya existía (reintento del mismo cliente) */
+  yaExistia: boolean
 }
 
 /** Crea una reserva pública y devuelve { id, token } */
@@ -87,9 +90,9 @@ export async function crearReservaPublica(datos: DatosReservaPublica): Promise<R
     if (error.code === EXCLUSION_VIOLATION) throw new DobleReservaError()
     throw error
   }
-  // La RPC retorna JSON: { id, token }
-  const row = data as { id: number; token: string }
-  return { id: Number(row.id), token: row.token ?? '' }
+  // La RPC retorna JSON: { id, token, ya_existia }
+  const row = data as { id: number; token: string; ya_existia?: boolean }
+  return { id: Number(row.id), token: row.token ?? '', yaExistia: !!row.ya_existia }
 }
 
 /** Obtiene el email del prestador (vía función SECURITY DEFINER). */

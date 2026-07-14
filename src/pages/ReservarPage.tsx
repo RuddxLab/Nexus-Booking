@@ -5,7 +5,6 @@ import {
   listServiciosPublico,
   listCategoriasPublico,
 } from '../services/entityServices'
-import { supabase } from '../services/supabaseClient'
 import {
   listHorariosPrestador,
   listAusenciasPrestador,
@@ -213,14 +212,16 @@ export function ReservarPage() {
 
   async function handleConfirmar() {
     if (!tenant) return
-    if (confirmandoRef.current) return  // prevenir doble tap en móvil
-    confirmandoRef.current = true
     setError(null)
+    // Validaciones ANTES del mutex: si fallan y el mutex ya estaba tomado,
+    // el botón quedaba muerto para siempre (confirmandoRef nunca se soltaba)
     if (!nombre.trim())              return setError('Tu nombre es obligatorio.')
     if (!email.trim() || !validarEmail(email)) return setError('Ingresa un correo válido.')
     if (!telSep.numero || !validarTelefono(telefono)) return setError(`Teléfono inválido para ${pais?.pais}.`)
     if (rut && !validarRut(rut))     return setError('El RUT no es válido.')
     if (!servicioElegido || !prestadorElegido || !fechaElegida || !horaElegida) return setError('Falta completar pasos anteriores.')
+    if (confirmandoRef.current) return  // prevenir doble tap en móvil
+    confirmandoRef.current = true
     setGuardando(true)
     try {
       const { id, token } = await crearReservaPublica({
@@ -235,7 +236,8 @@ export function ReservarPage() {
         email:          email.trim().toLowerCase(),
         rut: rut ? limpiarRut(rut) : null,
       })
-      // Reserva guardada exitosamente — marcar como reservado ANTES de enviar correo
+      // Reserva confirmada (nueva o reintento del mismo cliente: la RPC es
+      // idempotente y devuelve la existente) — marcar ANTES de enviar correo
       guardarDatos({ nombre, rut, telefono, email: email.trim().toLowerCase() })
       setReservado(true)
       // Enviar correo en background (si falla no afecta la reserva)
@@ -261,42 +263,21 @@ export function ReservarPage() {
       }).catch(() => setCorreoEnviado(false))
     } catch (err) {
       if (err instanceof DobleReservaError) {
-        // Verificar si la reserva ya fue creada por este mismo cliente
-        // (ocurre en móvil cuando la red es lenta)
-        const { data: yaExiste } = await supabase
-          .from('agendamientos')
-          .select('id_agendamiento, token_cancelacion, email')
-          .eq('id_empresa',   tenant.idEmpresa)
-          .eq('id_prestador', prestadorElegido!.id_prestador)
-          .eq('fecha',        fechaElegida!)
-          .eq('hora_inicio',  horaElegida!)
-          .neq('estado',      'CANCELADA')
-          .maybeSingle()
-
-        if (yaExiste) {
-          // Comprobar si es del mismo cliente (por email, case-insensitive)
-          const mismoCliente = yaExiste.email?.toLowerCase().trim() === email.toLowerCase().trim()
-          if (mismoCliente) {
-            // Es su propia reserva duplicada — mostrar confirmación
-            guardarDatos({ nombre, rut, telefono, email })
-            setReservado(true)
-          } else {
-            // Hora tomada por OTRO cliente — volver al paso de fecha/hora
-            setError('Esa hora ya fue reservada por otra persona. Elige otro horario.')
-            setHoraElegida(null)
-            irPaso(3)
-          }
-        } else {
-          // No encontramos la reserva — error genérico
-          setError('No se pudo confirmar la reserva. Intenta de nuevo.')
-        }
+        // La RPC ya verificó server-side: si el choque fuera contra una
+        // reserva del MISMO email habría retornado ya_existia=true. Llegar
+        // aquí = la hora la tomó otra persona. Refrescar disponibilidad
+        // y volver al paso de fecha/hora.
+        setError('Esa hora acaba de ser reservada por otra persona. Elige otro horario.')
+        setHoraElegida(null)
+        const [y, mo, d] = fechaElegida!.split('-').map(Number)
+        handleFecha(new Date(y, mo - 1, d)).catch(() => {})
+        irPaso(3)
       } else {
         console.error('Error al crear reserva:', err)
-        setError('No se pudo confirmar la reserva. Intenta de nuevo.')
+        setError('No se pudo confirmar la reserva. Revisa tu conexión e intenta de nuevo.')
       }
     } finally { setGuardando(false); confirmandoRef.current = false }
   }
-
   function reiniciar() {
     setServicioElegido(null); setPrestadorElegido(null); setFechaElegida(null)
     setHoraElegida(null); setReservado(false)
@@ -330,15 +311,33 @@ export function ReservarPage() {
     </div>
   )
 
-  if (errorTenant || !tenant) return (
-    <div className="rxp-shell" style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ textAlign: 'center', padding: 40 }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-        <h2 style={{ marginBottom: 8, color: 'var(--rx-ink)' }}>Negocio no encontrado</h2>
-        <p style={{ color: 'var(--rx-muted)' }}>Verifica el enlace que recibiste.</p>
+  if (errorTenant || !tenant) {
+    const esConexion = errorTenant === 'CONEXION'
+    return (
+      <div className="rxp-shell" style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', padding: 40 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>{esConexion ? '📡' : '🔍'}</div>
+          <h2 style={{ marginBottom: 8, color: 'var(--rx-ink)' }}>
+            {esConexion ? 'Problema de conexión' : 'Negocio no encontrado'}
+          </h2>
+          <p style={{ color: 'var(--rx-muted)', marginBottom: esConexion ? 20 : 0 }}>
+            {esConexion
+              ? 'No pudimos cargar la información. Revisa tu conexión a internet.'
+              : 'Verifica el enlace que recibiste.'}
+          </p>
+          {esConexion && (
+            <button
+              className="rxp-cta"
+              style={{ padding: '10px 28px' }}
+              onClick={() => window.location.reload()}
+            >
+              <span className="rxp-cta-txt">Reintentar</span>
+            </button>
+          )}
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   if (cargandoBase) return (
     <div className="rxp-shell">

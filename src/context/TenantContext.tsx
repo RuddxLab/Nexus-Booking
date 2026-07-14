@@ -137,20 +137,26 @@ export function TenantProvider({ slug, children }: { slug: string; children: Rea
         .eq('slug', slug)
         .maybeSingle()
 
-      if (errEmp || !empresa) {
-        if (activo) { setError('Negocio no encontrado.'); setLoading(false) }
+      // Error de red/servidor ≠ slug inexistente: no confundir al cliente
+      if (errEmp) {
+        if (activo) { setError('CONEXION'); setLoading(false) }
+        return
+      }
+      if (!empresa) {
+        if (activo) { setError('NO_ENCONTRADO'); setLoading(false) }
         return
       }
 
-      // Cargar TODAS las sucursales activas de la empresa
-      const { data: sucursales } = await supabase
-        .from('sucursales')
+      // Sucursales visibles al público: solo las que tienen prestadores
+      // online y servicios activos (vista v_sucursales_publico)
+      const { data: sucursales, error: errSuc } = await supabase
+        .from('v_sucursales_publico')
         .select('id_sucursal, nombre_sucursal')
         .eq('id_empresa', empresa.id_empresa)
-        .eq('activo', true)
         .order('id_sucursal')
 
       if (!activo) return
+      if (errSuc) { setError('CONEXION'); setLoading(false); return }
 
       const listaSucursales: SucursalOpcion[] = sucursales ?? []
       const primeraId = listaSucursales[0]?.id_sucursal ?? 1
@@ -173,8 +179,10 @@ export function TenantProvider({ slug, children }: { slug: string; children: Rea
       setLoading(false)
     }
 
-    resolver().catch(e => {
-      if (activo) { setError(e?.message ?? 'Error al cargar el negocio.'); setLoading(false) }
+    resolver().catch(() => {
+      // Excepción no controlada (típicamente "Failed to fetch" en redes
+      // móviles inestables) → error de conexión, nunca "no encontrado"
+      if (activo) { setError('CONEXION'); setLoading(false) }
     })
 
     return () => {
