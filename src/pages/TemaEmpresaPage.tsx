@@ -331,8 +331,7 @@ export function TemaEmpresaPage() {
       </div>
 
       {/* ── Tabs Público / Admin ── */}
-      {(
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24, alignItems: 'start' }}>
 
           {/* Panel izquierdo */}
           <div>
