@@ -62,19 +62,21 @@ function BloqueAusencia({ bloque, horaInicioDia }: { bloque: BloqueRojo; horaIni
         borderLeft: '3px solid #E5484D',
         zIndex: 1,
         pointerEvents: 'none',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'flex-start',
-        padding: '6px 8px',
-        fontSize: 11,
-        color: '#E5484D',
-        fontWeight: 600,
-        overflow: 'hidden',
-        lineHeight: 1.3,
+        // Día completo: sin texto, el header ya lo muestra
+        ...(bloque.diaCom ? {} : {
+          display: 'flex',
+          alignItems: 'flex-start',
+          padding: '4px 6px',
+          fontSize: 11,
+          color: '#E5484D',
+          fontWeight: 600,
+          overflow: 'hidden',
+          lineHeight: 1.3,
+        }),
       }}
       title={bloque.etiqueta}
     >
-      {bloque.etiqueta}
+      {!bloque.diaCom && bloque.etiqueta}
     </div>
   )
 }
