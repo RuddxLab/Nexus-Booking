@@ -1,9 +1,19 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-  || 'https://axgxsmovzfmaasyzmnqn.supabase.co'
-
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-  || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4Z3hzbW92emZtYWFzeXptbnFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxODIzMzksImV4cCI6MjA5ODc1ODMzOX0.AtJZhagvXvKIlom3oW_b3WKw6GSbhTb2uMgOCNvBevM'
+
+// Fallar ruidosamente en build/arranque en vez de degradar en silencio a un
+// valor hardcodeado. Si Cloudflare Pages no tiene las env vars configuradas,
+// queremos enterarnos aquí y no con un 401 críptico tres pantallas después.
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    '[Nexus Booking] Faltan variables de entorno de Supabase.\n' +
+      `  VITE_SUPABASE_URL:      ${supabaseUrl ? 'OK' : 'FALTA'}\n` +
+      `  VITE_SUPABASE_ANON_KEY: ${supabaseAnonKey ? 'OK' : 'FALTA'}\n` +
+      'Local: copia .env.example a .env y rellénalo.\n' +
+      'Prod:  Cloudflare Pages → Settings → Environment variables (¡y re-deploy!).'
+  )
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
