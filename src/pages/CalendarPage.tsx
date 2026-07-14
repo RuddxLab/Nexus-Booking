@@ -149,11 +149,6 @@ export function CalendarPage() {
       )
   }, [citas])
 
-  const citasDelDiaSeleccionado = useMemo(() => {
-    if (!diaSeleccionadoMes) return []
-    return citasPorDia[diaSeleccionadoMes] ?? []
-  }, [diaSeleccionadoMes, citasPorDia])
-
   function moverSemana(delta: number) {
     const nueva = new Date(anchor)
     nueva.setDate(nueva.getDate() + delta * 7)
@@ -278,20 +273,13 @@ export function CalendarPage() {
           {cargando ? (
             <p style={{ color: 'var(--color-ink-soft)' }}>Cargando agenda…</p>
           ) : (
-            <>
-              <MonthView
-                anchor={anchor}
-                citasPorDia={citasPorDia}
-                diaSeleccionado={diaSeleccionadoMes}
-                onDiaClick={setDiaSeleccionadoMes}
-              />
-              {diaSeleccionadoMes && (
-                <div style={{ marginTop: 16 }}>
-                  <ListView citas={citasDelDiaSeleccionado} onCitaClick={(cita) => setCitaSeleccionada(cita)} />
-                </div>
-              )}
-            </>
-          )}
+            <MonthView
+              anchor={anchor}
+              citasPorDia={citasPorDia}
+              diaSeleccionado={diaSeleccionadoMes}
+              onDiaClick={setDiaSeleccionadoMes}
+              onCitaClick={(cita) => setCitaSeleccionada(cita)}
+            />
         </>
       )}
 
