@@ -221,82 +221,62 @@ export function CalendarPage() {
 
       {vista === 'semana' && (
         <>
-          {/* Fila superior: empresa/sucursal a la izquierda, nav a la derecha */}
+          {/* Fila de filtros: empresa/sucursal + prestador */}
           {!esPrestador && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                {(esAdmin || esSupervisor) && empresas.length > 0 && (
-                  <>
-                    <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Empresa:</span>
-                    <select
-                      value={empresaId ?? ''}
-                      onChange={e => setEmpresaId(Number(e.target.value))}
-                      style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
-                    >
-                      {empresas.map(e => <option key={e.id_empresa} value={e.id_empresa}>{e.nombre_empresa}</option>)}
-                    </select>
-                  </>
-                )}
-                {sucursalesDeEmpresa.length > 1 && (
-                  <>
-                    <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sucursal:</span>
-                    <select
-                      value={sucursalId ?? ''}
-                      onChange={e => setSucursalId(Number(e.target.value))}
-                      style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
-                    >
-                      {sucursalesDeEmpresa.map(s => <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre_sucursal}</option>)}
-                    </select>
-                  </>
-                )}
-              </div>
-
-              {/* Nav ‹ Hoy › a la derecha — solo botones, sin fecha */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(-1)} title="Semana anterior">
-                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-                </button>
-                <button className="btn btn--ghost cal-nav-hoy" onClick={() => setAnchor(new Date())}>Hoy</button>
-                <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(1)} title="Semana siguiente">
-                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
-                </button>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+              {(esAdmin || esSupervisor) && empresas.length > 0 && (
+                <>
+                  <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Empresa:</span>
+                  <select
+                    value={empresaId ?? ''}
+                    onChange={e => setEmpresaId(Number(e.target.value))}
+                    style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
+                  >
+                    {empresas.map(e => <option key={e.id_empresa} value={e.id_empresa}>{e.nombre_empresa}</option>)}
+                  </select>
+                </>
+              )}
+              {sucursalesDeEmpresa.length > 1 && (
+                <>
+                  <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sucursal:</span>
+                  <select
+                    value={sucursalId ?? ''}
+                    onChange={e => setSucursalId(Number(e.target.value))}
+                    style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
+                  >
+                    {sucursalesDeEmpresa.map(s => <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre_sucursal}</option>)}
+                  </select>
+                </>
+              )}
+              {prestadores.length > 0 && (
+                <>
+                  <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ver agenda de:</span>
+                  <select
+                    style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
+                    value={idPrestadorFiltro ?? ''}
+                    onChange={e => setIdPrestadorFiltro(Number(e.target.value))}
+                  >
+                    {prestadores.map(p => (
+                      <option key={p.id_prestador} value={p.id_prestador}>{p.nombre_prestador}</option>
+                    ))}
+                  </select>
+                </>
+              )}
             </div>
           )}
 
-          {/* Fila inferior: ver agenda de (prestador) */}
-          {!esPrestador && prestadores.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ver agenda de:</span>
-              <select
-                style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
-                value={idPrestadorFiltro ?? ''}
-                onChange={e => setIdPrestadorFiltro(Number(e.target.value))}
-              >
-                {prestadores.map(p => (
-                  <option key={p.id_prestador} value={p.id_prestador}>{p.nombre_prestador}</option>
-                ))}
-              </select>
+          {/* Botones nav — pegados al calendario, derecha */}
+          <div style={{ display: 'flex', justifyContent: esPrestador ? 'flex-start' : 'flex-end', marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(-1)} title="Semana anterior">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              <button className="btn btn--ghost cal-nav-hoy" onClick={() => setAnchor(new Date())}>Hoy</button>
+              <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(1)} title="Semana siguiente">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+              </button>
             </div>
-          )}
-
-          {/* Nav para prestador (sin filtros de empresa) */}
-          {esPrestador && (
-            <div className="calendar__nav" style={{ marginBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(-1)} title="Semana anterior">
-                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-                </button>
-                <button className="btn btn--ghost cal-nav-hoy" onClick={() => setAnchor(new Date())}>Hoy</button>
-                <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(1)} title="Semana siguiente">
-                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
-                </button>
-              </div>
-              <span className="calendar__nav-label">
-                {dias[0].toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })} – {dias[6].toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </span>
-            </div>
-          )}
+          </div>
           {cargando ? (
             <p style={{ color: 'var(--color-ink-soft)' }}>Cargando agenda…</p>
           ) : (

@@ -230,15 +230,17 @@ export function WeekView({
                   {noLaborable && (
                     <div style={{
                       position: 'absolute', inset: 0,
-                      background: 'var(--color-primary-soft)',
-                      borderTop: '2px solid var(--color-primary)',
+                      background: diaComBloquedo ? 'rgba(229,72,77,0.07)' : 'var(--color-primary-soft)',
+                      borderTop: diaComBloquedo ? '2px solid #E5484D' : '2px solid var(--color-primary)',
                       zIndex: 1, pointerEvents: 'none',
                       display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
                       paddingTop: 8,
-                      fontSize: 10, color: 'var(--color-primary)', fontWeight: 600,
+                      fontSize: 10,
+                      color: diaComBloquedo ? '#E5484D' : 'var(--color-primary)',
+                      fontWeight: 600,
                       letterSpacing: '0.08em', textTransform: 'uppercase',
                     }}>
-                      No laborable
+                      {diaComBloquedo ? (bloques.find(b => b.diaCom)?.etiqueta ?? 'Bloqueado') : 'No laborable'}
                     </div>
                   )}
                   {horas.map(h => {
