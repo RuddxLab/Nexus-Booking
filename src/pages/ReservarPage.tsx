@@ -130,6 +130,31 @@ export function ReservarPage() {
   function irPaso(n: 0|1|2|3|4) {
     setAnimDir(n > paso ? 'in' : 'out')
     setPaso(n)
+    // Si volvemos al paso de fecha/hora con fecha ya elegida, refrescar horas
+    if (n === 3 && fechaElegida && prestadorElegido && servicioElegido) {
+      const d = new Date(fechaElegida + 'T00:00:00')
+      setCargandoHoras(true)
+      Promise.all([
+        listHorariosPrestador(prestadorElegido.id_prestador),
+        listAusenciasPrestador(prestadorElegido.id_prestador),
+        listHorasOcupadas(prestadorElegido.id_prestador, fechaElegida),
+        listDiasBloqueadosPorRango(fechaElegida, fechaElegida, prestadorElegido.id_prestador),
+      ]).then(([hor, aus, ocu, bloq]) => {
+        const dNum = diaISO(d)
+        const hDia = hor.find(h => h.dia === dNum && h.activo && h.hora_inicio && h.hora_fin)
+        if (!hDia || bloq.some(b => !b.hora_inicio || !b.hora_fin)) { setHorasDelDia([]); return }
+        const nombreDia = NOMBRES_DIA_ISO[dNum-1]
+        const ausD = aus.filter(a => String(a.dia).trim().toUpperCase() === nombreDia || String(a.dia).trim() === String(dNum))
+        const bloqP = bloq.filter(b => b.hora_inicio && b.hora_fin).map(b => ({ dia: String(dNum), hora_inicio: b.hora_inicio!, hora_fin: b.hora_fin! }))
+        setHorasDelDia(generarHorasDisponibles({
+          horaInicio: hDia.hora_inicio!, horaFin: hDia.hora_fin!,
+          duracionMin: servicioElegido.duracion, fecha: fechaElegida,
+          ocupados: ocu, ausencias: [...ausD, ...bloqP],
+          pasoMin:   prestadorElegido.paso_agenda ?? undefined,
+          bufferMin: prestadorElegido.buffer_min  ?? 0,
+        }))
+      }).finally(() => setCargandoHoras(false))
+    }
   }
 
   function triggerRipple(id: string) {
@@ -237,28 +262,33 @@ export function ReservarPage() {
     } catch (err) {
       if (err instanceof DobleReservaError) {
         // Verificar si la reserva ya fue creada por este mismo cliente
-        // Ocurre en móvil cuando la red es lenta: el INSERT se ejecutó
-        // en Postgres pero el browser no recibió la respuesta a tiempo
+        // (ocurre en móvil cuando la red es lenta)
         const { data: yaExiste } = await supabase
           .from('agendamientos')
-          .select('id_agendamiento, token_cancelacion')
+          .select('id_agendamiento, token_cancelacion, email')
           .eq('id_empresa',   tenant.idEmpresa)
           .eq('id_prestador', prestadorElegido!.id_prestador)
           .eq('fecha',        fechaElegida!)
           .eq('hora_inicio',  horaElegida!)
-          .ilike('email',     email.trim())
           .neq('estado',      'CANCELADA')
           .maybeSingle()
 
         if (yaExiste) {
-          // La reserva ya existe y es del mismo cliente — mostrar confirmación
-          guardarDatos({ nombre, rut, telefono, email })
-          setReservado(true)
+          // Comprobar si es del mismo cliente (por email, case-insensitive)
+          const mismoCliente = yaExiste.email?.toLowerCase().trim() === email.toLowerCase().trim()
+          if (mismoCliente) {
+            // Es su propia reserva duplicada — mostrar confirmación
+            guardarDatos({ nombre, rut, telefono, email })
+            setReservado(true)
+          } else {
+            // Hora tomada por OTRO cliente — volver al paso de fecha/hora
+            setError('Esa hora ya fue reservada por otra persona. Elige otro horario.')
+            setHoraElegida(null)
+            irPaso(3)
+          }
         } else {
-          // Hora tomada por otro cliente
-          setError('Esa hora ya fue tomada. Elige otro horario.')
-          setHoraElegida(null)
-          irPaso(3)
+          // No encontramos la reserva — error genérico
+          setError('No se pudo confirmar la reserva. Intenta de nuevo.')
         }
       } else {
         console.error('Error al crear reserva:', err)
