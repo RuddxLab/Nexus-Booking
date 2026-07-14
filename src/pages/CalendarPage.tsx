@@ -251,20 +251,15 @@ export function CalendarPage() {
                 )}
               </div>
 
-              {/* Nav ‹ Hoy › a la derecha + fecha en línea propia debajo */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(-1)} title="Semana anterior">
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-                  </button>
-                  <button className="btn btn--ghost cal-nav-hoy" onClick={() => setAnchor(new Date())}>Hoy</button>
-                  <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(1)} title="Semana siguiente">
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
-                  </button>
-                </div>
-                <span className="calendar__nav-label" style={{ fontSize: 12, fontWeight: 600 }}>
-                  {dias[0].toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })} – {dias[6].toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </span>
+              {/* Nav ‹ Hoy › a la derecha — solo botones, sin fecha */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(-1)} title="Semana anterior">
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <button className="btn btn--ghost cal-nav-hoy" onClick={() => setAnchor(new Date())}>Hoy</button>
+                <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(1)} title="Semana siguiente">
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </button>
               </div>
             </div>
           )}

@@ -225,11 +225,6 @@ export function WeekView({
                 <div className={`calendar__day-header ${esHoy ? 'calendar__day-header--today' : ''} ${diaComBloquedo ? 'calendar__day-header--bloqueado' : ''} ${noLaborable && !diaComBloquedo ? 'calendar__day-header--no-laborable' : ''}`}>
                   <div className="calendar__day-name">{NOMBRES_DIA[diaNro - 1]}</div>
                   <div className="calendar__day-number">{dia.getDate()}</div>
-                  {diaComBloquedo && (
-                    <div style={{ fontSize: 9, color: '#E5484D', marginTop: 2 }}>
-                      {bloques.find(b => b.diaCom)?.etiqueta}
-                    </div>
-                  )}
                 </div>
                 <div className="calendar__day-column" style={{ position: 'relative' }}>
                   {noLaborable && (
