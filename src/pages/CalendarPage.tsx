@@ -11,7 +11,6 @@ import { listPrestadoresPublico, serviciosService } from '../services/entityServ
 import { getWeekDays, getMonthGrid, toISODate } from '../utils/calendarUtils'
 import { useUserRole } from '../hooks/useUserRole'
 import { useFiltroEmpresa } from '../hooks/useFiltroEmpresa'
-import { SelectorFiltro } from '../components/Common/SelectorFiltro'
 import { PageHeader } from '../components/Common/PageHeader'
 import type { Agendamiento, PrestadorPublico, Servicio } from '../types'
 
@@ -184,18 +183,34 @@ export function CalendarPage() {
         </div>
       </PageHeader>
 
-      {/* Selector empresa + sucursal para admin/supervisor */}
-      {!esPrestador && (
-        <SelectorFiltro
-          esAdmin={esAdmin}
-          esSupervisor={esSupervisor}
-          empresas={empresas}
-          sucursalesDeEmpresa={sucursalesDeEmpresa}
-          empresaId={empresaId}
-          sucursalId={sucursalId}
-          onEmpresaChange={setEmpresaId}
-          onSucursalChange={setSucursalId}
-        />
+      {/* Selector empresa + sucursal compacto (Lista y Mes lo usan; Semana tiene el suyo inline) */}
+      {!esPrestador && vista !== 'semana' && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+          {(esAdmin || esSupervisor) && empresas.length > 0 && (
+            <>
+              <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Empresa:</span>
+              <select
+                value={empresaId ?? ''}
+                onChange={e => setEmpresaId(Number(e.target.value))}
+                style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
+              >
+                {empresas.map(e => <option key={e.id_empresa} value={e.id_empresa}>{e.nombre_empresa}</option>)}
+              </select>
+            </>
+          )}
+          {sucursalesDeEmpresa.length > 1 && (
+            <>
+              <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sucursal:</span>
+              <select
+                value={sucursalId ?? ''}
+                onChange={e => setSucursalId(Number(e.target.value))}
+                style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
+              >
+                {sucursalesDeEmpresa.map(s => <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre_sucursal}</option>)}
+              </select>
+            </>
+          )}
+        </div>
       )}
 
       {esPrestador && (
@@ -206,22 +221,54 @@ export function CalendarPage() {
 
       {vista === 'semana' && (
         <>
-          {!esPrestador && prestadores.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <span style={{ fontSize: 12, color: 'var(--color-ink-soft)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Ver agenda de:
-              </span>
-              <select
-                style={{ padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface-2)', color: 'var(--color-ink)', fontSize: 13 }}
-                value={idPrestadorFiltro ?? ''}
-                onChange={e => setIdPrestadorFiltro(Number(e.target.value))}
-              >
-                {prestadores.map(p => (
-                  <option key={p.id_prestador} value={p.id_prestador}>{p.nombre_prestador}</option>
-                ))}
-              </select>
+          {/* Fila de filtros: empresa/sucursal (si aplica) + prestador */}
+          {!esPrestador && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+              {/* Empresa */}
+              {(esAdmin || esSupervisor) && empresas.length > 0 && (
+                <>
+                  <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Empresa:</span>
+                  <select
+                    value={empresaId ?? ''}
+                    onChange={e => setEmpresaId(Number(e.target.value))}
+                    style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
+                  >
+                    {empresas.map(e => <option key={e.id_empresa} value={e.id_empresa}>{e.nombre_empresa}</option>)}
+                  </select>
+                </>
+              )}
+              {/* Sucursal */}
+              {sucursalesDeEmpresa.length > 1 && (
+                <>
+                  <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sucursal:</span>
+                  <select
+                    value={sucursalId ?? ''}
+                    onChange={e => setSucursalId(Number(e.target.value))}
+                    style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
+                  >
+                    {sucursalesDeEmpresa.map(s => <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre_sucursal}</option>)}
+                  </select>
+                </>
+              )}
+              {/* Prestador */}
+              {prestadores.length > 0 && (
+                <>
+                  <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ver agenda de:</span>
+                  <select
+                    style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
+                    value={idPrestadorFiltro ?? ''}
+                    onChange={e => setIdPrestadorFiltro(Number(e.target.value))}
+                  >
+                    {prestadores.map(p => (
+                      <option key={p.id_prestador} value={p.id_prestador}>{p.nombre_prestador}</option>
+                    ))}
+                  </select>
+                </>
+              )}
             </div>
           )}
+
+          {/* Nav: ‹ Hoy › + label fecha — justo encima del calendario */}
           <div className="calendar__nav">
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(-1)} title="Semana anterior">
