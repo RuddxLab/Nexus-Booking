@@ -238,98 +238,13 @@ function PaletasGrid({ paletas, tipoEmpresa, onSelect }: {
   )
 }
 
-// ── Tab Empresa ───────────────────────────────────────────────────────────────
-
-const TIPOS_NEGOCIO = [
-  { id: 'barberia', label: 'Barbería',            emoji: '💈', desc: 'Cuero Clásico, Cyber Obsidiana, Bosque Ejecutivo' },
-  { id: 'salon',    label: 'Salón de belleza',    emoji: '✨', desc: 'Rose Gold, Esmeralda Orgánico, Matte Onyx' },
-  { id: 'spa',      label: 'Spa / Wellness',      emoji: '🌿', desc: 'Tonos orgánicos y Esmeralda' },
-  { id: 'nail',     label: 'Nail Art / Manicure', emoji: '💅', desc: 'Matte Onyx y tonos minimalistas' },
-  { id: 'general',  label: 'Negocio general',     emoji: '🪨', desc: 'Carbon y tonos neutros' },
-]
-
-function TabEmpresa({ empresaId, empresas }: { empresaId: number | null; empresas: any[] }) {
-  const [datos, setDatos] = useState<{ nombre_empresa: string; slug: string; tipo_negocio: string | null } | null>(null)
-  const [guardando, setGuardando] = useState(false)
-  const [guardado,  setGuardado]  = useState(false)
-  const [error,     setError]     = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!empresaId) return
-    supabase.from('empresas')
-      .select('nombre_empresa, slug, tipo_negocio')
-      .eq('id_empresa', empresaId)
-      .single()
-      .then(({ data }) => {
-        if (data) setDatos({ nombre_empresa: data.nombre_empresa, slug: data.slug ?? '', tipo_negocio: data.tipo_negocio ?? null })
-      })
-  }, [empresaId])
-
-  async function guardar() {
-    if (!empresaId || !datos) return
-    setGuardando(true); setError(null)
-    const { error: err } = await supabase.from('empresas')
-      .update({ tipo_negocio: datos.tipo_negocio })
-      .eq('id_empresa', empresaId)
-    if (err) setError('No se pudo guardar. ' + err.message)
-    else { setGuardado(true); setTimeout(() => setGuardado(false), 3000) }
-    setGuardando(false)
-  }
-
-  if (!datos) return <p style={{ color: 'var(--color-ink-soft)' }}>Cargando…</p>
-
-  return (
-    <div style={{ maxWidth: 640 }}>
-      <div className="card" style={{ padding: '20px 24px', marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-ink-soft)', marginBottom: 16 }}>Información de la empresa</div>
-        <div style={{ display: 'grid', gap: 14 }}>
-          <div className="field">
-            <label>Nombre</label>
-            <input value={datos.nombre_empresa} disabled style={{ opacity: 0.6 }} />
-          </div>
-          <div className="field">
-            <label>Slug (URL pública)</label>
-            <input value={datos.slug} disabled style={{ opacity: 0.6, fontFamily: 'monospace', fontSize: 13 }} />
-            <div style={{ fontSize: 11, color: 'var(--color-ink-soft)', marginTop: 4 }}>
-              Página de reservas: <code style={{ background: 'var(--color-surface-2)', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>/r/{datos.slug}</code>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="card" style={{ padding: '20px 24px', marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-ink-soft)', marginBottom: 4 }}>Tipo de negocio</div>
-        <div style={{ fontSize: 12, color: 'var(--color-ink-soft)', marginBottom: 16 }}>Clasifica el negocio para filtrar automáticamente las paletas relevantes en Página pública y Panel admin.</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
-          {TIPOS_NEGOCIO.map(t => {
-            const activo = datos.tipo_negocio === t.id
-            return (
-              <button key={t.id}
-                onClick={() => { setDatos(d => d ? { ...d, tipo_negocio: t.id } : d); setGuardado(false) }}
-                style={{ padding: '12px 14px', borderRadius: 'var(--radius-sm)', border: activo ? '2px solid var(--color-primary)' : '1px solid var(--color-border)', background: activo ? 'var(--color-primary-soft)' : 'var(--color-surface)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
-                <div style={{ fontSize: 20, marginBottom: 6 }}>{t.emoji}</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: activo ? 'var(--color-primary)' : 'var(--color-ink)', marginBottom: 3 }}>{t.label}</div>
-                <div style={{ fontSize: 11, color: 'var(--color-ink-soft)', lineHeight: 1.4 }}>{t.desc}</div>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {error && <div className="error-text" style={{ marginBottom: 12 }}>{error}</div>}
-      <button className="btn btn--primary btn--icon" onClick={guardar} disabled={guardando || guardado}>
-        {guardando ? 'Guardando…' : guardado ? '✓ Guardado' : <><IconGuardar /> Guardar</>}
-      </button>
-    </div>
-  )
-}
 
 // ── Page principal ────────────────────────────────────────────────────────────
 
-type Tab = 'publico' | 'admin' | 'empresa'
+type Tab = 'publico' | 'admin'
 
 export function TemaEmpresaPage() {
-  const { empresaId, empresas } = useFiltroEmpresa()
+  const { empresaId, setEmpresaId, empresas, esAdmin } = useFiltroEmpresa()
   const empresa = empresas.find(e => e.id_empresa === empresaId)
   const { configAdmin: configAdminActual } = useAdminTheme()
 
@@ -385,21 +300,29 @@ export function TemaEmpresaPage() {
   return (
     <div className="main">
       <PageHeader titulo="Tema visual">
-        {tab !== 'empresa' && (
-          <button className="btn btn--ghost" onClick={resetear}>Restaurar</button>
+        {/* Selector de empresa (solo admin con múltiples empresas) */}
+        {esAdmin && empresas.length > 1 && (
+          <select
+            value={empresaId ?? ''}
+            onChange={e => setEmpresaId(Number(e.target.value))}
+            style={{ fontSize: 13, padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', minWidth: 160, cursor: 'pointer' }}
+          >
+            {empresas.map(e => (
+              <option key={e.id_empresa} value={e.id_empresa}>{e.nombre_empresa}</option>
+            ))}
+          </select>
         )}
-        {tab !== 'empresa' && (
-          <button className={`btn ${guardado ? 'btn--ghost' : 'btn--primary'} btn--icon`} onClick={guardar} disabled={guardando}>
-            {guardando ? 'Guardando…' : guardado ? '✓ Guardado' : <><IconGuardar /> Guardar cambios</>}
-          </button>
-        )}
+        <button className="btn btn--ghost" onClick={resetear}>Restaurar</button>
+        <button className={`btn ${guardado ? 'btn--ghost' : 'btn--primary'} btn--icon`} onClick={guardar} disabled={guardando}>
+          {guardando ? 'Guardando…' : guardado ? '✓ Guardado' : <><IconGuardar /> Guardar cambios</>}
+        </button>
       </PageHeader>
 
       {error && <div className="error-text" style={{ marginBottom: 16 }}>{error}</div>}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: '2px solid var(--color-border)' }}>
-        {([['publico','🌐 Página pública'],['admin','⚙️ Panel admin'],['empresa','🏢 Empresa']] as [Tab,string][]).map(([t, label]) => (
+        {([['publico','🌐 Página pública'],['admin','⚙️ Panel admin']] as [Tab,string][]).map(([t, label]) => (
           <button key={t} onClick={() => { setTab(t); setGuardado(false) }}
             style={{ padding: '10px 24px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: tab === t ? 'var(--color-primary)' : 'var(--color-ink-soft)', borderBottom: tab === t ? '2px solid var(--color-primary)' : '2px solid transparent', marginBottom: -2, transition: 'all .2s' }}>
             {label}
@@ -407,13 +330,8 @@ export function TemaEmpresaPage() {
         ))}
       </div>
 
-      {/* ── Tab Empresa ── */}
-      {tab === 'empresa' && (
-        <TabEmpresa empresaId={empresaId} empresas={empresas} />
-      )}
-
       {/* ── Tabs Público / Admin ── */}
-      {tab !== 'empresa' && (
+      {(
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24, alignItems: 'start' }}>
 
           {/* Panel izquierdo */}
@@ -469,7 +387,6 @@ export function TemaEmpresaPage() {
           </div>
 
         </div>
-      )}
     </div>
   )
 }

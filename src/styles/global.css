@@ -717,9 +717,7 @@ a { color: var(--color-ink); text-decoration: none; }
 .rxp-topbar {
   position: relative;
   z-index: 10;
-  background: var(--rx-glass2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--rx-surf2);
   border-bottom: 1px solid var(--rx-bdr);
   padding: 10px 20px;
   display: flex;
@@ -779,9 +777,7 @@ a { color: var(--color-ink); text-decoration: none; }
 
 /* ── Aside glassmorphism ── */
 .rxp-aside {
-  background: var(--rx-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--rx-surf);
   border-right: 1px solid var(--rx-bdr);
   padding: 22px 16px;
   display: flex;
