@@ -223,11 +223,17 @@ export function CalendarPage() {
             </div>
           )}
           <div className="calendar__nav">
-            <button className="btn btn--ghost" onClick={() => moverSemana(-1)}>← Semana anterior</button>
-            <button className="btn btn--ghost" onClick={() => setAnchor(new Date())}>Hoy</button>
-            <button className="btn btn--ghost" onClick={() => moverSemana(1)}>Semana siguiente →</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(-1)} title="Semana anterior">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              <button className="btn btn--ghost cal-nav-hoy" onClick={() => setAnchor(new Date())}>Hoy</button>
+              <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(1)} title="Semana siguiente">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
             <span className="calendar__nav-label">
-              {dias[0].toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })} – {dias[6].toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}
+              {dias[0].toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })} – {dias[6].toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' })}
             </span>
           </div>
           {cargando ? (
@@ -263,10 +269,16 @@ export function CalendarPage() {
       {vista === 'mes' && (
         <>
           <div className="calendar__nav">
-            <button className="btn btn--ghost" onClick={() => moverMes(-1)}>← Mes anterior</button>
-            <button className="btn btn--ghost" onClick={() => { setAnchor(new Date()); setDiaSeleccionadoMes(null) }}>Hoy</button>
-            <button className="btn btn--ghost" onClick={() => moverMes(1)}>Mes siguiente →</button>
-            <span className="calendar__nav-label">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button className="btn btn--ghost cal-nav-btn" onClick={() => moverMes(-1)} title="Mes anterior">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              <button className="btn btn--ghost cal-nav-hoy" onClick={() => { setAnchor(new Date()); setDiaSeleccionadoMes(null) }}>Hoy</button>
+              <button className="btn btn--ghost cal-nav-btn" onClick={() => moverMes(1)} title="Mes siguiente">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+            <span className="calendar__nav-label" style={{ textTransform: 'capitalize' }}>
               {anchor.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })}
             </span>
           </div>

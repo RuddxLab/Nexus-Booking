@@ -35,6 +35,7 @@ export function AusenciasPage() {
   const [nuevoAusenciaFin, setNuevoAusenciaFin] = useState('14:00')
 
   // Días bloqueados
+  const hoyISO = new Date().toISOString().split('T')[0]
   const [diasBloqueados, setDiasBloqueados] = useState<DiaBloqueado[]>([])
   const [nbFecha, setNbFecha] = useState('')
   const [nbDesc, setNbDesc] = useState('')
@@ -239,7 +240,7 @@ export function AusenciasPage() {
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
               <div className="field" style={{ margin: 0 }}>
                 <label>Fecha</label>
-                <input type="date" value={nbFecha} onChange={e => setNbFecha(e.target.value)} />
+                <input type="date" value={nbFecha} min={hoyISO} onChange={e => setNbFecha(e.target.value)} />
               </div>
               <div className="field" style={{ margin: 0, minWidth: 200 }}>
                 <label>Descripción</label>
@@ -285,8 +286,8 @@ export function AusenciasPage() {
 
           {/* Lista de días bloqueados */}
           <div className="card">
-            {diasBloqueados.length === 0 ? (
-              <p style={{ padding: 20, color: 'var(--color-ink-soft)' }}>No hay días bloqueados registrados.</p>
+            {diasBloqueados.filter(d => d.fecha >= hoyISO).length === 0 ? (
+              <p style={{ padding: 20, color: 'var(--color-ink-soft)' }}>No hay días bloqueados próximos.</p>
             ) : (
               <table className="table">
                 <thead>
@@ -299,7 +300,7 @@ export function AusenciasPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {diasBloqueados.map(d => (
+                  {diasBloqueados.filter(d => d.fecha >= hoyISO).map(d => (
                     <tr key={d.id_dia_bloqueado}>
                       <td>{new Date(d.fecha + 'T00:00:00').toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</td>
                       <td>{d.descripcion ?? '—'}</td>

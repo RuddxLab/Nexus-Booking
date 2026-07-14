@@ -1,6 +1,35 @@
 import { useState, useRef, useEffect } from 'react'
 import { PAISES_TELEFONO, separarTelefono, armarTelefono, validarTelefono } from '../../data/paisesTelefono'
 
+
+// Convierte código telefónico a ISO alpha-2 para flagcdn.com
+const CODIGO_A_ISO: Record<string, string> = {
+  '+56': 'cl', '+54': 'ar', '+51': 'pe', '+57': 'co', '+58': 've',
+  '+52': 'mx', '+55': 'br', '+593': 'ec', '+595': 'py', '+598': 'uy',
+  '+591': 'bo', '+503': 'sv', '+502': 'gt', '+504': 'hn', '+505': 'ni',
+  '+506': 'cr', '+507': 'pa', '+1': 'us', '+44': 'gb', '+34': 'es',
+  '+33': 'fr', '+49': 'de', '+39': 'it', '+351': 'pt', '+31': 'nl',
+  '+32': 'be', '+41': 'ch', '+43': 'at', '+46': 'se', '+47': 'no',
+  '+45': 'dk', '+358': 'fi', '+61': 'au', '+64': 'nz', '+81': 'jp',
+  '+82': 'kr', '+86': 'cn', '+91': 'in', '+27': 'za', '+234': 'ng',
+  '+20': 'eg', '+212': 'ma', '+213': 'dz', '+216': 'tn',
+}
+
+function FlagImg({ codigo, pais }: { codigo: string; pais: string }) {
+  const iso = CODIGO_A_ISO[codigo]
+  if (!iso) return <span style={{ fontSize: 16, lineHeight: 1, minWidth: 22 }}>🌐</span>
+  return (
+    <img
+      src={`https://flagcdn.com/20x15/${iso}.png`}
+      width={20}
+      height={15}
+      alt={pais}
+      style={{ borderRadius: 2, objectFit: 'cover', flexShrink: 0 }}
+      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+    />
+  )
+}
+
 interface Props {
   value: string           // formato "+56912345678"
   onChange: (val: string) => void
@@ -54,9 +83,9 @@ export function TelefonoPicker({ value, onChange, disabled, style }: Props) {
         style={btnStyle}
         disabled={disabled}
         onClick={() => !disabled && setAbierto(v => !v)}
-        title={`${pais?.bandera} ${pais?.pais} (${codigo})`}
+        title={`${pais?.pais} (${codigo})`}
       >
-        <span style={{ fontSize: 20, lineHeight: 1 }}>{pais?.bandera ?? '🌐'}</span>
+        <FlagImg codigo={codigo} pais={pais?.pais ?? ''} />
         <span style={{ fontSize: 11, color: 'var(--color-ink-soft)' }}>{codigo}</span>
         <span style={{ fontSize: 9, opacity: .5 }}>▾</span>
       </button>
@@ -106,7 +135,7 @@ export function TelefonoPicker({ value, onChange, disabled, style }: Props) {
                 onMouseEnter={e => { if (p.codigo !== codigo) (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-2)' }}
                 onMouseLeave={e => { if (p.codigo !== codigo) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
               >
-                <span style={{ fontSize: 18, minWidth: 24 }}>{p.bandera}</span>
+                <FlagImg codigo={p.codigo} pais={p.pais} />
                 <span style={{ flex: 1 }}>{p.pais}</span>
                 <span style={{ fontSize: 11, color: 'var(--color-ink-soft)' }}>{p.codigo}</span>
               </button>

@@ -91,7 +91,7 @@ function RutasProtegidas() {
         <Route path="/usuarios"    element={<RutaSoloCatalogo><UsuariosPage /></RutaSoloCatalogo>} />
         <Route path="/horarios"    element={<RutaSoloCatalogo><HorariosPage /></RutaSoloCatalogo>} />
         <Route path="/ausencias"   element={<RutaSoloCatalogo><AusenciasPage /></RutaSoloCatalogo>} />
-        <Route path="/tema"        element={<RutaSoloAdmin><TemaEmpresaPage /></RutaSoloAdmin>} />
+        <Route path="/tema"        element={<RutaSoloCatalogo><TemaEmpresaPage /></RutaSoloCatalogo>} />
         <Route path="/correo"      element={<RutaSoloAdmin><CorreoConfigPage /></RutaSoloAdmin>} />
       </Route>
       <Route path="*" element={<Navigate to="/admin" replace />} />

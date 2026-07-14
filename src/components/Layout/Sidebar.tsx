@@ -350,17 +350,25 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
             colorKey="empresa"
             rutas={['/admin/sucursales', '/admin/empresas', '/admin/usuarios', '/admin/tema', '/admin/correo']}
           >
-            <SidebarBtn to="/admin/sucursales" label="Sucursales"   colorKey="sucursales" onClick={onNavegar}/>
             <SidebarBtn to="/admin/empresas"   label="Empresa"      colorKey="empresa"    onClick={onNavegar}/>
+            <SidebarBtn to="/admin/sucursales" label="Sucursales"   colorKey="sucursales" onClick={onNavegar}/>
             <SidebarBtn to="/admin/usuarios"   label="Usuarios"     colorKey="usuarios"   onClick={onNavegar}/>
             <SidebarBtn to="/admin/tema"       label="Tema visual"  colorKey="tema"       onClick={onNavegar}/>
             <SidebarBtn to="/admin/correo"     label="Correo"       colorKey="correo"     onClick={onNavegar}/>
           </SidebarSection>
         )}
 
-        {/* Supervisor solo ve usuarios */}
+        {/* Supervisor: usuarios + tema visual */}
         {esSupervisor && (
-          <SidebarBtn to="/admin/usuarios" label="Usuarios" colorKey="usuarios" onClick={onNavegar}/>
+          <SidebarSection
+            titulo="Administración"
+            icono={Icons.empresa}
+            colorKey="empresa"
+            rutas={['/admin/usuarios', '/admin/tema']}
+          >
+            <SidebarBtn to="/admin/usuarios"  label="Usuarios"    colorKey="usuarios" onClick={onNavegar}/>
+            <SidebarBtn to="/admin/tema"      label="Tema visual" colorKey="tema"     onClick={onNavegar}/>
+          </SidebarSection>
         )}
       </div>
 
