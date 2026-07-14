@@ -49,68 +49,33 @@ const GRUPOS = ['Marca', 'Superficies', 'Tipografía', 'Estados']
 
 interface Paleta<T> { nombre: string; emoji: string; seccion: string; config: Partial<T> }
 
-const PALETAS_PUBLICO: Paleta<TenantConfigUI>[] = [
-  // ── Barberías ────────────────────────────────────────────────────────────
-  {
-    nombre: 'Cuero Clásico',
-    emoji: '💈',
-    seccion: 'Barberías',
-    config: { color_primario:'#D4A373', color_primario_suave:'#D4A37320', color_fondo:'#FDFBF7', color_superficie:'#FFFFFF', color_superficie2:'#F5F1EA', color_borde:'#E8DED0', color_texto:'#1E1A17', color_texto_suave:'#4A5759', color_acento:'#D4A373', color_exito:'#4A7C59', color_peligro:'#C0392B' },
-  },
-  {
-    nombre: 'Cyber Obsidiana',
-    emoji: '⚡',
-    seccion: 'Barberías',
-    config: { color_primario:'#66FCF1', color_primario_suave:'#66FCF120', color_fondo:'#0B0C10', color_superficie:'#1F2833', color_superficie2:'#151920', color_borde:'#2E3A46', color_texto:'#FFFFFF', color_texto_suave:'#A0AEB8', color_acento:'#66FCF1', color_exito:'#45A049', color_peligro:'#EF4444' },
-  },
-  {
-    nombre: 'Bosque Ejecutivo',
-    emoji: '♟️',
-    seccion: 'Barberías',
-    config: { color_primario:'#D4AF37', color_primario_suave:'#D4AF3720', color_fondo:'#111E15', color_superficie:'#1A2B1E', color_superficie2:'#162019', color_borde:'#2A3D2E', color_texto:'#FAF6F0', color_texto_suave:'#8FA896', color_acento:'#D4AF37', color_exito:'#3E9B5E', color_peligro:'#E05252' },
-  },
-  // ── Salones & Estética ───────────────────────────────────────────────────
-  {
-    nombre: 'Rose Gold',
-    emoji: '🌹',
-    seccion: 'Salones & Estética',
-    config: { color_primario:'#C4848A', color_primario_suave:'#C4848A18', color_fondo:'#FFF8F6', color_superficie:'#FFFFFF', color_superficie2:'#FFF0EE', color_borde:'#D4A5A5', color_texto:'#2B1B17', color_texto_suave:'#8A5E62', color_acento:'#E5B3B3', color_exito:'#4A7C59', color_peligro:'#B91C1C' },
-  },
-  {
-    nombre: 'Esmeralda Orgánico',
-    emoji: '🌿',
-    seccion: 'Salones & Estética',
-    config: { color_primario:'#0A231C', color_primario_suave:'#0A231C18', color_fondo:'#FAF8F5', color_superficie:'#FFFFFF', color_superficie2:'#F2EEE8', color_borde:'#D9C9B0', color_texto:'#0A231C', color_texto_suave:'#1E352F', color_acento:'#D9B48F', color_exito:'#2D6E4F', color_peligro:'#B91C1C' },
-  },
-  {
-    nombre: 'Matte Onyx',
-    emoji: '🖤',
-    seccion: 'Salones & Estética',
-    config: { color_primario:'#111111', color_primario_suave:'#11111114', color_fondo:'#FCFBF9', color_superficie:'#FFFFFF', color_superficie2:'#F4F2EF', color_borde:'#D5C3BE', color_texto:'#111111', color_texto_suave:'#8E7C77', color_acento:'#D5C3BE', color_exito:'#4A7C59', color_peligro:'#C0392B' },
-  },
+const PALETA_BASE_PUBLICO = [
+  { nombre: 'Cuero Clásico',       emoji: '💈', seccion: 'Barberías',         config: { color_primario:'#D4A373', color_primario_suave:'#D4A37320', color_fondo:'#FDFBF7', color_superficie:'#FFFFFF', color_superficie2:'#F5F1EA', color_borde:'#E8DED0', color_texto:'#1E1A17', color_texto_suave:'#4A5759', color_acento:'#D4A373', color_exito:'#4A7C59', color_peligro:'#C0392B' } },
+  { nombre: 'Cyber Obsidiana',      emoji: '⚡', seccion: 'Barberías',         config: { color_primario:'#66FCF1', color_primario_suave:'#66FCF120', color_fondo:'#0B0C10', color_superficie:'#1F2833', color_superficie2:'#151920', color_borde:'#2E3A46', color_texto:'#FFFFFF', color_texto_suave:'#A0AEB8', color_acento:'#66FCF1', color_exito:'#45A049', color_peligro:'#EF4444' } },
+  { nombre: 'Bosque Ejecutivo',     emoji: '♟️', seccion: 'Barberías',         config: { color_primario:'#D4AF37', color_primario_suave:'#D4AF3720', color_fondo:'#111E15', color_superficie:'#1A2B1E', color_superficie2:'#162019', color_borde:'#2A3D2E', color_texto:'#FAF6F0', color_texto_suave:'#8FA896', color_acento:'#D4AF37', color_exito:'#3E9B5E', color_peligro:'#E05252' } },
+  { nombre: 'Rose Gold',            emoji: '🌹', seccion: 'Salones & Estética', config: { color_primario:'#C4848A', color_primario_suave:'#C4848A18', color_fondo:'#FFF8F6', color_superficie:'#FFFFFF', color_superficie2:'#FFF0EE', color_borde:'#D4A5A5', color_texto:'#2B1B17', color_texto_suave:'#8A5E62', color_acento:'#E5B3B3', color_exito:'#4A7C59', color_peligro:'#B91C1C' } },
+  { nombre: 'Esmeralda Orgánico',   emoji: '🌿', seccion: 'Salones & Estética', config: { color_primario:'#0A231C', color_primario_suave:'#0A231C18', color_fondo:'#FAF8F5', color_superficie:'#FFFFFF', color_superficie2:'#F2EEE8', color_borde:'#D9C9B0', color_texto:'#0A231C', color_texto_suave:'#1E352F', color_acento:'#D9B48F', color_exito:'#2D6E4F', color_peligro:'#B91C1C' } },
+  { nombre: 'Matte Onyx',           emoji: '🖤', seccion: 'Salones & Estética', config: { color_primario:'#111111', color_primario_suave:'#11111114', color_fondo:'#FCFBF9', color_superficie:'#FFFFFF', color_superficie2:'#F4F2EF', color_borde:'#D5C3BE', color_texto:'#111111', color_texto_suave:'#8E7C77', color_acento:'#D5C3BE', color_exito:'#4A7C59', color_peligro:'#C0392B' } },
+  { nombre: 'Carbon',               emoji: '🪨', seccion: 'General',            config: { color_primario:'#374151', color_primario_suave:'#37415118', color_fondo:'#F9FAFB', color_superficie:'#FFFFFF', color_superficie2:'#F3F4F6', color_borde:'#E5E7EB', color_texto:'#111827', color_texto_suave:'#6B7280', color_acento:'#F59E0B', color_exito:'#10B981', color_peligro:'#EF4444' } },
 ]
 
-const PALETAS_ADMIN: Paleta<AdminConfigUI>[] = [
-  { nombre: 'Forest',    emoji: '🌲', seccion: 'General', config: { color_primario:'#6B7A5E', color_primario_suave:'#6B7A5E20', color_fondo:'#F4F6F3', color_superficie:'#FFFFFF', color_superficie2:'#EDEEE9', color_borde:'#D8DDD2', color_texto:'#1E2419', color_texto_suave:'#6B7265', color_acento:'#C8A46A', color_exito:'#4A7C59', color_peligro:'#C0453E' }},
-  { nombre: 'Índigo',    emoji: '💙', seccion: 'General', config: { color_primario:'#4F46E5', color_primario_suave:'#4F46E520', color_fondo:'#F5F3FF', color_superficie:'#FFFFFF', color_superficie2:'#EDE9FE', color_borde:'#DDD6FE', color_texto:'#1E1B4B', color_texto_suave:'#6D28D9', color_acento:'#EC4899', color_exito:'#059669', color_peligro:'#DC2626' }},
-  { nombre: 'Carbon',    emoji: '🖤', seccion: 'General', config: { color_primario:'#374151', color_primario_suave:'#37415118', color_fondo:'#F9FAFB', color_superficie:'#FFFFFF', color_superficie2:'#F3F4F6', color_borde:'#E5E7EB', color_texto:'#111827', color_texto_suave:'#6B7280', color_acento:'#F59E0B', color_exito:'#10B981', color_peligro:'#EF4444' }},
-  { nombre: 'Violet',    emoji: '🔮', seccion: 'General', config: { color_primario:'#7C3AED', color_primario_suave:'#7C3AED18', color_fondo:'#FAF5FF', color_superficie:'#FFFFFF', color_superficie2:'#F3E8FF', color_borde:'#E9D5FF', color_texto:'#2E1065', color_texto_suave:'#7E22CE', color_acento:'#F59E0B', color_exito:'#059669', color_peligro:'#DC2626' }},
-  { nombre: 'Teal',      emoji: '🩵', seccion: 'General', config: { color_primario:'#0D9488', color_primario_suave:'#0D948818', color_fondo:'#F0FDFA', color_superficie:'#FFFFFF', color_superficie2:'#CCFBF1', color_borde:'#99F6E4', color_texto:'#042F2E', color_texto_suave:'#0F766E', color_acento:'#F97316', color_exito:'#16A34A', color_peligro:'#DC2626' }},
-  { nombre: 'Obsidian',  emoji: '🌑', seccion: 'General', config: { color_primario:'#8B5CF6', color_primario_suave:'#8B5CF618', color_fondo:'#09090B', color_superficie:'#18181B', color_superficie2:'#27272A', color_borde:'#3F3F46', color_texto:'#FAFAFA', color_texto_suave:'#A1A1AA', color_acento:'#F59E0B', color_exito:'#22C55E', color_peligro:'#EF4444' }},
-]
+const PALETAS_PUBLICO: Paleta<TenantConfigUI>[] = PALETA_BASE_PUBLICO as any
+const PALETAS_ADMIN:   Paleta<AdminConfigUI>[]  = PALETA_BASE_PUBLICO as any
 
-// ── Tipos de empresa ──────────────────────────────────────────────────────────
+// ── Filtro por tipo ───────────────────────────────────────────────────────────
 
 const TIPOS_EMPRESA = [
   { id: 'todos',    label: 'Todas',               emoji: '✦' },
   { id: 'barberia', label: 'Barberías',            emoji: '💈' },
   { id: 'salon',    label: 'Salones & Estética',   emoji: '✨' },
+  { id: 'general',  label: 'General',              emoji: '🪨' },
 ]
 
 const SECCION_POR_TIPO: Record<string, string[]> = {
-  todos:    ['Barberías', 'Salones & Estética'],
+  todos:    ['Barberías', 'Salones & Estética', 'General'],
   barberia: ['Barberías'],
   salon:    ['Salones & Estética'],
+  general:  ['General'],
 }
 
 // ── Preview público ───────────────────────────────────────────────────────────
@@ -146,7 +111,6 @@ function PreviewPublico({ cfg, nombre }: { cfg: TenantConfigUI; nombre: string }
 function PreviewAdmin({ cfg }: { cfg: AdminConfigUI }) {
   return (
     <div style={{ background: cfg.color_fondo, borderRadius: 12, border: `1px solid ${cfg.color_borde}`, overflow: 'hidden', fontFamily: 'Inter, sans-serif', fontSize: 13 }}>
-      {/* Sidebar mini */}
       <div style={{ display: 'flex', height: 160 }}>
         <div style={{ width: 40, background: cfg.color_superficie, borderRight: `1px solid ${cfg.color_borde}`, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0', gap: 6 }}>
           <div style={{ width: 24, height: 24, borderRadius: 6, background: cfg.color_primario, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff' }}>NX</div>
@@ -156,7 +120,6 @@ function PreviewAdmin({ cfg }: { cfg: AdminConfigUI }) {
             </div>
           ))}
         </div>
-        {/* Main */}
         <div style={{ flex: 1, padding: 10 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: cfg.color_texto, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Agenda</div>
           {[{n:'Camila Z.', s:'Manicure', h:'10:00'},{n:'María L.', s:'Pedicure', h:'11:30'}].map(r => (
@@ -230,26 +193,156 @@ function EditorCampos<T extends Record<string, string>>({
   )
 }
 
+// ── Paletas grid compartido ───────────────────────────────────────────────────
+
+function PaletasGrid({ paletas, tipoEmpresa, onSelect }: {
+  paletas: Paleta<any>[]
+  tipoEmpresa: string
+  onSelect: (p: Paleta<any>) => void
+}) {
+  return (
+    <>
+      {SECCION_POR_TIPO[tipoEmpresa].map(seccion => {
+        const lista = paletas.filter(p => p.seccion === seccion)
+        if (!lista.length) return null
+        const iconSec = seccion === 'Barberías' ? '💈' : seccion === 'Salones & Estética' ? '✨' : '🪨'
+        return (
+          <div key={seccion} style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-ink-soft)', marginBottom: 8, paddingBottom: 4, borderBottom: '1px solid var(--color-border)' }}>
+              {iconSec} {seccion}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(176px, 1fr))', gap: 8 }}>
+              {lista.map(p => {
+                const cfg = p.config as any
+                const esDark = cfg.color_fondo && parseInt(cfg.color_fondo.replace('#','').slice(0,2), 16) < 80
+                return (
+                  <button key={p.nombre} onClick={() => onSelect(p)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: cfg.color_fondo ?? 'var(--color-surface)', cursor: 'pointer', textAlign: 'left', transition: 'box-shadow 0.15s' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
+                      <div style={{ width: 18, height: 10, borderRadius: 3, background: cfg.color_primario }} />
+                      <div style={{ width: 18, height: 10, borderRadius: 3, background: cfg.color_acento }} />
+                      <div style={{ width: 18, height: 10, borderRadius: 3, background: cfg.color_superficie ?? '#fff', border: '1px solid rgba(0,0,0,0.08)' }} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: esDark ? (cfg.color_texto ?? '#fff') : (cfg.color_texto ?? '#111'), lineHeight: 1.3 }}>{p.emoji} {p.nombre}</div>
+                      <div style={{ fontSize: 10, color: cfg.color_texto_suave ?? '#888', marginTop: 1 }}>{p.seccion}</div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+    </>
+  )
+}
+
+// ── Tab Empresa ───────────────────────────────────────────────────────────────
+
+const TIPOS_NEGOCIO = [
+  { id: 'barberia', label: 'Barbería',            emoji: '💈', desc: 'Cuero Clásico, Cyber Obsidiana, Bosque Ejecutivo' },
+  { id: 'salon',    label: 'Salón de belleza',    emoji: '✨', desc: 'Rose Gold, Esmeralda Orgánico, Matte Onyx' },
+  { id: 'spa',      label: 'Spa / Wellness',      emoji: '🌿', desc: 'Tonos orgánicos y Esmeralda' },
+  { id: 'nail',     label: 'Nail Art / Manicure', emoji: '💅', desc: 'Matte Onyx y tonos minimalistas' },
+  { id: 'general',  label: 'Negocio general',     emoji: '🪨', desc: 'Carbon y tonos neutros' },
+]
+
+function TabEmpresa({ empresaId, empresas }: { empresaId: number | null; empresas: any[] }) {
+  const [datos, setDatos] = useState<{ nombre_empresa: string; slug: string; tipo_negocio: string | null } | null>(null)
+  const [guardando, setGuardando] = useState(false)
+  const [guardado,  setGuardado]  = useState(false)
+  const [error,     setError]     = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!empresaId) return
+    supabase.from('empresas')
+      .select('nombre_empresa, slug, tipo_negocio')
+      .eq('id_empresa', empresaId)
+      .single()
+      .then(({ data }) => {
+        if (data) setDatos({ nombre_empresa: data.nombre_empresa, slug: data.slug ?? '', tipo_negocio: data.tipo_negocio ?? null })
+      })
+  }, [empresaId])
+
+  async function guardar() {
+    if (!empresaId || !datos) return
+    setGuardando(true); setError(null)
+    const { error: err } = await supabase.from('empresas')
+      .update({ tipo_negocio: datos.tipo_negocio })
+      .eq('id_empresa', empresaId)
+    if (err) setError('No se pudo guardar. ' + err.message)
+    else { setGuardado(true); setTimeout(() => setGuardado(false), 3000) }
+    setGuardando(false)
+  }
+
+  if (!datos) return <p style={{ color: 'var(--color-ink-soft)' }}>Cargando…</p>
+
+  return (
+    <div style={{ maxWidth: 640 }}>
+      <div className="card" style={{ padding: '20px 24px', marginBottom: 20 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-ink-soft)', marginBottom: 16 }}>Información de la empresa</div>
+        <div style={{ display: 'grid', gap: 14 }}>
+          <div className="field">
+            <label>Nombre</label>
+            <input value={datos.nombre_empresa} disabled style={{ opacity: 0.6 }} />
+          </div>
+          <div className="field">
+            <label>Slug (URL pública)</label>
+            <input value={datos.slug} disabled style={{ opacity: 0.6, fontFamily: 'monospace', fontSize: 13 }} />
+            <div style={{ fontSize: 11, color: 'var(--color-ink-soft)', marginTop: 4 }}>
+              Página de reservas: <code style={{ background: 'var(--color-surface-2)', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>/r/{datos.slug}</code>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: '20px 24px', marginBottom: 20 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-ink-soft)', marginBottom: 4 }}>Tipo de negocio</div>
+        <div style={{ fontSize: 12, color: 'var(--color-ink-soft)', marginBottom: 16 }}>Clasifica el negocio para filtrar automáticamente las paletas relevantes en Página pública y Panel admin.</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
+          {TIPOS_NEGOCIO.map(t => {
+            const activo = datos.tipo_negocio === t.id
+            return (
+              <button key={t.id}
+                onClick={() => { setDatos(d => d ? { ...d, tipo_negocio: t.id } : d); setGuardado(false) }}
+                style={{ padding: '12px 14px', borderRadius: 'var(--radius-sm)', border: activo ? '2px solid var(--color-primary)' : '1px solid var(--color-border)', background: activo ? 'var(--color-primary-soft)' : 'var(--color-surface)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                <div style={{ fontSize: 20, marginBottom: 6 }}>{t.emoji}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: activo ? 'var(--color-primary)' : 'var(--color-ink)', marginBottom: 3 }}>{t.label}</div>
+                <div style={{ fontSize: 11, color: 'var(--color-ink-soft)', lineHeight: 1.4 }}>{t.desc}</div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {error && <div className="error-text" style={{ marginBottom: 12 }}>{error}</div>}
+      <button className="btn btn--primary btn--icon" onClick={guardar} disabled={guardando || guardado}>
+        {guardando ? 'Guardando…' : guardado ? '✓ Guardado' : <><IconGuardar /> Guardar</>}
+      </button>
+    </div>
+  )
+}
+
 // ── Page principal ────────────────────────────────────────────────────────────
 
-type Tab = 'publico' | 'admin'
+type Tab = 'publico' | 'admin' | 'empresa'
 
 export function TemaEmpresaPage() {
   const { empresaId, empresas } = useFiltroEmpresa()
   const empresa = empresas.find(e => e.id_empresa === empresaId)
   const { configAdmin: configAdminActual } = useAdminTheme()
 
-  const [tab,            setTab]            = useState<Tab>('publico')
-  const [configPublico,  setConfigPublico]  = useState<TenantConfigUI>({ ...CONFIG_UI_DEFAULTS })
-  const [configAdmin,    setConfigAdmin]    = useState<AdminConfigUI>({ ...ADMIN_CONFIG_DEFAULTS })
-  const [grupoPublico,   setGrupoPublico]   = useState('Marca')
-  const [grupoAdmin,     setGrupoAdmin]     = useState('Marca')
-  const [tipoEmpresa,    setTipoEmpresa]    = useState('todos')
-  const [guardando,      setGuardando]      = useState(false)
-  const [guardado,       setGuardado]       = useState(false)
-  const [error,          setError]          = useState<string | null>(null)
+  const [tab,           setTab]           = useState<Tab>('publico')
+  const [configPublico, setConfigPublico] = useState<TenantConfigUI>({ ...CONFIG_UI_DEFAULTS })
+  const [configAdmin,   setConfigAdmin]   = useState<AdminConfigUI>({ ...ADMIN_CONFIG_DEFAULTS })
+  const [grupoPublico,  setGrupoPublico]  = useState('Marca')
+  const [grupoAdmin,    setGrupoAdmin]    = useState('Marca')
+  const [tipoEmpresa,   setTipoEmpresa]   = useState('todos')
+  const [guardando,     setGuardando]     = useState(false)
+  const [guardado,      setGuardado]      = useState(false)
+  const [error,         setError]         = useState<string | null>(null)
 
-  // Cargar ambas configs de la BD
   useEffect(() => {
     if (!empresaId) return
     supabase.from('empresas').select('config_ui, config_ui_admin').eq('id_empresa', empresaId).single()
@@ -259,7 +352,6 @@ export function TemaEmpresaPage() {
       })
   }, [empresaId])
 
-  // Sync admin config con el estado actual aplicado
   useEffect(() => {
     setConfigAdmin(prev => ({ ...prev, ...configAdminActual }))
   }, [configAdminActual])
@@ -286,24 +378,28 @@ export function TemaEmpresaPage() {
 
   function resetear() {
     if (tab === 'publico') setConfigPublico({ ...CONFIG_UI_DEFAULTS })
-    else                   setConfigAdmin({   ...ADMIN_CONFIG_DEFAULTS })
+    if (tab === 'admin')   setConfigAdmin({   ...ADMIN_CONFIG_DEFAULTS })
     setGuardado(false)
   }
 
   return (
     <div className="main">
       <PageHeader titulo="Tema visual">
-        <button className="btn btn--ghost" onClick={resetear}>Restaurar</button>
-        <button className={`btn ${guardado ? 'btn--ghost' : 'btn--primary'} btn--icon`} onClick={guardar} disabled={guardando}>
-          {guardando ? 'Guardando…' : guardado ? '✓ Guardado' : <><IconGuardar /> Guardar cambios</>}
-        </button>
+        {tab !== 'empresa' && (
+          <button className="btn btn--ghost" onClick={resetear}>Restaurar</button>
+        )}
+        {tab !== 'empresa' && (
+          <button className={`btn ${guardado ? 'btn--ghost' : 'btn--primary'} btn--icon`} onClick={guardar} disabled={guardando}>
+            {guardando ? 'Guardando…' : guardado ? '✓ Guardado' : <><IconGuardar /> Guardar cambios</>}
+          </button>
+        )}
       </PageHeader>
 
       {error && <div className="error-text" style={{ marginBottom: 16 }}>{error}</div>}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: '2px solid var(--color-border)' }}>
-        {([['publico','🌐 Página pública'],['admin','⚙️ Panel admin']] as [Tab,string][]).map(([t, label]) => (
+        {([['publico','🌐 Página pública'],['admin','⚙️ Panel admin'],['empresa','🏢 Empresa']] as [Tab,string][]).map(([t, label]) => (
           <button key={t} onClick={() => { setTab(t); setGuardado(false) }}
             style={{ padding: '10px 24px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: tab === t ? 'var(--color-primary)' : 'var(--color-ink-soft)', borderBottom: tab === t ? '2px solid var(--color-primary)' : '2px solid transparent', marginBottom: -2, transition: 'all .2s' }}>
             {label}
@@ -311,18 +407,23 @@ export function TemaEmpresaPage() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24, alignItems: 'start' }}>
+      {/* ── Tab Empresa ── */}
+      {tab === 'empresa' && (
+        <TabEmpresa empresaId={empresaId} empresas={empresas} />
+      )}
 
-        {/* ── Panel izquierdo: editor ── */}
-        <div>
-          {/* Paletas */}
-          <div className="card" style={{ padding: '16px 20px', marginBottom: 20 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-ink-soft)', marginBottom: 12 }}>
-              Paletas — {tab === 'publico' ? 'Página pública' : 'Panel admin'}
-            </div>
+      {/* ── Tabs Público / Admin ── */}
+      {tab !== 'empresa' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24, alignItems: 'start' }}>
 
-            {/* Filtro por tipo de empresa (solo tab público) */}
-            {tab === 'publico' && (
+          {/* Panel izquierdo */}
+          <div>
+            {/* Paletas */}
+            <div className="card" style={{ padding: '16px 20px', marginBottom: 20 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-ink-soft)', marginBottom: 12 }}>
+                Paletas — {tab === 'publico' ? 'Página pública' : 'Panel admin'}
+              </div>
+              {/* Filtro tipo */}
               <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
                 {TIPOS_EMPRESA.map(t => (
                   <button key={t.id} onClick={() => setTipoEmpresa(t.id)}
@@ -332,86 +433,43 @@ export function TemaEmpresaPage() {
                   </button>
                 ))}
               </div>
-            )}
+              <PaletasGrid
+                paletas={tab === 'publico' ? PALETAS_PUBLICO : PALETAS_ADMIN}
+                tipoEmpresa={tipoEmpresa}
+                onSelect={p => tab === 'publico'
+                  ? setConfigPublico(prev => ({ ...prev, ...p.config }))
+                  : setConfigAdmin(prev => ({ ...prev, ...p.config }))
+                }
+              />
+            </div>
 
-            {/* Paletas agrupadas por sección */}
-            {tab === 'publico' ? (
-              SECCION_POR_TIPO[tipoEmpresa].map(seccion => {
-                const paletas = PALETAS_PUBLICO.filter(p => p.seccion === seccion)
-                return (
-                  <div key={seccion} style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-ink-soft)', marginBottom: 8, paddingBottom: 4, borderBottom: '1px solid var(--color-border)' }}>
-                      {seccion === 'Barberías' ? '💈 Barberías' : '✨ Salones & Estética'}
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(176px, 1fr))', gap: 8 }}>
-                      {paletas.map(p => {
-                        const cfg = p.config as any
-                        const esDark = cfg.color_fondo && parseInt(cfg.color_fondo.replace('#','').slice(0,2), 16) < 80
-                        return (
-                          <button key={p.nombre}
-                            onClick={() => setConfigPublico(prev => ({ ...prev, ...p.config }))}
-                            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: cfg.color_fondo ?? 'var(--color-surface)', cursor: 'pointer', textAlign: 'left', transition: 'box-shadow 0.15s' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
-                              <div style={{ width: 18, height: 10, borderRadius: 3, background: cfg.color_primario }} />
-                              <div style={{ width: 18, height: 10, borderRadius: 3, background: cfg.color_acento }} />
-                              <div style={{ width: 18, height: 10, borderRadius: 3, background: cfg.color_superficie ?? '#fff', border: '1px solid rgba(0,0,0,0.08)' }} />
-                            </div>
-                            <div>
-                              <div style={{ fontSize: 12, fontWeight: 700, color: esDark ? (cfg.color_texto ?? '#fff') : (cfg.color_texto ?? '#111'), lineHeight: 1.3 }}>{p.emoji} {p.nombre}</div>
-                              <div style={{ fontSize: 10, color: cfg.color_texto_suave ?? '#888', marginTop: 1 }}>{p.seccion}</div>
-                            </div>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )
-              })
-            ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {PALETAS_ADMIN.map(p => (
-                  <button key={p.nombre}
-                    onClick={() => setConfigAdmin(prev => ({ ...prev, ...p.config }))}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: (p.config as any).color_fondo ?? 'var(--color-surface)', color: (p.config as any).color_texto ?? 'var(--color-ink)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
-                    <span>{p.emoji}</span>
-                    <span>{p.nombre}</span>
-                    <span style={{ display: 'flex', gap: 2, marginLeft: 2 }}>
-                      {[(p.config as any).color_primario, (p.config as any).color_acento].map((c: string, i: number) => (
-                        <span key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c, border: '1px solid rgba(0,0,0,0.1)' }} />
-                      ))}
-                    </span>
-                  </button>
-                ))}
+            {/* Campos */}
+            {tab === 'publico'
+              ? <EditorCampos campos={CAMPOS_PUBLICO} config={configPublico as any} onChange={setCampoPublico as any} grupoActivo={grupoPublico} setGrupoActivo={setGrupoPublico}/>
+              : <EditorCampos campos={CAMPOS_ADMIN}   config={configAdmin as any}   onChange={setCampoAdmin as any}   grupoActivo={grupoAdmin}   setGrupoActivo={setGrupoAdmin}/>
+            }
+          </div>
+
+          {/* Panel derecho: preview */}
+          <div style={{ position: 'sticky', top: 24 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-ink-soft)', marginBottom: 10 }}>
+              Vista previa
+            </div>
+            {tab === 'publico'
+              ? <PreviewPublico cfg={configPublico} nombre={empresa?.nombre_empresa ?? 'Mi Negocio'}/>
+              : <PreviewAdmin   cfg={configAdmin}/>
+            }
+            <div className="card" style={{ padding: '12px 16px', marginTop: 16 }}>
+              <div style={{ fontSize: 11, color: 'var(--color-ink-soft)', marginBottom: 4 }}>Empresa activa</div>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{empresa?.nombre_empresa ?? '—'}</div>
+              <div style={{ fontSize: 11, color: 'var(--color-ink-soft)', marginTop: 4 }}>
+                {tab === 'publico' ? 'Aplica al sitio público de reservas' : 'Aplica al panel de administración'}
               </div>
-            )}
-          </div>
-
-          {/* Campos */}
-          {tab === 'publico'
-            ? <EditorCampos campos={CAMPOS_PUBLICO} config={configPublico as any} onChange={setCampoPublico as any} grupoActivo={grupoPublico} setGrupoActivo={setGrupoPublico}/>
-            : <EditorCampos campos={CAMPOS_ADMIN}   config={configAdmin as any}   onChange={setCampoAdmin as any}   grupoActivo={grupoAdmin}   setGrupoActivo={setGrupoAdmin}/>
-          }
-        </div>
-
-        {/* ── Panel derecho: preview ── */}
-        <div style={{ position: 'sticky', top: 24 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-ink-soft)', marginBottom: 10 }}>
-            Vista previa
-          </div>
-          {tab === 'publico'
-            ? <PreviewPublico cfg={configPublico} nombre={empresa?.nombre_empresa ?? 'Mi Negocio'}/>
-            : <PreviewAdmin   cfg={configAdmin}/>
-          }
-          <div className="card" style={{ padding: '12px 16px', marginTop: 16 }}>
-            <div style={{ fontSize: 11, color: 'var(--color-ink-soft)', marginBottom: 4 }}>Empresa activa</div>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>{empresa?.nombre_empresa ?? '—'}</div>
-            <div style={{ fontSize: 11, color: 'var(--color-ink-soft)', marginTop: 4 }}>
-              {tab === 'publico' ? 'Aplica al sitio público de reservas' : 'Aplica al panel de administración'}
             </div>
           </div>
-        </div>
 
-      </div>
+        </div>
+      )}
     </div>
   )
 }
