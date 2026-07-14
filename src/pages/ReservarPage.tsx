@@ -625,6 +625,13 @@ export function ReservarPage() {
                   <button className="rxp-back" onClick={() => irPaso(2)}>← Volver</button>
                   <div className="rxp-title"><span>Elige fecha y hora</span></div>
                   <div className="rxp-sub">Selecciona el día y luego la hora disponible</div>
+
+                  {/* El error también debe verse acá: cuando la hora se la gana
+                      otra persona, handleConfirmar hace setError(...) + irPaso(3).
+                      El render del error del paso 4 se desmonta con su bloque, así
+                      que sin esto el usuario volvía al calendario sin explicación. */}
+                  {error && <div className="rxp-error">{error}</div>}
+
                   <div className="rxp-cal-wrap">
                     <div>
                       <div className="rxp-cal-nav">
@@ -677,7 +684,7 @@ export function ReservarPage() {
                           {horasDelDia.map((h, i) => (
                             <button key={h} className={`rxp-hp ${horaElegida === h ? 'sel' : ''}`}
                               style={{ animationDelay: `${i * 35}ms` }}
-                              onClick={() => { setHoraElegida(h); triggerRipple('h'+h) }}>
+                              onClick={() => { setError(null); setHoraElegida(h); triggerRipple('h'+h) }}>
                               {h}
                             </button>
                           ))}
