@@ -1,0 +1,45 @@
+# ── Dependencias ──────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Build ─────────────────────────────────────
+dist/
+dist-ssr/
+build/
+*.local
+
+# ── Variables de entorno ──────────────────────
+# .env NUNCA se versiona. Solo .env.example (con placeholders).
+.env
+.env.*
+!.env.example
+
+# ── Editor / SO ───────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── Logs ──────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Supabase (CLI local) ──────────────────────
+.branches/
+.temp/
+supabase/.temp/
+
+# ── Python (subir_v6.py) ──────────────────────
+__pycache__/
+*.py[cod]
