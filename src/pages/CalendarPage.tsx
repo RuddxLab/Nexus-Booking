@@ -221,21 +221,17 @@ export function CalendarPage() {
 
       {vista === 'semana' && (
         <>
-          {/* Fila de filtros: empresa/sucursal + prestador */}
-          {!esPrestador && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
-              {(esAdmin || esSupervisor) && empresas.length > 0 && (
-                <>
-                  <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Empresa:</span>
-                  <select
-                    value={empresaId ?? ''}
-                    onChange={e => setEmpresaId(Number(e.target.value))}
-                    style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
-                  >
-                    {empresas.map(e => <option key={e.id_empresa} value={e.id_empresa}>{e.nombre_empresa}</option>)}
-                  </select>
-                </>
-              )}
+          {/* Fila 1: Empresa + Sucursal */}
+          {!esPrestador && (esAdmin || esSupervisor) && empresas.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Empresa:</span>
+              <select
+                value={empresaId ?? ''}
+                onChange={e => setEmpresaId(Number(e.target.value))}
+                style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
+              >
+                {empresas.map(e => <option key={e.id_empresa} value={e.id_empresa}>{e.nombre_empresa}</option>)}
+              </select>
               {sucursalesDeEmpresa.length > 1 && (
                 <>
                   <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sucursal:</span>
@@ -248,7 +244,13 @@ export function CalendarPage() {
                   </select>
                 </>
               )}
-              {prestadores.length > 0 && (
+            </div>
+          )}
+
+          {/* Fila 2: Ver agenda de (izq) + nav botones (der) */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {!esPrestador && prestadores.length > 0 && (
                 <>
                   <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ver agenda de:</span>
                   <select
@@ -263,10 +265,6 @@ export function CalendarPage() {
                 </>
               )}
             </div>
-          )}
-
-          {/* Botones nav — pegados al calendario, derecha */}
-          <div style={{ display: 'flex', justifyContent: esPrestador ? 'flex-start' : 'flex-end', marginBottom: 4 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <button className="btn btn--ghost cal-nav-btn" onClick={() => moverSemana(-1)} title="Semana anterior">
                 <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>

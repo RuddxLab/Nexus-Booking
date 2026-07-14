@@ -358,16 +358,17 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
           </SidebarSection>
         )}
 
-        {/* Supervisor: usuarios + tema visual */}
+        {/* Supervisor: usuarios + sucursales + tema visual */}
         {esSupervisor && (
           <SidebarSection
             titulo="Administración"
             icono={Icons.empresa}
             colorKey="empresa"
-            rutas={['/admin/usuarios', '/admin/tema']}
+            rutas={['/admin/usuarios', '/admin/sucursales', '/admin/tema']}
           >
-            <SidebarBtn to="/admin/usuarios"  label="Usuarios"    colorKey="usuarios" onClick={onNavegar}/>
-            <SidebarBtn to="/admin/tema"      label="Tema visual" colorKey="tema"     onClick={onNavegar}/>
+            <SidebarBtn to="/admin/usuarios"  label="Usuarios"    colorKey="usuarios"   onClick={onNavegar}/>
+            <SidebarBtn to="/admin/sucursales" label="Sucursales" colorKey="sucursales" onClick={onNavegar}/>
+            <SidebarBtn to="/admin/tema"      label="Tema visual" colorKey="tema"       onClick={onNavegar}/>
           </SidebarSection>
         )}
       </div>
