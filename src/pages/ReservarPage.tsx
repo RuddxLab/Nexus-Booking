@@ -224,7 +224,7 @@ export function ReservarPage() {
     confirmandoRef.current = true
     setGuardando(true)
     try {
-      const { id, token } = await crearReservaPublica({
+      const { id, token, yaExistia } = await crearReservaPublica({
         idEmpresa:      tenant.idEmpresa,
         idSucursal:     tenant.idSucursal,
         idPrestador:    prestadorElegido.id_prestador,
@@ -240,6 +240,15 @@ export function ReservarPage() {
       // idempotente y devuelve la existente) — marcar ANTES de enviar correo
       guardarDatos({ nombre, rut, telefono, email: email.trim().toLowerCase() })
       setReservado(true)
+
+      // yaExistia = la RPC chocó con la constraint EXCLUDE, pero la reserva en
+      // conflicto era de este MISMO email → nos devolvió la que ya estaba.
+      // Pasa con doble pestaña, back/forward, o reintento tras timeout.
+      // El correo ya salió cuando se creó: reenviarlo confunde al cliente
+      // (dos correos, una sola cita). Mostramos la confirmación igual, porque
+      // la reserva existe y es suya — solo no duplicamos el correo.
+      if (yaExistia) return
+
       // Enviar correo en background (si falla no afecta la reserva)
       const [h, m] = horaElegida.split(':').map(Number)
       const t = h*60 + m + servicioElegido.duracion
