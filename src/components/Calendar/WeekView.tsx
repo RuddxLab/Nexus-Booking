@@ -44,26 +44,33 @@ interface BloqueRojo {
 }
 
 /** Bloque visual rojo */
-function BloqueAusencia({ bloque, horaInicioDia }: { bloque: BloqueRojo; horaInicioDia: number }) {
-  const inicioMin = timeToMinutes(bloque.horaInicio) - horaInicioDia * 60
-  const finMin    = timeToMinutes(bloque.horaFin)    - horaInicioDia * 60
-  const top    = Math.max(0, (inicioMin / 60) * ALTO_HORA_PX)
-  const height = Math.max(((finMin - inicioMin) / 60) * ALTO_HORA_PX, 20)
+function BloqueAusencia({ bloque, horaInicioDia, totalHoras }: {
+  bloque: BloqueRojo
+  horaInicioDia: number
+  totalHoras: number
+}) {
+  const totalAlto   = totalHoras * ALTO_HORA_PX
+  const inicioMin   = timeToMinutes(bloque.horaInicio) - horaInicioDia * 60
+  const finMin      = timeToMinutes(bloque.horaFin)    - horaInicioDia * 60
+  const top         = Math.max(0, (inicioMin / 60) * ALTO_HORA_PX)
+  const height      = bloque.diaCom
+    ? totalAlto
+    : Math.max(((finMin - inicioMin) / 60) * ALTO_HORA_PX, 20)
 
   return (
     <div
       style={{
         position: 'absolute',
-        top:    bloque.diaCom ? 0 : top,
-        bottom: bloque.diaCom ? 0 : undefined,
-        height: bloque.diaCom ? undefined : height,
-        left: 0, right: 0,
-        background: 'rgba(229,72,77,0.10)',
+        top,
+        left: 2,
+        right: 2,
+        height,
+        background: bloque.diaCom ? 'rgba(229,72,77,0.08)' : 'rgba(229,72,77,0.10)',
         borderLeft: '3px solid #E5484D',
+        borderRadius: 6,
         zIndex: 1,
         pointerEvents: 'none',
-        // Día completo: sin texto, el header ya lo muestra
-        ...(bloque.diaCom ? {} : {
+        ...(!bloque.diaCom ? {
           display: 'flex',
           alignItems: 'flex-start',
           padding: '4px 6px',
@@ -72,7 +79,7 @@ function BloqueAusencia({ bloque, horaInicioDia }: { bloque: BloqueRojo; horaIni
           fontWeight: 600,
           overflow: 'hidden',
           lineHeight: 1.3,
-        }),
+        } : {}),
       }}
       title={bloque.etiqueta}
     >
@@ -255,7 +262,7 @@ export function WeekView({
 
                   {/* Bloques rojos de ausencias y días bloqueados */}
                   {bloques.map((b, i) => (
-                    <BloqueAusencia key={i} bloque={b} horaInicioDia={horaInicio} />
+                    <BloqueAusencia key={i} bloque={b} horaInicioDia={horaInicio} totalHoras={horas.length} />
                   ))}
 
                   {/* Citas con columnas anti-solapamiento */}
