@@ -280,6 +280,7 @@ export function CalendarPage() {
               onDiaClick={setDiaSeleccionadoMes}
               onCitaClick={(cita) => setCitaSeleccionada(cita)}
             />
+          )}
         </>
       )}
 
