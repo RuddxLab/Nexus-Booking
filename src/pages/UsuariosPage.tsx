@@ -78,6 +78,10 @@ export function UsuariosPage() {
   const [invGuardando,  setInvGuardando]  = useState(false)
   const [invError,      setInvError]      = useState<string | null>(null)
   const [invOk,         setInvOk]         = useState<string | null>(null)
+  // Aviso separado de invError: cuando el usuario SÍ se creó pero el correo
+  // falló, es un éxito parcial. invError vive dentro del formulario, que se
+  // oculta cuando hay invOk — así que ahí este mensaje no se vería nunca.
+  const [invCorreoAviso, setInvCorreoAviso] = useState<string | null>(null)
 
   // Modal cambiar rol
   const [modalRol,      setModalRol]      = useState<UsuarioFila | null>(null)
@@ -149,15 +153,27 @@ export function UsuariosPage() {
 
   async function handleInvitar() {
     if (!invEmail.trim() || !invRol || !invEmpresa) return setInvError('Completa todos los campos.')
-    setInvGuardando(true); setInvError(null); setInvOk(null)
+    setInvGuardando(true); setInvError(null); setInvOk(null); setInvCorreoAviso(null)
     try {
+      const destinatario = invEmail.trim()
       const res = await callFn('POST', { accion: 'invitar' }, {
-        email: invEmail.trim(), nombre: invNombre.trim(), id_rol: invRol, id_empresa: invEmpresa
+        email: destinatario, nombre: invNombre.trim(), id_rol: invRol, id_empresa: invEmpresa
       })
-      if (res.ya_existia) {
-        setInvOk(`El usuario ${invEmail.trim()} ya tenía cuenta. Se le asignó el rol seleccionado.`)
+
+      // Antes esto afirmaba "Se envió un correo de bienvenida" sin saberlo.
+      // Ahora la Edge Function reporta el resultado real del envío.
+      const base = res.ya_existia
+        ? `${destinatario} ya tenía cuenta. Se le asignó el rol seleccionado.`
+        : `Usuario ${destinatario} creado.`
+
+      if (res.correo_enviado) {
+        setInvOk(`${base} Se le envió el correo de invitación.`)
       } else {
-        setInvOk(`Usuario creado. Se envió un correo de bienvenida a ${invEmail.trim()}.`)
+        setInvOk(base)
+        setInvCorreoAviso(
+          `El correo NO se pudo enviar: ${res.correo_error ?? 'motivo desconocido'} ` +
+          `El acceso ya está activo: puede entrar con "¿Olvidaste tu contraseña?" usando ${destinatario}.`
+        )
       }
       setInvEmail(''); setInvNombre(''); setInvRol('')
       cargar(empresaFiltro !== '' ? empresaFiltro as number : undefined)
@@ -189,7 +205,7 @@ export function UsuariosPage() {
   }
 
   function abrirModalInvitar() {
-    setModalInvitar(true); setInvOk(null); setInvError(null)
+    setModalInvitar(true); setInvOk(null); setInvError(null); setInvCorreoAviso(null)
     setInvEmail(''); setInvNombre(''); setInvRol('')
     if (empresaFiltro !== '') setInvEmpresa(empresaFiltro as number)
     else if (empresas.length === 1) setInvEmpresa(empresas[0].id_empresa)
@@ -327,8 +343,15 @@ export function UsuariosPage() {
                   background: 'var(--color-success-soft)', color: 'var(--color-success)',
                   borderRadius: 8, padding: '12px 14px', fontSize: 13, marginBottom: 20, lineHeight: 1.5,
                 }}>✓ {invOk}</div>
+                {invCorreoAviso && (
+                  <div style={{
+                    background: 'var(--color-warning-soft)', color: 'var(--color-warning)',
+                    border: '1px solid var(--color-warning)',
+                    borderRadius: 8, padding: '12px 14px', fontSize: 13, marginBottom: 20, lineHeight: 1.5,
+                  }}>⚠ {invCorreoAviso}</div>
+                )}
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                  <button className="btn btn--ghost" onClick={() => { setInvOk(null) }}>Invitar otro</button>
+                  <button className="btn btn--ghost" onClick={() => { setInvOk(null); setInvCorreoAviso(null) }}>Invitar otro</button>
                   <button className="btn btn--primary" onClick={() => setModalInvitar(false)}>Cerrar</button>
                 </div>
               </>
