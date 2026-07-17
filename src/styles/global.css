@@ -1229,3 +1229,53 @@ a { color: var(--color-ink); text-decoration: none; }
   padding:5px 10px;border-radius:6px;text-align:center;
   border:1px solid var(--rx-bdr-soft);
 }
+
+
+/* ── Badge de ambiente ─────────────────────────────────────────────────
+   Pegar al final de src/styles/global.css                              */
+
+.badge-ambiente {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #0a0a0a;
+
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Rayas diagonales: legible incluso de reojo o con daltonismo. */
+.badge-ambiente::before,
+.badge-ambiente::after {
+  content: '';
+  flex: 1;
+  height: 100%;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.28) 0 6px,
+    transparent 6px 12px
+  );
+}
+
+/* La banda es fixed: corre todo lo demás hacia abajo. */
+body.con-badge-ambiente {
+  padding-top: 22px;
+}
+
+@media print {
+  .badge-ambiente { display: none; }
+  body.con-badge-ambiente { padding-top: 0; }
+}

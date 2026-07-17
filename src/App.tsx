@@ -5,6 +5,7 @@ import { ThemeProvider } from './hooks/useTheme'
 import { useUserRole, PUEDE_GESTIONAR_CATALOGO } from './hooks/useUserRole'
 import { TenantProvider } from './context/TenantContext'
 import { AppShell } from './components/Layout/AppShell'
+import { BadgeAmbiente } from './components/Common/BadgeAmbiente'
 import { LoginPage } from './pages/LoginPage'
 import { CalendarPage } from './pages/CalendarPage'
 import { ClientesPage } from './pages/ClientesPage'
@@ -101,6 +102,8 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        {/* Banda de ambiente: visible en LOCAL y QA, invisible en PROD. */}
+        <BadgeAmbiente />
         <BrowserRouter>
           <Routes>
             {/* ── Rutas públicas por tenant (slug) ─────────────────────── */}
