@@ -23,7 +23,7 @@ import re
 import subprocess
 import sys
 
-RUTA_PROYECTO = r"D:\Ruddy\Escritorio\Nexus Agendamiento\nexus-booking"
+RUTA_PROYECTO = r"D:\Ruddy\Escritorio\Nexus Agendamiento\nexus-booking-QA"
 REMOTE_ESPERADO = "RuddxLab"
 RAMA = "main"
 

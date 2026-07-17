@@ -27,7 +27,7 @@ export function CancelarPage() {
 
   const token   = searchParams.get('token')
   const accion  = searchParams.get('accion') ?? 'cancelar'
-  const baseUrl = `/r/${slug ?? 'polish-nail-bar'}`
+  const baseUrl = `/r/${slug ?? ''}`
 
   const [estado,        setEstado]        = useState<Estado>('cargando')
   const [cita,          setCita]          = useState<DatosCita | null>(null)

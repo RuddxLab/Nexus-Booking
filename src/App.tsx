@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { ThemeProvider } from './hooks/useTheme'
 import { useUserRole, PUEDE_GESTIONAR_CATALOGO } from './hooks/useUserRole'
@@ -23,16 +23,12 @@ import { TipoCategoriasPage } from './pages/TipoCategoriasPage'
 import { TemaEmpresaPage } from './pages/TemaEmpresaPage'
 import { CorreoConfigPage } from './pages/CorreoConfigPage'
 
-// Slug por defecto para rutas legacy (emails enviados antes del cambio de rutas)
-const SLUG_DEFAULT = 'polish-nail-bar'
-
 /**
- * Redirige /cancelar?id=X&accion=Y → /r/polish-nail-bar/cancelar?id=X&accion=Y
- * preservando todos los query params para que los links de email sigan funcionando.
+ * Rutas legacy sin slug → redirige al login de admin.
+ * En PROD no hay un slug por defecto; cada empresa tiene su propia URL /r/:slug
  */
 function CancelarCompat() {
-  const { search } = useLocation()
-  return <Navigate to={`/r/${SLUG_DEFAULT}/cancelar${search}`} replace />
+  return <Navigate to="/admin/login" replace />
 }
 
 // ── Wrappers de tenant ────────────────────────────────────────────────────────
@@ -117,13 +113,13 @@ export default function App() {
             <Route path="/admin/*"     element={<RutasProtegidas />} />
 
             {/* ── Compat: rutas antiguas sin slug ──────────────────────── */}
-            {/* /cancelar?id=X&accion=Y  →  /r/polish-nail-bar/cancelar?id=X&accion=Y */}
+            {/* En PROD redirigen al login; cada empresa usa /r/:slug        */}
             <Route path="/cancelar" element={<CancelarCompat />} />
-            <Route path="/reservar" element={<Navigate to="/r/polish-nail-bar" replace />} />
-            <Route path="/"         element={<Navigate to="/r/polish-nail-bar" replace />} />
+            <Route path="/reservar" element={<Navigate to="/admin/login" replace />} />
+            <Route path="/"         element={<Navigate to="/admin/login" replace />} />
 
             {/* Catch-all */}
-            <Route path="*" element={<Navigate to="/r/polish-nail-bar" replace />} />
+            <Route path="*" element={<Navigate to="/admin/login" replace />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

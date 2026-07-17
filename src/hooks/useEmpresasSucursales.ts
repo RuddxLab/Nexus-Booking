@@ -24,8 +24,18 @@ export function useEmpresasSucursales() {
   const nombreSucursal  = (id: number) => sucursales.find((s) => s.id_sucursal  === id)?.nombre_sucursal  ?? String(id)
   const nombreCategoria = (id: number) => categorias.find((c) => c.id_categoria === id)?.nombre_categoria ?? String(id)
 
-  const opcionesEmpresa  = empresas.map((e) => ({ value: e.id_empresa,   label: e.nombre_empresa }))
-  const opcionesSucursal = sucursales.map((s) => ({ value: s.id_sucursal, label: s.nombre_sucursal }))
+  const opcionesEmpresa  = empresas.map((e) => ({
+    value: e.id_empresa,
+    label: e.nro_empresa != null
+      ? `${String(e.nro_empresa).padStart(3, '0')} - ${e.nombre_empresa}`
+      : e.nombre_empresa
+  }))
+  const opcionesSucursal = sucursales.map((s) => ({
+    value: s.id_sucursal,
+    label: s.nro_sucursal != null
+      ? `${String(s.nro_sucursal).padStart(3, '0')} - ${s.nombre_sucursal}`
+      : s.nombre_sucursal
+  }))
 
   const opcionesCategorias = (filtrarEmpresa?: number) =>
     categorias

@@ -2,14 +2,12 @@ import { CrudPage } from '../components/Common/CrudPage'
 import { empresasService } from '../services/entityServices'
 import type { Empresa } from '../types'
 
-/** Convierte un nombre a slug URL-friendly: "Polish Nail Bar" → "polish-nail-bar" */
-function nombreASlug(nombre: string): string {
-  return nombre
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // quitar tildes
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
+/** Genera un ID corto aleatorio de 8 caracteres en base36 (letras + números) */
+function generarSlugAleatorio(): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(6)))
+    .map(b => b.toString(36).padStart(2, '0'))
+    .join('')
+    .slice(0, 8)
 }
 
 export function EmpresasPage() {
@@ -22,9 +20,9 @@ export function EmpresasPage() {
       filtrarPorSucursal={false}
       defaults={{ activo: true } as any}
       transformPayload={(payload, esNuevo) => {
-        // Auto-generar slug desde nombre_empresa al crear (nunca sobreescribir en edición)
-        if (esNuevo && payload.nombre_empresa && !payload.slug) {
-          return { ...payload, slug: nombreASlug(payload.nombre_empresa) }
+        // Auto-generar slug aleatorio al crear — nunca modificable
+        if (esNuevo && !payload.slug) {
+          return { ...payload, slug: generarSlugAleatorio() }
         }
         return payload
       }}
@@ -36,12 +34,12 @@ export function EmpresasPage() {
         { key: 'activo',         label: 'Activa', render: (r) => (r.activo ? 'Sí' : 'No') },
       ]}
       campos={[
-        { key: 'nombre_empresa',    label: 'Nombre',            required: true, ancho: 'completo' },
-        { key: 'rut_empresa',       label: 'RUT',               type: 'rut' },
+        { key: 'nombre_empresa',    label: 'Nombre',             required: true, ancho: 'completo' },
+        { key: 'rut_empresa',       label: 'RUT',                type: 'rut' },
         { key: 'email_contacto',    label: 'Correo de contacto', type: 'email' },
         { key: 'direccion_empresa', label: 'Dirección' },
-        { key: 'slug', label: 'URL del negocio (ej: mi-salon)', soloEdicion: true },
-        { key: 'activo',            label: 'Activa',            type: 'checkbox' },
+        { key: 'slug',              label: 'URL del negocio',    soloEdicion: true, soloLectura: true },
+        { key: 'activo',            label: 'Activa',             type: 'checkbox' },
       ]}
     />
   )

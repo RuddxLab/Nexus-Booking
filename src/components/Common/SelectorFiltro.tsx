@@ -54,7 +54,9 @@ export function SelectorFiltro({
             style={SEL}
           >
             {empresas.map(e => (
-              <option key={e.id_empresa} value={e.id_empresa}>{e.nombre_empresa}</option>
+              <option key={e.id_empresa} value={e.id_empresa}>
+                {e.nro_empresa != null ? `${String(e.nro_empresa).padStart(3, '0')} - ${e.nombre_empresa}` : e.nombre_empresa}
+              </option>
             ))}
           </select>
         </div>
@@ -71,7 +73,9 @@ export function SelectorFiltro({
             style={SEL}
           >
             {sucursalesDeEmpresa.map(s => (
-              <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre_sucursal}</option>
+              <option key={s.id_sucursal} value={s.id_sucursal}>
+                {s.nro_sucursal != null ? `${String(s.nro_sucursal).padStart(3, '0')} - ${s.nombre_sucursal}` : s.nombre_sucursal}
+              </option>
             ))}
           </select>
         </div>

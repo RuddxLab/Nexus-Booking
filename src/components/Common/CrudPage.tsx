@@ -18,6 +18,7 @@ export interface CrudField {
   options?: { value: string | number; label: string }[]
   ancho?: 'completo'
   soloEdicion?: boolean
+  soloLectura?: boolean  // visible pero no editable en ningún modo
 }
 
 export interface CrudColumn {
@@ -526,11 +527,17 @@ export function CrudPage<T extends Record<string, any>>({
               return (
                 <div className={cls} key={campo.key}>
                   <label>{campo.label}</label>
-                  <input type={campo.type ?? 'text'} required={campo.required} value={valor ?? ''}
-                    onChange={e => setEditando({
+                  <input
+                    type={campo.type ?? 'text'}
+                    required={campo.required}
+                    value={valor ?? ''}
+                    readOnly={campo.soloLectura}
+                    style={campo.soloLectura ? { opacity: 0.5, cursor: 'not-allowed', userSelect: 'none' } : undefined}
+                    onChange={campo.soloLectura ? undefined : e => setEditando({
                       ...editando,
                       [campo.key]: campo.type === 'number' ? Number(e.target.value) : e.target.value
-                    })} />
+                    })}
+                  />
                 </div>
               )
             })}

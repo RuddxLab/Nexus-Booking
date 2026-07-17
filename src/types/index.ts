@@ -10,6 +10,7 @@ export type EstadoAgendamiento =
 
 export interface Empresa {
   id_empresa: number
+  nro_empresa: number | null
   nombre_empresa: string
   rut_empresa: string | null
   email_contacto: string | null
@@ -23,6 +24,7 @@ export interface Empresa {
 export interface Sucursal {
   id_sucursal: number
   id_empresa: number
+  nro_sucursal: number | null
   nombre_sucursal: string
   slug: string | null
   config_ui: Record<string, string> | null

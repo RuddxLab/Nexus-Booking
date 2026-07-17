@@ -194,7 +194,7 @@ export function CalendarPage() {
                 onChange={e => setEmpresaId(Number(e.target.value))}
                 style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
               >
-                {empresas.map(e => <option key={e.id_empresa} value={e.id_empresa}>{e.nombre_empresa}</option>)}
+                {empresas.map(e => <option key={e.id_empresa} value={e.id_empresa}>{e.nro_empresa != null ? `${String(e.nro_empresa).padStart(3, '0')} - ${e.nombre_empresa}` : e.nombre_empresa}</option>)}
               </select>
             </>
           )}
@@ -206,7 +206,7 @@ export function CalendarPage() {
                 onChange={e => setSucursalId(Number(e.target.value))}
                 style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
               >
-                {sucursalesDeEmpresa.map(s => <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre_sucursal}</option>)}
+                {sucursalesDeEmpresa.map(s => <option key={s.id_sucursal} value={s.id_sucursal}>{s.nro_sucursal != null ? `${String(s.nro_sucursal).padStart(3, '0')} - ${s.nombre_sucursal}` : s.nombre_sucursal}</option>)}
               </select>
             </>
           )}
@@ -230,7 +230,7 @@ export function CalendarPage() {
                 onChange={e => setEmpresaId(Number(e.target.value))}
                 style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
               >
-                {empresas.map(e => <option key={e.id_empresa} value={e.id_empresa}>{e.nombre_empresa}</option>)}
+                {empresas.map(e => <option key={e.id_empresa} value={e.id_empresa}>{e.nro_empresa != null ? `${String(e.nro_empresa).padStart(3, '0')} - ${e.nombre_empresa}` : e.nombre_empresa}</option>)}
               </select>
               {sucursalesDeEmpresa.length > 1 && (
                 <>
@@ -240,7 +240,7 @@ export function CalendarPage() {
                     onChange={e => setSucursalId(Number(e.target.value))}
                     style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-ink)', fontSize: 12 }}
                   >
-                    {sucursalesDeEmpresa.map(s => <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre_sucursal}</option>)}
+                    {sucursalesDeEmpresa.map(s => <option key={s.id_sucursal} value={s.id_sucursal}>{s.nro_sucursal != null ? `${String(s.nro_sucursal).padStart(3, '0')} - ${s.nombre_sucursal}` : s.nombre_sucursal}</option>)}
                   </select>
                 </>
               )}
