@@ -41,12 +41,12 @@ export function useFiltroEmpresa(): FiltroEmpresaState {
     if (!empresaId) return
     const subs = sucursales.filter(s => s.id_empresa === empresaId)
     if (subs.length === 0) { setSucursalId(null); return }
-    if (esSupervisor && idSucursalUsuario) {
+    if (esSupervisor && idSucursalUsuario && subs.some(s => s.id_sucursal === idSucursalUsuario)) {
       setSucursalId(idSucursalUsuario)
     } else {
       setSucursalId(subs[0].id_sucursal)
     }
-  }, [empresaId, sucursales.length]) // eslint-disable-line
+  }, [empresaId, sucursales.length, sucursales.map(s => s.id_sucursal).join(',')]) // eslint-disable-line
 
   const sucursalesDeEmpresa = sucursales.filter(s => s.id_empresa === empresaId)
 
