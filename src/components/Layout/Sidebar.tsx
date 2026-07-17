@@ -171,9 +171,9 @@ function ReservasBtn({ slugEmpresa, esAdmin }: { slugEmpresa: string | null; esA
     return () => document.removeEventListener('mousedown', fn)
   }, [abierto])
 
-  // Cargar empresas y sucursales cuando se abre (solo admin ve todas)
+  // Cargar empresas y sucursales al montar (no al abrir, para evitar popup blocker)
   useEffect(() => {
-    if (!abierto) return
+    if (!esAdmin) return
     const cargar = async () => {
       const { data: empresas } = await supabase
         .from('empresas')
@@ -201,7 +201,7 @@ function ReservasBtn({ slugEmpresa, esAdmin }: { slugEmpresa: string | null; esA
       setOpciones(resultado)
     }
     cargar()
-  }, [abierto])
+  }, [esAdmin])
 
   // Si no es admin, abrir directo sin desplegable
   const handleClick = () => {
