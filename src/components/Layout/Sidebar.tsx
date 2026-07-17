@@ -241,7 +241,7 @@ function ReservasBtn({ slugEmpresa, esAdmin }: { slugEmpresa: string | null; esA
               {/* Si tiene 1 sucursal, mostrar directo. Si tiene varias, mostrar empresa + sucursales */}
               {emp.sucursales.length === 1 ? (
                 <button
-                  onClick={() => { window.open(`/r/${emp.sucursales[0].slug}`, '_blank'); setAbierto(false) }}
+                  onClick={() => { window.open(`/r/${emp.slug}`, '_blank'); setAbierto(false) }}
                   style={{
                     display: 'block', width: '100%', textAlign: 'left',
                     padding: '9px 14px', background: 'none', border: 'none',
@@ -261,7 +261,7 @@ function ReservasBtn({ slugEmpresa, esAdmin }: { slugEmpresa: string | null; esA
                   {emp.sucursales.map(suc => (
                     <button
                       key={suc.slug}
-                      onClick={() => { window.open(`/r/${suc.slug}`, '_blank'); setAbierto(false) }}
+                      onClick={() => { window.open(`/r/${emp.slug}`, '_blank'); setAbierto(false) }}
                       style={{
                         display: 'block', width: '100%', textAlign: 'left',
                         padding: '7px 14px 7px 22px', background: 'none', border: 'none',
