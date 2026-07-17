@@ -233,6 +233,9 @@ export function CrudPage<T extends Record<string, any>>({
 
   function prepararPayload(): Partial<T> {
     const payload: any = { ...editando }
+    const camposNumericos = new Set(
+      campos.filter(c => c.type === 'number').map(c => c.key)
+    )
     for (const campo of campos) {
       if (campo.type === 'rut' && typeof payload[campo.key] === 'string')
         payload[campo.key] = limpiarRut(payload[campo.key])
@@ -240,7 +243,10 @@ export function CrudPage<T extends Record<string, any>>({
         payload[campo.key] = null
     }
     for (const key of Object.keys(payload)) {
-      if (payload[key] === '') payload[key] = null
+      if (payload[key] === '') {
+        // Campos numéricos vacíos → 0 (la BD tiene constraints >= 0)
+        payload[key] = camposNumericos.has(key) ? 0 : null
+      }
     }
     return payload
   }

@@ -26,7 +26,7 @@ export function ServiciosPage() {
       orderBy="nombre_servicio"
       busqueda={{ campos: ['nombre_servicio'], placeholder: 'Buscar servicio…' }}
       filaExpandible={s => <PrestadoresDelServicio servicio={s} />}
-      defaults={{ activo: true, maneja_iva: 0, tipo_comision: 'P' } as any}
+      defaults={{ activo: true, valor: 0, duracion: 30, comision: 0, maneja_iva: 0, tipo_comision: 'P' } as any}
       columnas={[
         { key: 'nombre_servicio', label: 'Servicio' },
         { key: 'id_categoria',   label: 'Categoría', render: r => nombreCategoria(r.id_categoria) },

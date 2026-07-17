@@ -16,7 +16,7 @@ export function PrestadoresPage() {
       orderBy="nombre_prestador"
       busqueda={{ campos: ['nombre_prestador', 'rut'], placeholder: 'Buscar por nombre o RUT…' }}
       campoFecha="fecha_creacion"
-      defaults={{ activo: true, reserva_online: 1, buffer_min: 0, dias_agenda: 30 } as any}
+      defaults={{ activo: true, reserva_online: 1, comision: 0, paso_agenda: 0, buffer_min: 0, dias_agenda: 30 } as any}
       columnas={[
         { key: 'nombre_prestador', label: 'Nombre' },
         { key: 'id_empresa',       label: 'Empresa',        render: r => nombreEmpresa(r.id_empresa) },
