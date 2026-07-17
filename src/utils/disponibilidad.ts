@@ -82,13 +82,20 @@ export function generarHorasDisponibles({
       horas.push(minutosAHora(inicio))
       mostrados.add(inicio)
     } else {
-      // Buscar primer slot válido dentro de esta ventana (hueco post-ausencia)
-      for (let offset = PASO_BUSQUEDA; offset < pasoDisplay; offset += PASO_BUSQUEDA) {
-        const candidato = inicio + offset
-        if (slotsValidos.has(candidato) && !mostrados.has(candidato)) {
-          horas.push(minutosAHora(candidato))
-          mostrados.add(candidato)
-          break
+      // Recuperar hueco post-ausencia SOLO si el slot fue bloqueado por una
+      // ausencia o reserva. Si simplemente ya pasó la hora, no rescatar:
+      // evita mostrar slots con separación menor al paso configurado.
+      const fueBloqueo = bloqueos.some((b) =>
+        seSuperponen(inicio, inicio + duracionMin, b.inicio, b.fin)
+      )
+      if (fueBloqueo) {
+        for (let offset = PASO_BUSQUEDA; offset < pasoDisplay; offset += PASO_BUSQUEDA) {
+          const candidato = inicio + offset
+          if (slotsValidos.has(candidato) && !mostrados.has(candidato)) {
+            horas.push(minutosAHora(candidato))
+            mostrados.add(candidato)
+            break
+          }
         }
       }
     }
