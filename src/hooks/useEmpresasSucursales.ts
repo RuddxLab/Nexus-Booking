@@ -12,7 +12,7 @@ export function useEmpresasSucursales() {
 
   useEffect(() => {
     // Empresas: siempre cargar (admin necesita verlas todas)
-    empresasService.listAll('nombre_empresa').then(setEmpresas).catch(() => setEmpresas([]))
+    empresasService.listAll('nro_empresa').then(setEmpresas).catch(() => setEmpresas([]))
     // Sucursales y categorías: esperar a que idEmpresa esté disponible
     if (!idEmpresa) return
     sucursalesService.listAll('nombre_sucursal', idEmpresa).then(setSucursales).catch(() => setSucursales([]))
