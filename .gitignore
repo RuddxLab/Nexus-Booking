@@ -44,4 +44,7 @@ supabase/.temp/
 # ── Python (subir_v6.py) ──────────────────────
 __pycache__/
 *.py[cod]
-subir*.py.py
+subir*.py
+
+# ── ZIP ──────────────────────
+*.zip
