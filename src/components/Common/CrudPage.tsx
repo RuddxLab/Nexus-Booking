@@ -17,6 +17,10 @@ export interface CrudField {
   required?: boolean
   dependsOn?: string
   options?: { value: string | number; label: string }[]
+  /** Opciones dinámicas en función del valor del campo `dependsOn`
+   *  (ej. sucursales filtradas por la empresa seleccionada). Si se define,
+   *  tiene prioridad sobre `options`. */
+  opcionesDe?: (dep: any) => { value: string | number; label: string }[]
   ancho?: 'completo'
   soloEdicion?: boolean
   soloLectura?: boolean  // visible pero no editable en ningún modo
@@ -481,19 +485,28 @@ export function CrudPage<T extends Record<string, any>>({
                 )
               }
 
-              if (campo.type === 'select') return (
-                <div className={cls} key={campo.key}>
-                  <label>{campo.label}</label>
-                  <select value={valor ?? ''}
-                    onChange={e => {
-                      const op = campo.options?.find(o => String(o.value) === e.target.value)
-                      setEditando({ ...editando, [campo.key]: op ? op.value : e.target.value })
-                    }}>
-                    <option value="">Selecciona…</option>
-                    {(campo.options ?? []).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
-              )
+              if (campo.type === 'select') {
+                const depVal   = campo.dependsOn ? (editando as any)[campo.dependsOn] : undefined
+                const opciones = campo.opcionesDe ? campo.opcionesDe(depVal) : (campo.options ?? [])
+                const bloqueado = !!campo.dependsOn && (depVal === undefined || depVal === null || depVal === '')
+                return (
+                  <div className={cls} key={campo.key}>
+                    <label>{campo.label}</label>
+                    <select value={valor ?? ''} disabled={bloqueado}
+                      onChange={e => {
+                        const op = opciones.find(o => String(o.value) === e.target.value)
+                        const nuevoVal = op ? op.value : e.target.value
+                        // Reset en cascada: limpiar selects que dependen de este campo
+                        const deps = campos.filter(c => c.type === 'select' && c.dependsOn === campo.key)
+                        const resets = Object.fromEntries(deps.map(d => [d.key, '']))
+                        setEditando({ ...editando, [campo.key]: nuevoVal, ...resets })
+                      }}>
+                      <option value="">{bloqueado ? 'Primero elige…' : 'Selecciona…'}</option>
+                      {opciones.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </div>
+                )
+              }
 
               if (campo.type === 'rut') return (
                 <div className={cls} key={campo.key}>
