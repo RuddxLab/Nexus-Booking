@@ -109,6 +109,14 @@ export function HorariosPage() {
   async function guardarTodo() {
     const prestador = prestadores.find((p) => p.id_prestador === idPrestador)
     if (!prestador) return
+    // La sucursal del horario es la seleccionada en el filtro (los horarios
+    // son por sede). Si la empresa tiene una sola sucursal y el selector está
+    // oculto, se usa la del prestador (columna en transición).
+    const idSucursalHorario = sucursalId ?? prestador.id_sucursal
+    if (idSucursalHorario == null) {
+      setMensaje('Selecciona una sucursal para guardar el horario.')
+      return
+    }
     setGuardando(true)
     setMensaje(null)
     try {
@@ -116,7 +124,7 @@ export function HorariosPage() {
         await guardarDiaHorario(fila, {
           idPrestador: prestador.id_prestador,
           idEmpresa: prestador.id_empresa,
-          idSucursal: prestador.id_sucursal
+          idSucursal: idSucursalHorario
         })
       }
       setMensaje('Horario guardado.')
