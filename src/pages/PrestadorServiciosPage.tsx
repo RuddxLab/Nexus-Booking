@@ -7,6 +7,7 @@ import {
   vincularPrestadorServicio,
   desvincularPrestadorServicio,
 } from '../services/prestadorServiciosAdminService'
+import { listPrestadorIdsDeSucursal } from '../services/prestadorSucursalesService'
 import type { Prestador, Servicio, Categoria } from '../types'
 
 export function PrestadorServiciosPage() {
@@ -27,31 +28,45 @@ export function PrestadorServiciosPage() {
   // Cargar prestadores, servicios y categorías filtrados por empresa y sucursal
   useEffect(() => {
     if (!empresaId) return
+    let cancelado = false
     setCargando(true)
     setPrestadorSel('')
-    const qPrests = supabase.from('prestadores').select('*')
-      .eq('id_empresa', empresaId).eq('activo', true).order('nombre_prestador')
-    const qServs = supabase.from('servicios').select('*')
-      .eq('id_empresa', empresaId).eq('activo', true).order('nombre_servicio')
-    const qCats = supabase.from('categorias').select('*')
-      .eq('id_empresa', empresaId).eq('activo', true).order('nombre_categoria')
 
-    // Aplicar filtro de sucursal si está seleccionada
-    const queries = sucursalId
-      ? [
-          qPrests.eq('id_sucursal', sucursalId),
-          qServs.eq('id_sucursal', sucursalId),
-          qCats.eq('id_sucursal', sucursalId),
-        ]
-      : [qPrests, qServs, qCats]
+    ;(async () => {
+      try {
+        // Prestadores de la empresa. Si hay sucursal seleccionada, se
+        // restringe a los inscritos en ella vía la tabla puente
+        // (prestadores ya no tiene columna id_sucursal).
+        let qPrests = supabase.from('prestadores').select('*')
+          .eq('id_empresa', empresaId).eq('activo', true).order('nombre_prestador')
+        if (sucursalId) {
+          const ids = await listPrestadorIdsDeSucursal(sucursalId)
+          qPrests = qPrests.in('id_prestador', ids.length ? ids : [-1]) as any
+        }
 
-    Promise.resolve(Promise.all(queries))
-      .then(([{ data: prests }, { data: servs }, { data: cats }]) => {
+        // Servicios y categorías sí conservan id_sucursal
+        let qServs = supabase.from('servicios').select('*')
+          .eq('id_empresa', empresaId).eq('activo', true).order('nombre_servicio')
+        let qCats = supabase.from('categorias').select('*')
+          .eq('id_empresa', empresaId).eq('activo', true).order('nombre_categoria')
+        if (sucursalId) {
+          qServs = qServs.eq('id_sucursal', sucursalId) as any
+          qCats  = qCats.eq('id_sucursal', sucursalId) as any
+        }
+
+        const [{ data: prests }, { data: servs }, { data: cats }] =
+          await Promise.all([qPrests, qServs, qCats])
+        if (cancelado) return
         setPrestadores((prests ?? []) as Prestador[])
         setServicios((servs ?? []) as Servicio[])
         setCategorias((cats ?? []) as Categoria[])
         if (prests && prests.length > 0) setPrestadorSel(prests[0].id_prestador)
-      }).finally(() => setCargando(false))
+      } finally {
+        if (!cancelado) setCargando(false)
+      }
+    })()
+
+    return () => { cancelado = true }
   }, [empresaId, sucursalId])
 
   // Cargar servicios vinculados al prestador seleccionado

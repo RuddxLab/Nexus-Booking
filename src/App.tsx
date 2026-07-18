@@ -19,6 +19,7 @@ import { ReservarPage } from './pages/ReservarPage'
 import { CancelarPage } from './pages/CancelarPage'
 import { UsuariosPage } from './pages/UsuariosPage'
 import { PrestadorServiciosPage } from './pages/PrestadorServiciosPage'
+import { PrestadorSucursalesPage } from './pages/PrestadorSucursalesPage'
 import { CategoriasPage } from './pages/CategoriasPage'
 import { TipoCategoriasPage } from './pages/TipoCategoriasPage'
 import { TemaEmpresaPage } from './pages/TemaEmpresaPage'
@@ -79,6 +80,7 @@ function RutasProtegidas() {
         <Route path="/"            element={<CalendarPage />} />
         <Route path="/clientes"    element={<RutaSoloCatalogo><ClientesPage /></RutaSoloCatalogo>} />
         <Route path="/prestadores" element={<RutaSoloCatalogo><PrestadoresPage /></RutaSoloCatalogo>} />
+        <Route path="/prestador-sucursales" element={<RutaSoloCatalogo><PrestadorSucursalesPage /></RutaSoloCatalogo>} />
         <Route path="/servicios"           element={<RutaSoloCatalogo><ServiciosPage /></RutaSoloCatalogo>} />
         <Route path="/prestador-servicios" element={<RutaSoloCatalogo><PrestadorServiciosPage /></RutaSoloCatalogo>} />
         <Route path="/categorias"          element={<RutaSoloCatalogo><CategoriasPage /></RutaSoloCatalogo>} />
