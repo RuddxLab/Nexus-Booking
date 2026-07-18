@@ -2,7 +2,8 @@ import { useEffect, useState, ReactNode, Fragment } from 'react'
 import { Modal } from './Modal'
 import { PageHeader } from './PageHeader'
 import { SelectorFiltro } from './SelectorFiltro'
-import { IconEditar, IconEliminar, IconNuevo, IconBuscar, IconCSV, IconGuardar } from './icons'
+import { IconEditar, IconEliminar, IconNuevo, IconBuscar, IconExcel, IconGuardar } from './icons'
+import * as XLSX from 'xlsx'
 import { REGIONES, REGIONES_COMUNAS } from '../../data/chileRegionesComunas'
 import { formatearRut, limpiarRut, validarRut, validarEmail, EJEMPLO_RUT } from '../../utils/validators'
 import { PAISES_TELEFONO, separarTelefono, armarTelefono, validarTelefono } from '../../data/paisesTelefono'
@@ -138,29 +139,35 @@ export function CrudPage<T extends Record<string, any>>({
     }
   }
 
-  function descargarCSV() {
+  function descargarExcel() {
     if (filasVisibles.length === 0) return
 
-    // Usar campos del formulario como columnas del CSV
-    const camposCSV = campos.filter(c => !c.soloEdicion)
-    const headers   = camposCSV.map(c => c.label)
+    const camposXLS = campos.filter(c => !c.soloEdicion)
+    const headers   = camposXLS.map(c => c.label)
 
-    const filas_csv = filasVisibles.map(fila =>
-      camposCSV.map(campo => {
+    const data = filasVisibles.map(fila =>
+      camposXLS.reduce((row, campo) => {
         const val = resolverValorCampo(fila, campo)
-        // Siempre envolver en comillas para manejar comas, saltos de línea y caracteres especiales
-        return `"${val.replace(/"/g, '""')}"`
-      }).join(';')  // Usar ; como separador (estándar para Excel en es-CL)
+        // Intentar convertir a número si el campo es numérico
+        row[campo.label] = campo.type === 'number' && val !== '' ? Number(val) : val
+        return row
+      }, {} as Record<string, unknown>)
     )
 
-    const csv  = [headers.map(h => `"${h}"`).join(';'), ...filas_csv].join('\n')
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
-    a.download = `${titulo.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers })
+
+    // Ancho automático de columnas basado en el contenido
+    ws['!cols'] = headers.map((h, i) => {
+      const maxLen = Math.max(
+        h.length,
+        ...data.map(row => String(row[h] ?? '').length)
+      )
+      return { wch: Math.min(maxLen + 2, 40) }
+    })
+
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, titulo.slice(0, 31)) // Excel limita a 31 chars
+    XLSX.writeFile(wb, `${titulo.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`)
   }
 
   async function cargar() {
@@ -316,12 +323,12 @@ export function CrudPage<T extends Record<string, any>>({
         )}
         <button
           className="btn btn--ghost btn--icon"
-          onClick={descargarCSV}
-          title="Descargar CSV"
+          onClick={descargarExcel}
+          title="Descargar Excel"
           disabled={filasVisibles.length === 0}
           style={{ opacity: filasVisibles.length === 0 ? 0.4 : 1 }}
         >
-          <IconCSV /> CSV
+          <IconExcel /> Excel
         </button>
         <button className="btn btn--primary btn--icon" onClick={abrirNuevo} title="Nuevo registro">
           <IconNuevo /> Nuevo
