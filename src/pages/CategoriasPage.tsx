@@ -29,6 +29,7 @@ export function CategoriasPage() {
       idKey="id_categoria"
       service={categoriasService}
       orderBy="nombre_categoria"
+      sucursalPorFlagEmpresa
       busqueda={{ campos: ['nombre_categoria'], placeholder: 'Buscar categoría…' }}
       defaults={{ activo: true } as any}
       columnas={[
@@ -41,7 +42,7 @@ export function CategoriasPage() {
         { key: 'nombre_categoria', label: 'Nombre',            required: true, ancho: 'completo' },
         { key: 'id_tipocategoria', label: 'Tipo de categoría', type: 'select', required: true, options: opcionesTipo },
         { key: 'id_empresa',       label: 'Empresa',           type: 'select', required: true, options: opcionesEmpresa },
-        { key: 'id_sucursal',      label: 'Sucursal',          type: 'select', options: opcionesSucursal },
+        { key: 'id_sucursal',      label: 'Sucursal',          type: 'select', required: true, options: opcionesSucursal },
         { key: 'activo',           label: 'Activo',            type: 'checkbox' },
       ]}
     />

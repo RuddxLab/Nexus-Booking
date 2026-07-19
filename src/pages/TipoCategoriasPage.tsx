@@ -12,6 +12,7 @@ export function TipoCategoriasPage() {
       idKey="id_tipocategoria"
       service={tipoCategoriasService}
       orderBy="nombre_tipo_categoria"
+      sucursalPorFlagEmpresa
       busqueda={{ campos: ['nombre_tipo_categoria'], placeholder: 'Buscar tipo de categoría…' }}
       defaults={{ activo: true } as any}
       columnas={[
@@ -22,7 +23,7 @@ export function TipoCategoriasPage() {
       campos={[
         { key: 'nombre_tipo_categoria', label: 'Nombre',   required: true, ancho: 'completo' },
         { key: 'id_empresa',            label: 'Empresa',  type: 'select', required: true, options: opcionesEmpresa },
-        { key: 'id_sucursal',           label: 'Sucursal', type: 'select', options: opcionesSucursal },
+        { key: 'id_sucursal',           label: 'Sucursal', type: 'select', required: true, options: opcionesSucursal },
         { key: 'activo',                label: 'Activo',   type: 'checkbox' },
       ]}
     />

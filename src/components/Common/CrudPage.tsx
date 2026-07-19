@@ -54,6 +54,11 @@ interface Props<T extends Record<string, any>> {
   transformPayload?: (payload: Partial<T>, esNuevo: boolean) => Partial<T>
   /** Si false, no filtra por sucursal aunque haya una seleccionada (ej. tablas sin id_sucursal) */
   filtrarPorSucursal?: boolean
+  /** Si true, el manejo de sucursal depende del flag `servicios_por_sucursal` de la
+   *  empresa seleccionada: en modo compartido (false) se oculta el filtro y el campo
+   *  id_sucursal (no requerido → se guarda NULL, registro a nivel empresa); en modo
+   *  por-sucursal (true) se comporta como siempre (filtra y exige sucursal). */
+  sucursalPorFlagEmpresa?: boolean
   recargarCuando?: unknown[]
   /** Habilita filtro por rango de fecha y botón de descarga CSV */
   campoFecha?: string  // ej: 'created_at' | 'fecha_creacion'
@@ -80,6 +85,7 @@ export function CrudPage<T extends Record<string, any>>({
   defaults, busqueda, filaExpandible, transformPayload,
   recargarCuando = [],
   filtrarPorSucursal = true,
+  sucursalPorFlagEmpresa = false,
   campoFecha,
 }: Props<T>) {
 
@@ -90,6 +96,17 @@ export function CrudPage<T extends Record<string, any>>({
     esAdmin, esSupervisor,
     empresas, sucursalesDeEmpresa,
   } = useFiltroEmpresa()
+
+  // Modo de servicios de la empresa seleccionada. Si la empresa comparte
+  // servicios (false), la sucursal deja de ser una dimensión: no se filtra la
+  // lista, se oculta el selector y el campo id_sucursal (se guarda NULL).
+  const serviciosPorSucursal =
+    empresas.find(e => e.id_empresa === empresaId)?.servicios_por_sucursal ?? true
+  const filtrarSucursal = filtrarPorSucursal && (!sucursalPorFlagEmpresa || serviciosPorSucursal)
+  const ocultarCampoSucursal = sucursalPorFlagEmpresa && !serviciosPorSucursal
+  const camposActivos = ocultarCampoSucursal
+    ? campos.filter(c => c.key !== 'id_sucursal')
+    : campos
 
   const [filas,           setFilas]           = useState<T[]>([])
   const [cargando,        setCargando]        = useState(true)
@@ -181,17 +198,17 @@ export function CrudPage<T extends Record<string, any>>({
       setFilas(await service.listAll(
         orderBy,
         empresaId,
-        filtrarPorSucursal ? (sucursalId ?? undefined) : undefined,
+        filtrarSucursal ? (sucursalId ?? undefined) : undefined,
       ))
     } finally {
       setCargando(false)
     }
   }
 
-  // Recargar cuando cambia empresa o sucursal en el selector
+  // Recargar cuando cambia empresa o sucursal en el selector, o el modo de la empresa
   useEffect(() => {
     cargar()
-  }, [empresaId, sucursalId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [empresaId, sucursalId, serviciosPorSucursal]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function abrirNuevo() {
     setError(null)
@@ -213,7 +230,7 @@ export function CrudPage<T extends Record<string, any>>({
     if (empresaId && idKey !== 'id_empresa') {
       extra.id_empresa = empresaId
     }
-    if (sucursalId && idKey !== 'id_sucursal' && filtrarPorSucursal) {
+    if (sucursalId && idKey !== 'id_sucursal' && filtrarSucursal) {
       extra.id_sucursal = sucursalId
     }
     setEditando({ ...(defaults ?? {}), ...extra } as Partial<T>)
@@ -225,7 +242,7 @@ export function CrudPage<T extends Record<string, any>>({
   }
 
   function validarFormulario(): string | null {
-    for (const campo of campos) {
+    for (const campo of camposActivos) {
       const valor = (editando as any)?.[campo.key]
       const vacio = campo.type === 'telefono'
         ? !separarTelefono(String(valor ?? '')).numero
@@ -245,9 +262,9 @@ export function CrudPage<T extends Record<string, any>>({
   function prepararPayload(): Partial<T> {
     const payload: any = { ...editando }
     const camposNumericos = new Set(
-      campos.filter(c => c.type === 'number').map(c => c.key)
+      camposActivos.filter(c => c.type === 'number').map(c => c.key)
     )
-    for (const campo of campos) {
+    for (const campo of camposActivos) {
       if (campo.type === 'rut' && typeof payload[campo.key] === 'string')
         payload[campo.key] = limpiarRut(payload[campo.key])
       if (campo.type === 'telefono' && !separarTelefono(String(payload[campo.key] ?? '')).numero)
@@ -349,7 +366,7 @@ export function CrudPage<T extends Record<string, any>>({
         sucursalId={sucursalId}
         onEmpresaChange={setEmpresaId}
         onSucursalChange={setSucursalId}
-        mostrarSucursal={filtrarPorSucursal}
+        mostrarSucursal={filtrarSucursal}
       />
 
       {busqueda && (
@@ -434,7 +451,7 @@ export function CrudPage<T extends Record<string, any>>({
       {editando && (
         <Modal title={(editando as any)[idKey] ? 'Editar' : 'Nuevo registro'} onClose={() => setEditando(null)}>
           <div className="form-grid">
-            {campos.filter(c => !(c.soloEdicion && !(editando as any)[idKey])).map(campo => {
+            {camposActivos.filter(c => !(c.soloEdicion && !(editando as any)[idKey])).map(campo => {
               const valor = (editando as any)[campo.key]
               const cls   = 'field' + (campo.ancho === 'completo' ? ' form-grid--span2' : '')
 

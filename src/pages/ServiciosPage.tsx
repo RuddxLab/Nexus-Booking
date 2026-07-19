@@ -24,6 +24,7 @@ export function ServiciosPage() {
       idKey="id_servicio"
       service={serviciosService}
       orderBy="nombre_servicio"
+      sucursalPorFlagEmpresa
       busqueda={{ campos: ['nombre_servicio'], placeholder: 'Buscar servicio…' }}
       filaExpandible={s => <PrestadoresDelServicio servicio={s} />}
       defaults={{ activo: true, valor: 0, duracion: 30, comision: 0, maneja_iva: 0, tipo_comision: 'P' } as any}
