@@ -7,7 +7,6 @@ import {
   vincularPrestadorServicio,
   desvincularPrestadorServicio,
 } from '../services/prestadorServiciosAdminService'
-import { listPrestadorIdsDeSucursal } from '../services/prestadorSucursalesService'
 import type { Prestador, Servicio, Categoria } from '../types'
 
 export function PrestadorServiciosPage() {
@@ -40,8 +39,7 @@ export function PrestadorServiciosPage() {
         let qPrests = supabase.from('prestadores').select('*')
           .eq('id_empresa', empresaId).eq('activo', true).order('nombre_prestador')
         if (sucursalId) {
-          const ids = await listPrestadorIdsDeSucursal(sucursalId)
-          qPrests = qPrests.in('id_prestador', ids.length ? ids : [-1]) as any
+          qPrests = qPrests.eq('id_sucursal', sucursalId) as any
         }
 
         // Servicios y categorías sí conservan id_sucursal
