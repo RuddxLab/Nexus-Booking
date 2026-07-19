@@ -6,7 +6,7 @@ import type { Prestador } from '../types'
 
 export function PrestadoresPage() {
   const { idEmpresa } = useUserRole()
-  const { nombreEmpresa, nombreSucursal, opcionesEmpresa, opcionesSucursalDe } = useEmpresasSucursales()
+  const { nombreEmpresa, nombreSucursal, opcionesEmpresa, opcionesSucursal } = useEmpresasSucursales()
 
   return (
     <CrudPage<Prestador>
@@ -28,7 +28,7 @@ export function PrestadoresPage() {
       campos={[
         { key: 'nombre_prestador', label: 'Nombre',         required: true, ancho: 'completo' },
         { key: 'id_empresa',       label: 'Empresa',        type: 'select', required: true, options: opcionesEmpresa },
-        { key: 'id_sucursal',      label: 'Sucursal',       type: 'select', required: true, dependsOn: 'id_empresa', opcionesDe: (idEmp) => opcionesSucursalDe(idEmp ? Number(idEmp) : undefined) },
+        { key: 'id_sucursal',      label: 'Sucursal',       type: 'select', required: true, options: opcionesSucursal },
         { key: 'rut',              label: 'RUT',            type: 'rut' },
         { key: 'email',            label: 'Correo',         type: 'email' },
         { key: 'telefono',         label: 'Teléfono',       type: 'telefono', required: true },

@@ -44,10 +44,7 @@ export interface Cliente {
 export interface Prestador {
   id_prestador: number
   id_empresa: number
-  /** @deprecated Se elimina de `prestadores`; las sucursales del prestador
-   *  viven ahora en la tabla puente `prestador_sucursales`. Opcional durante
-   *  la transición. */
-  id_sucursal?: number
+  id_sucursal: number
   id_usuario: string | null
   nombre_prestador: string
   email: string | null
@@ -119,15 +116,6 @@ export interface PrestadorAusencia {
   dia: string
   hora_inicio: string
   hora_fin: string
-}
-
-// Relación N–N prestador ↔ sucursal (tabla puente prestador_sucursales)
-export interface PrestadorSucursal {
-  id_prestador_sucursal: number
-  id_prestador: number
-  id_sucursal: number
-  id_empresa: number
-  activo: boolean
 }
 
 // Vista pública segura (sin datos sensibles de prestadores)

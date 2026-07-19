@@ -334,10 +334,9 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
             titulo="Prestadores"
             icono={Icons.staff}
             colorKey="staff"
-            rutas={['/admin/prestadores', '/admin/prestador-sucursales', '/admin/horarios', '/admin/ausencias']}
+            rutas={['/admin/prestadores', '/admin/horarios', '/admin/ausencias']}
           >
             <SidebarBtn to="/admin/prestadores" label="Prestadores" colorKey="staff"     onClick={onNavegar}/>
-            <SidebarBtn to="/admin/prestador-sucursales" label="Prest. & Sucurs." colorKey="staff" onClick={onNavegar}/>
             <SidebarBtn to="/admin/horarios"    label="Horarios"    colorKey="horarios"  onClick={onNavegar}/>
             <SidebarBtn to="/admin/ausencias"   label="Ausencias"   colorKey="ausencias" onClick={onNavegar}/>
           </SidebarSection>
