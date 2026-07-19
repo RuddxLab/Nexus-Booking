@@ -22,7 +22,7 @@ export async function listPrestadoresPublico(idEmpresa?: number) {
 
 export async function listServiciosPublico(idEmpresa: number) {
   const { data, error } = await supabase
-    .from('servicios').select('*')
+    .from('v_servicios_publico').select('*')
     .eq('id_empresa', idEmpresa).eq('activo', true).order('nombre_servicio')
   if (error) throw error
   return data ?? []
