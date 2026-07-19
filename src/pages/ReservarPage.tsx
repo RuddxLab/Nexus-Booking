@@ -91,15 +91,19 @@ export function ReservarPage() {
       return
     }
 
-    // Una sola sucursal → cargar catálogo directo filtrado por esa sucursal
+    // Una sola sucursal → cargar catálogo directo. Servicios/categorías se
+    // filtran por sucursal solo si la empresa opera "por sucursal"; en modo
+    // compartido se muestran todos los de la empresa. Los prestadores siempre
+    // se filtran por sucursal (pertenecen físicamente a una).
+    const compartido = !tenant.serviciosPorSucursal
     Promise.all([
       listServiciosPublico(idEmpresa),
       listCategoriasPublico(idEmpresa),
       listPrestadoresPublico(idEmpresa),
     ]).then(([servs, cats, prests]) => {
-      const sa = servs.filter(s => s.activo && s.id_sucursal === idSucursal)
+      const sa = servs.filter(s => s.activo && (compartido || s.id_sucursal === idSucursal))
       setServicios(sa)
-      setCategorias(cats.filter(c => c.activo && c.id_sucursal === idSucursal))
+      setCategorias(cats.filter(c => c.activo && (compartido || c.id_sucursal === idSucursal)))
       setPrestadores(prests.filter(p => Number(p.reserva_online) === 1 && p.id_sucursal === idSucursal))
       if (paramServicio) {
         const sp = sa.find(s => s.id_servicio === paramServicio)
@@ -524,13 +528,14 @@ export function ReservarPage() {
                           setCargandoBase(true)
                           // Cargar catálogo para la sucursal elegida
                           const { idEmpresa } = tenant
+                          const compartido = !tenant.serviciosPorSucursal
                           Promise.all([
                             listServiciosPublico(idEmpresa),
                             listCategoriasPublico(idEmpresa),
                             listPrestadoresPublico(idEmpresa),
                           ]).then(([servs, cats, prests]) => {
-                            setServicios(servs.filter(sv => sv.activo && sv.id_sucursal === s.id_sucursal))
-                            setCategorias(cats.filter(c => c.activo && c.id_sucursal === s.id_sucursal))
+                            setServicios(servs.filter(sv => sv.activo && (compartido || sv.id_sucursal === s.id_sucursal)))
+                            setCategorias(cats.filter(c => c.activo && (compartido || c.id_sucursal === s.id_sucursal)))
                             setPrestadores(prests.filter(p => Number(p.reserva_online) === 1 && p.id_sucursal === s.id_sucursal))
                           }).finally(() => { setCargandoBase(false); irPaso(1) })
                         }}

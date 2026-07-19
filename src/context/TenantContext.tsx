@@ -45,6 +45,8 @@ export interface Tenant {
   nombre:     string
   sucursales: SucursalOpcion[]
   configUI:   TenantConfigUI
+  /** true = servicios por sucursal; false = compartidos a nivel empresa. */
+  serviciosPorSucursal: boolean
 }
 
 interface TenantCtx {
@@ -137,6 +139,7 @@ export function TenantProvider({ slug, children }: { slug: string; children: Rea
         slug:           string
         config_ui:      Partial<TenantConfigUI> | null
         sucursales:     SucursalOpcion[]
+        servicios_por_sucursal?: boolean
       }
 
       const listaSucursales: SucursalOpcion[] = row.sucursales ?? []
@@ -156,6 +159,7 @@ export function TenantProvider({ slug, children }: { slug: string; children: Rea
         nombre:     row.nombre_empresa,
         sucursales: listaSucursales,
         configUI,
+        serviciosPorSucursal: row.servicios_por_sucursal ?? true,
       })
       setLoading(false)
     }
