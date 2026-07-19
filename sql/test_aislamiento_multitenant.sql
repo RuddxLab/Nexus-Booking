@@ -90,17 +90,16 @@ SELECT * FROM (
   )
 
   UNION ALL
-  -- 6) Funciones con secretos revocadas de anon Y authenticated
+  -- 6) Funciones con secretos revocadas de anon Y authenticated (agnóstico de firma:
+  --    busca por nombre en pg_proc, así cubre cualquier overload sin construir la firma)
   SELECT 6, 'Funciones con secretos revocadas (anon+auth)',
          CASE WHEN count(*)=0 THEN 'PASS' ELSE 'FAIL' END,
-         COALESCE(string_agg(f,', '),'ok')
+         COALESCE(string_agg(DISTINCT s.f, ', '),'ok')
   FROM secretas s
-  WHERE has_function_privilege('anon', 'public.'||f||'(integer,integer)','EXECUTE')  -- get_correo_config
-     OR (s.f<>'get_correo_config' AND EXISTS (
-          SELECT 1 FROM pg_proc p JOIN pg_namespace nn ON nn.oid=p.pronamespace
-          WHERE nn.nspname='public' AND p.proname=s.f
-            AND (has_function_privilege('anon', p.oid,'EXECUTE')
-              OR has_function_privilege('authenticated', p.oid,'EXECUTE'))))
+  JOIN pg_proc p       ON p.proname = s.f
+  JOIN pg_namespace nn ON nn.oid = p.pronamespace AND nn.nspname='public'
+  WHERE has_function_privilege('anon', p.oid,'EXECUTE')
+     OR has_function_privilege('authenticated', p.oid,'EXECUTE')
 
   UNION ALL
   -- 7) Ninguna función SECURITY DEFINER en public con search_path mutable
