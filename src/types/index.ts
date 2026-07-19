@@ -17,6 +17,8 @@ export interface Empresa {
   direccion_empresa: string | null
   db_empresa: string | null
   slug: string
+  /** true = servicios por sucursal; false = servicios compartidos a nivel empresa. */
+  servicios_por_sucursal: boolean
   activo: boolean
   fecha_creacion: string
 }
