@@ -49,9 +49,20 @@ export function useEmpresasSucursales() {
       .filter(c => !filtrarEmpresa || c.id_empresa === filtrarEmpresa)
       .map(c => ({ value: c.id_categoria, label: c.nombre_categoria }))
 
+  // Sucursales filtradas por empresa (para selects dependientes de id_empresa)
+  const opcionesSucursalDe = (filtrarEmpresa?: number) =>
+    sucursales
+      .filter(s => !filtrarEmpresa || s.id_empresa === filtrarEmpresa)
+      .map(s => ({
+        value: s.id_sucursal,
+        label: s.nro_sucursal != null
+          ? `${String(s.nro_sucursal).padStart(3, '0')} - ${s.nombre_sucursal}`
+          : s.nombre_sucursal
+      }))
+
   return {
     empresas, sucursales, categorias,
     nombreEmpresa, nombreSucursal, nombreCategoria,
-    opcionesEmpresa, opcionesSucursal, opcionesCategorias,
+    opcionesEmpresa, opcionesSucursal, opcionesSucursalDe, opcionesCategorias,
   }
 }
