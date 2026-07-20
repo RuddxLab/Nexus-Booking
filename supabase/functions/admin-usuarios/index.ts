@@ -7,6 +7,10 @@ const ANON_KEY      = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 // El admin es una ruta única compartida por todos los tenants (/admin/login);
 // lo que va por slug es solo la reserva pública. Por eso una sola URL sirve.
 const SITE_URL      = Deno.env.get('SITE_URL') ?? 'https://polishnailbar.pages.dev';
+// Envío centralizado: una sola cuenta Brevo de plataforma (secrets del proyecto).
+const BREVO_API_KEY = Deno.env.get('BREVO_API_KEY') ?? '';
+const FROM_EMAIL    = Deno.env.get('FROM_EMAIL') ?? 'no-reply@nexusbooking.cl';
+const FROM_NAME     = 'Nexus Booking';
 
 const ROLES_SUPERVISOR = ['supervisor','recepcionista','agenda_operador','prestador'];
 
@@ -20,45 +24,17 @@ function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
 }
 
-interface ConfigCorreo {
-  proveedor: string | null;
-  from_email: string | null;
-  from_name: string | null;
-  brevo_api_key: string | null;
-}
-
-/**
- * Config de correo de la empresa (tabla empresa_correo_config, key desencriptada).
- * La invitación es a una EMPRESA, no a una sucursal: por eso no pasamos
- * p_id_sucursal y dejamos que la RPC caiga a la primera sucursal activa.
- */
-async function obtenerConfigCorreo(sb: any, idEmpresa: number): Promise<ConfigCorreo | null> {
-  const { data, error } = await sb.rpc('get_correo_config', { p_id_empresa: idEmpresa });
-  if (error) {
-    console.error('[correo] get_correo_config falló:', error.message);
-    return null;
-  }
-  return (data as ConfigCorreo) ?? null;
-}
-
 type ResultadoCorreo = { ok: true } | { ok: false; error: string };
 
 /**
- * Devuelve el resultado en vez de tragárselo. Antes esto era
- * `try { ... } catch (_) {}` y un fetch sin revisar res.ok: si Brevo
- * respondía 401 nadie se enteraba jamás.
+ * Envía el correo de invitación vía la cuenta Brevo CENTRAL de la plataforma
+ * (secret BREVO_API_KEY / FROM_EMAIL). Ya no depende de config por empresa.
  */
 async function enviarEmailBienvenida(
-  cfg: ConfigCorreo | null, email: string, nombre: string, nombreEmpresa: string,
+  email: string, nombre: string, nombreEmpresa: string,
 ): Promise<ResultadoCorreo> {
-  if (!cfg) {
-    return { ok: false, error: `"${nombreEmpresa}" no tiene configuración de correo activa. Configúrala en Correo y reenvía la invitación.` };
-  }
-  if (cfg.proveedor !== 'brevo' || !cfg.brevo_api_key) {
-    return { ok: false, error: `La configuración de correo de "${nombreEmpresa}" no tiene una API key de Brevo válida.` };
-  }
-  if (!cfg.from_email) {
-    return { ok: false, error: `La configuración de correo de "${nombreEmpresa}" no tiene remitente (from_email).` };
+  if (!BREVO_API_KEY) {
+    return { ok: false, error: 'No hay configuración de correo central (BREVO_API_KEY) en el servidor.' };
   }
 
   const html =
@@ -80,9 +56,9 @@ async function enviarEmailBienvenida(
   try {
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
-      headers: { 'api-key': cfg.brevo_api_key, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({
-        sender: { name: cfg.from_name || nombreEmpresa, email: cfg.from_email },
+        sender: { name: FROM_NAME, email: FROM_EMAIL },
         to: [{ email, name: nombre }],
         subject: 'Invitación a ' + nombreEmpresa,
         htmlContent: html,
@@ -203,8 +179,7 @@ Deno.serve(async (req: Request) => {
     // usuario de auth.users, reinvitar nunca reenviaba nada. Además el
     // correo es idempotente (solo dice "usa ¿olvidaste tu contraseña?"),
     // así que reenviarlo no rompe nada.
-    const cfg     = await obtenerConfigCorreo(sb, Number(id_empresa));
-    const correo  = await enviarEmailBienvenida(cfg, email.trim(), nombre || email.split('@')[0], nombreEmpresa);
+    const correo  = await enviarEmailBienvenida(email.trim(), nombre || email.split('@')[0], nombreEmpresa);
 
     return json({
       ok: true,

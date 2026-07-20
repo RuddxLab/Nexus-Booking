@@ -23,7 +23,6 @@ import { PrestadorSucursalesPage } from './pages/PrestadorSucursalesPage'
 import { CategoriasPage } from './pages/CategoriasPage'
 import { TipoCategoriasPage } from './pages/TipoCategoriasPage'
 import { TemaEmpresaPage } from './pages/TemaEmpresaPage'
-import { CorreoConfigPage } from './pages/CorreoConfigPage'
 
 /**
  * Rutas legacy sin slug → redirige al login de admin.
@@ -91,7 +90,6 @@ function RutasProtegidas() {
         <Route path="/horarios"    element={<RutaSoloCatalogo><HorariosPage /></RutaSoloCatalogo>} />
         <Route path="/ausencias"   element={<RutaSoloCatalogo><AusenciasPage /></RutaSoloCatalogo>} />
         <Route path="/tema"        element={<RutaSoloCatalogo><TemaEmpresaPage /></RutaSoloCatalogo>} />
-        <Route path="/correo"      element={<RutaSoloAdmin><CorreoConfigPage /></RutaSoloAdmin>} />
       </Route>
       <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>
