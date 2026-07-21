@@ -7,6 +7,7 @@ import { TenantProvider } from './context/TenantContext'
 import { AppShell } from './components/Layout/AppShell'
 import { BadgeAmbiente } from './components/Common/BadgeAmbiente'
 import { LoginPage } from './pages/LoginPage'
+import { DashboardPage } from './pages/DashboardPage'
 import { CalendarPage } from './pages/CalendarPage'
 import { ClientesPage } from './pages/ClientesPage'
 import { PrestadoresPage } from './pages/PrestadoresPage'
@@ -77,6 +78,7 @@ function RutasProtegidas() {
     <Routes>
       <Route element={<AppShell />}>
         <Route path="/"            element={<CalendarPage />} />
+        <Route path="/dashboard"   element={<RutaSoloCatalogo><DashboardPage /></RutaSoloCatalogo>} />
         <Route path="/clientes"    element={<RutaSoloCatalogo><ClientesPage /></RutaSoloCatalogo>} />
         <Route path="/prestadores" element={<RutaSoloCatalogo><PrestadoresPage /></RutaSoloCatalogo>} />
         <Route path="/prestador-sucursales" element={<RutaSoloCatalogo><PrestadorSucursalesPage /></RutaSoloCatalogo>} />

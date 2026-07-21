@@ -62,11 +62,7 @@ function buildHtml(d: any, fromName: string, cancelarUrl: string, reagendarUrl: 
         <table width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;background:${cSuperficie};border:1px solid ${cBorde};border-radius:16px;overflow:hidden;">
           <tr>
             <td style="padding:24px 28px 20px;border-bottom:1px solid ${cBorde};">
-              <div style="display:inline-block;background:${cAccento};border-radius:7px;padding:4px 11px;margin-bottom:12px;">
-                <span style="font-family:'Space Grotesk',Helvetica,sans-serif;font-weight:700;font-size:11px;color:${cSobreAccento};letter-spacing:0.05em;text-transform:uppercase;">Nexus Booking</span>
-              </div>
-              <div style="font-family:'Space Grotesk',Helvetica,sans-serif;font-size:20px;font-weight:700;color:${cTexto};letter-spacing:-0.02em;margin-bottom:2px;">${fromName}</div>
-              <div style="font-size:11px;color:${cTexto}88;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;">Confirmaci&#243;n de reserva</div>
+              <div style="font-family:'Space Grotesk',Helvetica,sans-serif;font-size:20px;font-weight:700;color:${cTexto};letter-spacing:-0.02em;">Confirmaci&#243;n de reserva</div>
             </td>
           </tr>
           <tr>
@@ -140,11 +136,10 @@ function buildHtml(d: any, fromName: string, cancelarUrl: string, reagendarUrl: 
           </tr>
           <tr>
             <td style="padding:16px 28px 24px;border-top:1px solid ${cBorde};">
-              <p style="margin:0;font-size:11px;color:${cTexto}55;line-height:1.6;">Si no solicitaste esta cita, puedes ignorar este correo. &mdash; <span style="color:${cTexto}88;">${fromName}</span></p>
+              <p style="margin:0;font-size:11px;color:${cTexto}55;line-height:1.6;">Si no solicitaste esta cita, puedes ignorar este correo.</p>
             </td>
           </tr>
         </table>
-        <p style="margin:20px 0 0;font-size:10px;color:${cTexto}44;text-align:center;letter-spacing:0.06em;text-transform:uppercase;">Enviado v&#237;a Nexus Booking</p>
       </td>
     </tr>
   </table>

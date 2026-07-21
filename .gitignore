@@ -16,6 +16,9 @@ build/
 .env.*
 !.env.example
 
+# ── Config MCP (contiene token) ───────────────
+.mcp.json
+
 # ── Editor / SO ───────────────────────────────
 .vscode/*
 !.vscode/extensions.json
