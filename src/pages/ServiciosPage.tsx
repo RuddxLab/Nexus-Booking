@@ -5,9 +5,10 @@ import { useUserRole } from '../hooks/useUserRole'
 import { PrestadoresDelServicio } from '../components/Servicios/PrestadoresDelServicio'
 import type { Servicio } from '../types'
 
+// 'M' = monto fijo. La UI ofrecía 'F', que nunca calzó con la data ('M').
 const OPCIONES_TIPO_COMISION = [
   { value: 'P', label: 'Porcentaje (%)' },
-  { value: 'F', label: 'Monto fijo ($)' },
+  { value: 'M', label: 'Monto fijo ($)' },
 ]
 const OPCIONES_IVA = [
   { value: 0, label: 'Sin IVA' },
@@ -34,7 +35,7 @@ export function ServiciosPage() {
         { key: 'duracion',       label: 'Duración',  render: r => `${r.duracion} min` },
         { key: 'valor',          label: 'Valor',     render: r => `$${Number(r.valor).toLocaleString('es-CL')}` },
         { key: 'maneja_iva',     label: 'IVA',       render: r => Number(r.maneja_iva) === 1 ? 'Con IVA' : 'Sin IVA' },
-        { key: 'comision',       label: 'Comisión',  render: r => r.comision != null ? `${r.comision}${r.tipo_comision === 'F' ? ' $' : '%'}` : '—' },
+        { key: 'comision',       label: 'Comisión',  render: r => r.comision != null ? `${r.comision}${r.tipo_comision === 'M' ? ' $' : '%'}` : '—' },
         { key: 'id_empresa',     label: 'Empresa',   render: r => nombreEmpresa(r.id_empresa) },
         { key: 'activo',         label: 'Activo',    render: r => r.activo ? 'Sí' : 'No' },
       ]}

@@ -1,7 +1,8 @@
 import { createCrudService } from './crudFactory'
-import type { Cliente, Prestador, Servicio, Sucursal, Categoria, TipoCategoria, Empresa } from '../types'
+import type { Cliente, Prestador, Servicio, Sucursal, Categoria, TipoCategoria, Empresa, Producto } from '../types'
 
 export const clientesService        = createCrudService<Cliente>('clientes', 'id_cliente')
+export const productosService       = createCrudService<Producto>('productos', 'id_producto')
 export const prestadoresService     = createCrudService<Prestador>('prestadores', 'id_prestador')
 export const serviciosService       = createCrudService<Servicio>('servicios', 'id_servicio')
 export const sucursalesService      = createCrudService<Sucursal>('sucursales', 'id_sucursal')

@@ -148,6 +148,24 @@ export interface DiaBloqueado {
   created_at: string
 }
 
+export interface Producto {
+  id_producto:    number
+  id_empresa:     number
+  id_sucursal:    number | null
+  id_categoria:   number | null
+  sku:            string | null
+  nombre:         string
+  descripcion:    string | null
+  /** Precio NETO, sin IVA (misma convención que servicios.valor). */
+  precio_venta:   number
+  /** Costo promedio ponderado; lo calculan las compras (Fase 3). */
+  costo_promedio: number
+  maneja_iva:     boolean
+  /** false = no controla stock (servicios de terceros, artículos sin control). */
+  maneja_stock:   boolean
+  activo:         boolean
+}
+
 export interface TipoCategoria {
   id_tipocategoria: number
   id_empresa:       number
