@@ -58,6 +58,8 @@ export interface Prestador {
   ciudad: string | null
   comuna: string | null
   comision: number | null
+  /** 'P' = porcentaje, 'M' = monto fijo. Misma convención que servicios. */
+  tipo_comision: 'P' | 'M' | null
   reserva_online: number // 1 = sí, 0 = no
   paso_agenda:    number | null
   buffer_min:     number
