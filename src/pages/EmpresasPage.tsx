@@ -18,7 +18,7 @@ export function EmpresasPage() {
       service={empresasService}
       orderBy="nombre_empresa"
       filtrarPorSucursal={false}
-      defaults={{ activo: true, servicios_por_sucursal: true } as any}
+      defaults={{ activo: true, catalogo_por_sucursal: true } as any}
       transformPayload={(payload, esNuevo) => {
         // Auto-generar slug aleatorio al crear — nunca modificable
         if (esNuevo && !payload.slug) {
@@ -31,7 +31,7 @@ export function EmpresasPage() {
         { key: 'rut_empresa',    label: 'RUT', type: 'rut' },
         { key: 'email_contacto', label: 'Correo de contacto', type: 'email' },
         { key: 'slug',           label: 'Slug (URL)' },
-        { key: 'servicios_por_sucursal', label: 'Servicios', render: (r) => (r.servicios_por_sucursal ? 'Por sucursal' : 'Compartidos') },
+        { key: 'catalogo_por_sucursal', label: 'Catálogo', render: (r) => (r.catalogo_por_sucursal ? 'Por sucursal' : 'Compartido') },
         { key: 'activo',         label: 'Activa', render: (r) => (r.activo ? 'Sí' : 'No') },
       ]}
       campos={[
@@ -40,7 +40,7 @@ export function EmpresasPage() {
         { key: 'email_contacto',    label: 'Correo de contacto', type: 'email' },
         { key: 'direccion_empresa', label: 'Dirección' },
         { key: 'slug',              label: 'URL del negocio',    soloEdicion: true, soloLectura: true },
-        { key: 'servicios_por_sucursal', label: 'Servicios por sucursal (desmarcar = compartidos entre sucursales)', type: 'checkbox' },
+        { key: 'catalogo_por_sucursal', label: 'Catálogo por sucursal — servicios y productos (desmarcar = compartido entre sucursales)', type: 'checkbox' },
         { key: 'activo',            label: 'Activa',             type: 'checkbox' },
       ]}
     />

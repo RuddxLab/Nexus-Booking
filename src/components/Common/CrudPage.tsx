@@ -54,7 +54,7 @@ interface Props<T extends Record<string, any>> {
   transformPayload?: (payload: Partial<T>, esNuevo: boolean) => Partial<T>
   /** Si false, no filtra por sucursal aunque haya una seleccionada (ej. tablas sin id_sucursal) */
   filtrarPorSucursal?: boolean
-  /** Si true, el manejo de sucursal depende del flag `servicios_por_sucursal` de la
+  /** Si true, el manejo de sucursal depende del flag `catalogo_por_sucursal` de la
    *  empresa seleccionada: en modo compartido (false) se oculta el filtro y el campo
    *  id_sucursal (no requerido → se guarda NULL, registro a nivel empresa); en modo
    *  por-sucursal (true) se comporta como siempre (filtra y exige sucursal). */
@@ -100,10 +100,10 @@ export function CrudPage<T extends Record<string, any>>({
   // Modo de servicios de la empresa seleccionada. Si la empresa comparte
   // servicios (false), la sucursal deja de ser una dimensión: no se filtra la
   // lista, se oculta el selector y el campo id_sucursal (se guarda NULL).
-  const serviciosPorSucursal =
-    empresas.find(e => e.id_empresa === empresaId)?.servicios_por_sucursal ?? true
-  const filtrarSucursal = filtrarPorSucursal && (!sucursalPorFlagEmpresa || serviciosPorSucursal)
-  const ocultarCampoSucursal = sucursalPorFlagEmpresa && !serviciosPorSucursal
+  const catalogoPorSucursal =
+    empresas.find(e => e.id_empresa === empresaId)?.catalogo_por_sucursal ?? true
+  const filtrarSucursal = filtrarPorSucursal && (!sucursalPorFlagEmpresa || catalogoPorSucursal)
+  const ocultarCampoSucursal = sucursalPorFlagEmpresa && !catalogoPorSucursal
   const camposActivos = ocultarCampoSucursal
     ? campos.filter(c => c.key !== 'id_sucursal')
     : campos
@@ -208,7 +208,7 @@ export function CrudPage<T extends Record<string, any>>({
   // Recargar cuando cambia empresa o sucursal en el selector, o el modo de la empresa
   useEffect(() => {
     cargar()
-  }, [empresaId, sucursalId, serviciosPorSucursal]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [empresaId, sucursalId, catalogoPorSucursal]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function abrirNuevo() {
     setError(null)

@@ -17,8 +17,10 @@ export interface Empresa {
   direccion_empresa: string | null
   db_empresa: string | null
   slug: string
-  /** true = servicios por sucursal; false = servicios compartidos a nivel empresa. */
-  servicios_por_sucursal: boolean
+  /** Rige TODO el catálogo (servicios y productos):
+   *  true  = cada sucursal registra los suyos;
+   *  false = catálogo compartido a nivel empresa. */
+  catalogo_por_sucursal: boolean
   activo: boolean
   fecha_creacion: string
 }
@@ -151,5 +153,8 @@ export interface TipoCategoria {
   id_empresa:       number
   id_sucursal:      number | null
   nombre_tipo_categoria: string
+  /** Código estable del catálogo: PROD = productos, SERV = servicios.
+   *  El nombre es libre (solo para mostrar); el sistema filtra por este código. */
+  codigo:           'PROD' | 'SERV' | null
   activo:           boolean
 }

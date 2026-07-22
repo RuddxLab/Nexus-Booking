@@ -15,8 +15,8 @@ export function PrestadorServiciosPage() {
   // Parametrización por empresa: si false, los servicios son compartidos a
   // nivel empresa y NO se filtran por sucursal (solo los prestadores lo hacen,
   // porque físicamente pertenecen a una sucursal). Default true = por sucursal.
-  const serviciosPorSucursal =
-    empresas.find(e => e.id_empresa === empresaId)?.servicios_por_sucursal ?? true
+  const catalogoPorSucursal =
+    empresas.find(e => e.id_empresa === empresaId)?.catalogo_por_sucursal ?? true
 
   const [prestadores,  setPrestadores]  = useState<Prestador[]>([])
   const [servicios,    setServicios]    = useState<Servicio[]>([])
@@ -55,7 +55,7 @@ export function PrestadorServiciosPage() {
           .eq('id_empresa', empresaId).eq('activo', true).order('nombre_servicio')
         let qCats = supabase.from('categorias').select('*')
           .eq('id_empresa', empresaId).eq('activo', true).order('nombre_categoria')
-        if (sucursalId && serviciosPorSucursal) {
+        if (sucursalId && catalogoPorSucursal) {
           qServs = qServs.eq('id_sucursal', sucursalId) as any
           qCats  = qCats.eq('id_sucursal', sucursalId) as any
         }
@@ -73,7 +73,7 @@ export function PrestadorServiciosPage() {
     })()
 
     return () => { cancelado = true }
-  }, [empresaId, sucursalId, serviciosPorSucursal])
+  }, [empresaId, sucursalId, catalogoPorSucursal])
 
   // Cargar servicios vinculados al prestador seleccionado
   useEffect(() => {

@@ -95,7 +95,7 @@ export function ReservarPage() {
     // filtran por sucursal solo si la empresa opera "por sucursal"; en modo
     // compartido se muestran todos los de la empresa. Los prestadores siempre
     // se filtran por sucursal (pertenecen físicamente a una).
-    const compartido = !tenant.serviciosPorSucursal
+    const compartido = !tenant.catalogoPorSucursal
     Promise.all([
       listServiciosPublico(idEmpresa),
       listCategoriasPublico(idEmpresa),
@@ -528,7 +528,7 @@ export function ReservarPage() {
                           setCargandoBase(true)
                           // Cargar catálogo para la sucursal elegida
                           const { idEmpresa } = tenant
-                          const compartido = !tenant.serviciosPorSucursal
+                          const compartido = !tenant.catalogoPorSucursal
                           Promise.all([
                             listServiciosPublico(idEmpresa),
                             listCategoriasPublico(idEmpresa),

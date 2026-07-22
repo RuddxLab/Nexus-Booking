@@ -17,11 +17,16 @@ export function TipoCategoriasPage() {
       defaults={{ activo: true } as any}
       columnas={[
         { key: 'nombre_tipo_categoria', label: 'Nombre' },
+        { key: 'codigo',                label: 'Tipo',    render: r => r.codigo === 'PROD' ? 'Producto' : r.codigo === 'SERV' ? 'Servicio' : '—' },
         { key: 'id_empresa',            label: 'Empresa', render: r => nombreEmpresa(r.id_empresa) },
         { key: 'activo',                label: 'Activo',  render: r => r.activo ? 'Sí' : 'No' },
       ]}
       campos={[
         { key: 'nombre_tipo_categoria', label: 'Nombre',   required: true, ancho: 'completo' },
+        // El código es lo que el sistema usa para distinguir catálogo de
+        // productos vs servicios. El nombre es solo para mostrar.
+        { key: 'codigo',                label: 'Tipo',     type: 'select', required: true,
+          options: [{ value: 'SERV', label: 'Servicio' }, { value: 'PROD', label: 'Producto' }] },
         { key: 'id_empresa',            label: 'Empresa',  type: 'select', required: true, options: opcionesEmpresa },
         { key: 'id_sucursal',           label: 'Sucursal', type: 'select', required: true, options: opcionesSucursal },
         { key: 'activo',                label: 'Activo',   type: 'checkbox' },

@@ -21,8 +21,8 @@ export function CalendarPage() {
   const { empresaId, sucursalId, setEmpresaId, setSucursalId, esAdmin, esSupervisor, empresas, sucursalesDeEmpresa } = useFiltroEmpresa()
   const esPrestador = rol === 'prestador'
   // Modo de servicios de la empresa: si es compartido, no se filtran por sucursal.
-  const serviciosPorSucursal =
-    empresas.find(e => e.id_empresa === empresaId)?.servicios_por_sucursal ?? true
+  const catalogoPorSucursal =
+    empresas.find(e => e.id_empresa === empresaId)?.catalogo_por_sucursal ?? true
 
   const [vista, setVista] = useState<Vista>('semana')
   const [anchor, setAnchor] = useState(new Date())
@@ -126,10 +126,10 @@ export function CalendarPage() {
       .catch(() => { setPrestadores([]); resetandoPrestador.current = false })
     // En modo compartido no se filtra por sucursal (se muestran todos los
     // servicios de la empresa para agendar).
-    const filtroSucursal = serviciosPorSucursal ? (sucursalId ?? undefined) : undefined
+    const filtroSucursal = catalogoPorSucursal ? (sucursalId ?? undefined) : undefined
     serviciosService.listAll('nombre_servicio', empresaId, filtroSucursal)
       .then(setServicios).catch(() => setServicios([]))
-  }, [empresaId, sucursalId, serviciosPorSucursal]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [empresaId, sucursalId, catalogoPorSucursal]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const citasPorDia = useMemo(() => {
     const grupos: Record<string, Agendamiento[]> = {}
