@@ -34,7 +34,7 @@ export function EmpresasPage() {
       service={empresasService}
       orderBy="nombre_empresa"
       filtrarPorSucursal={false}
-      defaults={{ activo: true, catalogo_por_sucursal: true, regla_comision: 'MAYOR', regla_redondeo: 'TOTAL' } as any}
+      defaults={{ activo: true, catalogo_por_sucursal: true, tasa_iva: 19, regla_comision: 'MAYOR', regla_redondeo: 'TOTAL' } as any}
       transformPayload={(payload, esNuevo) => {
         // Auto-generar slug aleatorio al crear — nunca modificable
         if (esNuevo && !payload.slug) {
@@ -48,6 +48,7 @@ export function EmpresasPage() {
         { key: 'email_contacto', label: 'Correo de contacto', type: 'email' },
         { key: 'slug',           label: 'Slug (URL)' },
         { key: 'catalogo_por_sucursal', label: 'Catálogo', render: (r) => (r.catalogo_por_sucursal ? 'Por sucursal' : 'Compartido') },
+        { key: 'tasa_iva',       label: 'IVA', render: (r) => `${Number(r.tasa_iva ?? 19)}%` },
         { key: 'activo',         label: 'Activa', render: (r) => (r.activo ? 'Sí' : 'No') },
       ]}
       campos={[
@@ -57,6 +58,7 @@ export function EmpresasPage() {
         { key: 'direccion_empresa', label: 'Dirección' },
         { key: 'slug',              label: 'URL del negocio',    soloEdicion: true, soloLectura: true },
         { key: 'catalogo_por_sucursal', label: 'Catálogo por sucursal — servicios y productos (desmarcar = compartido entre sucursales)', type: 'checkbox' },
+        { key: 'tasa_iva',       label: 'Tasa de IVA (%)', type: 'number' },
         { key: 'regla_comision', label: 'Comisión: cuál gana si el servicio y el prestador tienen', type: 'select', options: OPCIONES_REGLA_COMISION },
         { key: 'regla_redondeo', label: 'Redondeo del IVA', type: 'select', options: OPCIONES_REGLA_REDONDEO },
         { key: 'activo',            label: 'Activa',             type: 'checkbox' },

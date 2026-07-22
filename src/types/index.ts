@@ -27,6 +27,9 @@ export interface Empresa {
   /** Dónde se aplica el redondeo del IVA: por cada línea o sobre el total
    *  del documento. No cambiar una vez que la empresa ya emitió. */
   regla_redondeo: 'LINEA' | 'TOTAL'
+  /** Tasa de IVA en porcentaje (Chile: 19). Se aplica a servicios y
+   *  productos marcados como afectos. */
+  tasa_iva: number
   activo: boolean
   fecha_creacion: string
 }
