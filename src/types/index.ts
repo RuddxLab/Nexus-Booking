@@ -139,6 +139,20 @@ export interface PrestadorAusencia {
   hora_fin: string
 }
 
+// Vista pública segura de servicios (sin comisión ni datos internos)
+export interface ServicioPublico {
+  id_servicio:     number
+  id_empresa:      number
+  id_sucursal:     number
+  id_categoria:    number
+  nombre_servicio: string
+  valor:           number
+  maneja_iva:      number
+  duracion:        number
+  descripcion:     string | null
+  activo:          boolean
+}
+
 // Vista pública segura (sin datos sensibles de prestadores)
 export interface PrestadorPublico {
   id_prestador: number

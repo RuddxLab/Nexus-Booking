@@ -22,7 +22,7 @@ import { PAISES_TELEFONO, separarTelefono, armarTelefono, validarTelefono } from
 import { TelefonoPicker } from '../components/Common/TelefonoPicker'
 import { useTenant } from '../context/TenantContext'
 import { ThemeToggle } from '../components/Common/ThemeToggle'
-import type { PrestadorPublico, Servicio, Categoria } from '../types'
+import type { PrestadorPublico, ServicioPublico, Categoria } from '../types'
 
 const NOMBRES_DIA_ISO    = ['LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO','DOMINGO']
 const NOMBRES_DIA_CORTOS = ['Lu','Ma','Mi','Ju','Vi','Sa','Do']
@@ -44,11 +44,11 @@ export function ReservarPage() {
   const [animDir, setAnimDir] = useState<'in'|'out'>('in')
   const [cargandoBase, setCargandoBase] = useState(true)
 
-  const [servicios,   setServicios]   = useState<Servicio[]>([])
+  const [servicios,   setServicios]   = useState<ServicioPublico[]>([])
   const [categorias,  setCategorias]  = useState<Categoria[]>([])
   const [prestadores, setPrestadores] = useState<PrestadorPublico[]>([])
 
-  const [servicioElegido,   setServicioElegido]   = useState<Servicio | null>(null)
+  const [servicioElegido,   setServicioElegido]   = useState<ServicioPublico | null>(null)
   const [prestadorElegido,  setPrestadorElegido]  = useState<PrestadorPublico | null>(null)
   const [fechaElegida,      setFechaElegida]      = useState<string | null>(null)
   const [horaElegida,       setHoraElegida]       = useState<string | null>(null)
@@ -108,7 +108,7 @@ export function ReservarPage() {
       if (paramServicio) {
         const sp = sa.find(s => s.id_servicio === paramServicio)
         if (sp) {
-          listPrestadorIdsDeServicio(sp.id_servicio).then(ids => {
+          listPrestadorIdsDeServicio(sp.id_servicio, tenant!.idEmpresa).then(ids => {
             setServicioElegido(sp); setIdsPrestServ(ids); setPaso(2)
           })
         }
@@ -119,7 +119,7 @@ export function ReservarPage() {
   const serviciosPorCat = useMemo(() => {
     const txt = busqueda.trim().toLowerCase()
     const fil = txt ? servicios.filter(s => s.nombre_servicio.toLowerCase().includes(txt)) : servicios
-    const m = new Map<number, Servicio[]>()
+    const m = new Map<number, ServicioPublico[]>()
     for (const s of fil) {
       const l = m.get(s.id_categoria) ?? []; l.push(s); m.set(s.id_categoria, l)
     }
@@ -138,9 +138,9 @@ export function ReservarPage() {
       const d = new Date(fechaElegida + 'T00:00:00')
       setCargandoHoras(true)
       Promise.all([
-        listHorariosPrestador(prestadorElegido.id_prestador),
-        listAusenciasPrestador(prestadorElegido.id_prestador),
-        listHorasOcupadas(prestadorElegido.id_prestador, fechaElegida),
+        listHorariosPrestador(prestadorElegido.id_prestador, tenant!.idEmpresa),
+        listAusenciasPrestador(prestadorElegido.id_prestador, tenant!.idEmpresa),
+        listHorasOcupadas(prestadorElegido.id_prestador, fechaElegida, tenant!.idEmpresa),
         listDiasBloqueadosPorRango(fechaElegida, fechaElegida, prestadorElegido.id_prestador),
       ]).then(([hor, aus, ocu, bloq]) => {
         const dNum = diaISO(d)
@@ -165,10 +165,10 @@ export function ReservarPage() {
     setTimeout(() => setRipple(null), 400)
   }
 
-  async function handleServicio(s: Servicio) {
+  async function handleServicio(s: ServicioPublico) {
     triggerRipple('s'+s.id_servicio)
     setServicioElegido(s); setPrestadorElegido(null)
-    const ids = await listPrestadorIdsDeServicio(s.id_servicio)
+    const ids = await listPrestadorIdsDeServicio(s.id_servicio, tenant!.idEmpresa)
     setIdsPrestServ(ids); irPaso(2)
   }
 
@@ -179,7 +179,7 @@ export function ReservarPage() {
     const desde = toISODate(new Date(hoy.getFullYear(), hoy.getMonth(), 1))
     const hasta = toISODate(new Date(hoy.getFullYear(), hoy.getMonth()+3, 0))
     const [hor, bloq] = await Promise.all([
-      listHorariosPrestador(p.id_prestador),
+      listHorariosPrestador(p.id_prestador, tenant!.idEmpresa),
       listDiasBloqueadosPorRango(desde, hasta, p.id_prestador),
     ])
     setDiasDisponibles(new Set(hor.filter(h => h.activo && h.hora_inicio && h.hora_fin).map(h => h.dia)))
@@ -193,9 +193,9 @@ export function ReservarPage() {
     setFechaElegida(iso); setHoraElegida(null); setCargandoHoras(true)
     try {
       const [hor, aus, ocu, bloq] = await Promise.all([
-        listHorariosPrestador(prestadorElegido.id_prestador),
-        listAusenciasPrestador(prestadorElegido.id_prestador),
-        listHorasOcupadas(prestadorElegido.id_prestador, iso),
+        listHorariosPrestador(prestadorElegido.id_prestador, tenant!.idEmpresa),
+        listAusenciasPrestador(prestadorElegido.id_prestador, tenant!.idEmpresa),
+        listHorasOcupadas(prestadorElegido.id_prestador, iso, tenant!.idEmpresa),
         listDiasBloqueadosPorRango(iso, iso, prestadorElegido.id_prestador),
       ])
       const dNum = diaISO(d)

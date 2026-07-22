@@ -82,7 +82,7 @@ export function CalendarPage() {
       if (todosIds.length > 0) {
         const [aus, horarios] = await Promise.all([
           listAusenciasPorPrestadores(todosIds),
-          listHorariosPorPrestadores(todosIds),
+          listHorariosPorPrestadores(todosIds, empresaId),
         ])
         setAusenciasRecurrentes(aus)
         setHorariosActivos(horarios)

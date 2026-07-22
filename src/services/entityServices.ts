@@ -1,5 +1,5 @@
 import { createCrudService } from './crudFactory'
-import type { Cliente, Prestador, Servicio, Sucursal, Categoria, TipoCategoria, Empresa, Producto } from '../types'
+import type { Cliente, Prestador, Servicio, Sucursal, Categoria, TipoCategoria, Empresa, Producto, PrestadorPublico, ServicioPublico } from '../types'
 
 export const clientesService        = createCrudService<Cliente>('clientes', 'id_cliente')
 export const productosService       = createCrudService<Producto>('productos', 'id_producto')
@@ -13,26 +13,29 @@ export const empresasService        = createCrudService<Empresa>('empresas', 'id
 // Funciones de lectura pública (para el flujo de reserva online)
 import { supabase } from './supabaseClient'
 
-export async function listPrestadoresPublico(idEmpresa?: number) {
-  let q = supabase.from('v_prestadores_publico').select('*')
-  if (idEmpresa) q = q.eq('id_empresa', idEmpresa) as any
-  const { data, error } = await q
+// Lecturas del catálogo público.
+//
+// Van por RPC y no por vista/tabla a propósito: el filtro por empresa tiene que
+// ocurrir en el servidor. Con `.from(vista).eq('id_empresa', X)` el filtro es
+// del cliente, así que cualquiera con la anon key (que es pública) podía pedir
+// el catálogo de TODAS las empresas de una sola vez.
+
+export async function listPrestadoresPublico(idEmpresa: number): Promise<PrestadorPublico[]> {
+  const { data, error } = await supabase.rpc('prestadores_publico', { p_id_empresa: idEmpresa })
   if (error) throw error
-  return data ?? []
+  return (data ?? []) as PrestadorPublico[]
 }
 
-export async function listServiciosPublico(idEmpresa: number) {
-  const { data, error } = await supabase
-    .from('v_servicios_publico').select('*')
-    .eq('id_empresa', idEmpresa).eq('activo', true).order('nombre_servicio')
+export async function listServiciosPublico(idEmpresa: number): Promise<ServicioPublico[]> {
+  const { data, error } = await supabase.rpc('servicios_publico', { p_id_empresa: idEmpresa })
   if (error) throw error
-  return data ?? []
+  return ((data ?? []) as ServicioPublico[])
+    .sort((a, b) => a.nombre_servicio.localeCompare(b.nombre_servicio, 'es'))
 }
 
-export async function listCategoriasPublico(idEmpresa: number) {
-  const { data, error } = await supabase
-    .from('categorias').select('*')
-    .eq('id_empresa', idEmpresa).eq('activo', true).order('nombre_categoria')
+export async function listCategoriasPublico(idEmpresa: number): Promise<Categoria[]> {
+  const { data, error } = await supabase.rpc('categorias_publico', { p_id_empresa: idEmpresa })
   if (error) throw error
-  return data ?? []
+  return ((data ?? []) as Categoria[])
+    .sort((a, b) => a.nombre_categoria.localeCompare(b.nombre_categoria, 'es'))
 }

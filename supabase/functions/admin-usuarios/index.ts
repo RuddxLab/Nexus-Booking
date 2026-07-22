@@ -102,6 +102,14 @@ Deno.serve(async (req: Request) => {
   // GET: listar usuarios
   if (req.method === 'GET') {
     const idEmpresaParam = url.searchParams.get('id_empresa');
+
+    // Esta función corre con service_role (saltea RLS), así que el id_empresa
+    // que llega por query param NO es de fiar: hay que validar pertenencia,
+    // igual que hacen POST/PATCH/DELETE más abajo.
+    if (idEmpresaParam && !misRoles.some((r: any) => r.id_empresa === Number(idEmpresaParam))) {
+      return json({ error: 'No tienes acceso a esa empresa' }, 403);
+    }
+
     const empresasPermitidas: number[] = esAdmin
       ? (idEmpresaParam ? [Number(idEmpresaParam)] : misRoles.map((r: any) => r.id_empresa))
       : [misRoles[0].id_empresa];

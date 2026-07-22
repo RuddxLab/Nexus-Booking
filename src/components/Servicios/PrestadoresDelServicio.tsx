@@ -14,7 +14,7 @@ export function PrestadoresDelServicio({ servicio }: { servicio: Servicio }) {
   useEffect(() => {
     Promise.all([
       prestadoresService.listAll('nombre_prestador', servicio.id_empresa),
-      listPrestadorIdsDeServicio(servicio.id_servicio)
+      listPrestadorIdsDeServicio(servicio.id_servicio, servicio.id_empresa)
     ])
       .then(([todos, ids]) => {
         setPrestadores(todos)
