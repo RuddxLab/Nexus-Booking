@@ -21,6 +21,12 @@ export interface Empresa {
    *  true  = cada sucursal registra los suyos;
    *  false = catálogo compartido a nivel empresa. */
   catalogo_por_sucursal: boolean
+  /** Cuando el servicio Y el prestador tienen comisión, cuál se aplica.
+   *  Ambas se convierten a pesos y recién ahí se comparan. */
+  regla_comision: 'SERVICIO' | 'PRESTADOR' | 'MAYOR' | 'MENOR'
+  /** Dónde se aplica el redondeo del IVA: por cada línea o sobre el total
+   *  del documento. No cambiar una vez que la empresa ya emitió. */
+  regla_redondeo: 'LINEA' | 'TOTAL'
   activo: boolean
   fecha_creacion: string
 }
@@ -82,9 +88,15 @@ export interface Servicio {
   id_sucursal: number
   id_categoria: number
   nombre_servicio: string
+  descripcion: string | null
   duracion: number // minutos
+  /** Precio NETO, sin IVA. */
   valor: number
+  /** Flag: 1 = afecto a IVA (19%), 0 = exento. */
+  maneja_iva: number
   comision: number | null
+  /** 'P' = porcentaje, 'M' = monto fijo. */
+  tipo_comision: 'P' | 'M' | null
   activo: boolean
 }
 
