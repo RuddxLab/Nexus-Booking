@@ -1,13 +1,14 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { signOut } from '../../services/authService'
-import { useUserRole, PUEDE_GESTIONAR_CATALOGO } from '../../hooks/useUserRole'
+import { useUserRole, PUEDE_GESTIONAR_CATALOGO, PUEDE_VENDER } from '../../hooks/useUserRole'
 import { supabase } from '../../services/supabaseClient'
 
 // ── Colores ───────────────────────────────────────────────────────────────────
 const COLORS: Record<string, { glow: string; grad: string; pill: string }> = {
   panel:         { glow: '#0ea5e9', grad: 'linear-gradient(135deg,#7dd3fc,#0ea5e9)', pill: '#0ea5e9' },
   productos:     { glow: '#f97316', grad: 'linear-gradient(135deg,#fdba74,#f97316)', pill: '#f97316' },
+  ventas:        { glow: '#22c55e', grad: 'linear-gradient(135deg,#86efac,#22c55e)', pill: '#22c55e' },
   agenda:        { glow: '#6366f1', grad: 'linear-gradient(135deg,#a5b4fc,#6366f1)', pill: '#6366f1' },
   clientes:      { glow: '#10b981', grad: 'linear-gradient(135deg,#6ee7b7,#10b981)', pill: '#10b981' },
   staff:         { glow: '#f59e0b', grad: 'linear-gradient(135deg,#fcd34d,#f59e0b)', pill: '#f59e0b' },
@@ -37,6 +38,7 @@ const Ico = ({ d, d2 }: { d: string; d2?: string }) => (
 const Icons: Record<string, React.ReactNode> = {
   panel:      <Ico d="M4 4h7v7H4zM13 4h7v4h-7zM13 11h7v9h-7zM4 14h7v6H4z"/>,
   productos:  <Ico d="M20 7L12 3 4 7m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>,
+  ventas:     <Ico d="M3 3h2l2.6 12.4a2 2 0 002 1.6h7.7a2 2 0 002-1.6L21 8H6M9 21h.01M18 21h.01"/>,
   agenda:     <Ico d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>,
   clientes:   <Ico d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>,
   staff:      <Ico d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>,
@@ -293,6 +295,7 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
   const { rol, slugEmpresa, loading } = useUserRole()
 
   const puedeVerCatalogo = !loading && rol && PUEDE_GESTIONAR_CATALOGO.includes(rol)
+  const puedeVender      = !loading && rol && PUEDE_VENDER.includes(rol)
   const esAdmin      = !loading && rol === 'admin'
   const esSupervisor = !loading && rol === 'supervisor'
   const linkReservas = slugEmpresa ? `/r/${slugEmpresa}` : '/'
@@ -309,6 +312,11 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
 
         {/* Agenda siempre visible */}
         <SidebarBtn to="/admin" label="Agenda" colorKey="agenda" end onClick={onNavegar}/>
+
+        {/* Punto de venta: admin, supervisor y recepcionista */}
+        {puedeVender && (
+          <SidebarBtn to="/admin/ventas" label="Vender" colorKey="ventas" onClick={onNavegar}/>
+        )}
 
         {/* Sección Clientes */}
         {puedeVerCatalogo && (

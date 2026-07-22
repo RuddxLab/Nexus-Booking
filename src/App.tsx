@@ -2,7 +2,7 @@ import { ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { ThemeProvider } from './hooks/useTheme'
-import { useUserRole, PUEDE_GESTIONAR_CATALOGO } from './hooks/useUserRole'
+import { useUserRole, PUEDE_GESTIONAR_CATALOGO, PUEDE_VENDER } from './hooks/useUserRole'
 import { TenantProvider } from './context/TenantContext'
 import { AppShell } from './components/Layout/AppShell'
 import { BadgeAmbiente } from './components/Common/BadgeAmbiente'
@@ -13,6 +13,7 @@ import { ClientesPage } from './pages/ClientesPage'
 import { PrestadoresPage } from './pages/PrestadoresPage'
 import { ServiciosPage } from './pages/ServiciosPage'
 import { ProductosPage } from './pages/ProductosPage'
+import { VentasPage } from './pages/VentasPage'
 import { SucursalesPage } from './pages/SucursalesPage'
 import { EmpresasPage } from './pages/EmpresasPage'
 import { HorariosPage } from './pages/HorariosPage'
@@ -63,6 +64,13 @@ function RutaSoloCatalogo({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
+function RutaVentas({ children }: { children: ReactNode }) {
+  const { rol, loading } = useUserRole()
+  if (loading) return <div style={{ padding: 40 }}>Cargando…</div>
+  if (!rol || !PUEDE_VENDER.includes(rol)) return <Navigate to="/admin" replace />
+  return <>{children}</>
+}
+
 function RutaSoloAdmin({ children }: { children: ReactNode }) {
   const { rol, loading } = useUserRole()
   if (loading) return <div style={{ padding: 40 }}>Cargando…</div>
@@ -85,6 +93,7 @@ function RutasProtegidas() {
         <Route path="/prestador-sucursales" element={<RutaSoloCatalogo><PrestadorSucursalesPage /></RutaSoloCatalogo>} />
         <Route path="/servicios"           element={<RutaSoloCatalogo><ServiciosPage /></RutaSoloCatalogo>} />
         <Route path="/productos"           element={<RutaSoloCatalogo><ProductosPage /></RutaSoloCatalogo>} />
+        <Route path="/ventas"              element={<RutaVentas><VentasPage /></RutaVentas>} />
         <Route path="/prestador-servicios" element={<RutaSoloCatalogo><PrestadorServiciosPage /></RutaSoloCatalogo>} />
         <Route path="/categorias"          element={<RutaSoloCatalogo><CategoriasPage /></RutaSoloCatalogo>} />
         <Route path="/tipo-categorias"     element={<RutaSoloCatalogo><TipoCategoriasPage /></RutaSoloCatalogo>} />

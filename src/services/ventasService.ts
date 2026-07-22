@@ -1,0 +1,187 @@
+import { supabase } from './supabaseClient'
+
+// ── Tipos ─────────────────────────────────────────────────────────────────────
+export type TipoLinea = 'SERVICIO' | 'PRODUCTO'
+export type MedioPago = 'EFECTIVO' | 'DEBITO' | 'CREDITO' | 'TRANSFERENCIA' | 'OTRO'
+
+/** Línea que se está armando en pantalla (aún no emitida). */
+export interface LineaVenta {
+  uid:            string          // clave local para React
+  tipo:           TipoLinea
+  id_servicio?:   number
+  id_producto?:   number
+  id_agendamiento?: number
+  id_prestador?:  number
+  nombre_prestador?: string
+  descripcion:    string
+  cantidad:       number
+  precio_unitario_neto: number
+  descuento:      number
+  aplica_iva:     boolean
+}
+
+export interface PagoInput {
+  medio:            MedioPago
+  monto:            number
+  referencia?:      string
+  ajuste_redondeo?: number
+}
+
+export interface ResultadoVenta {
+  id_venta: number
+  numero:   number
+  neto:     number
+  iva:      number
+  total:    number
+  tasa_iva: number
+}
+
+export interface AgendaPendiente {
+  id_agendamiento: number
+  id_servicio:     number
+  id_prestador:    number
+  nombre_cliente:  string
+  fecha:           string
+  hora_inicio:     string
+  nombre_servicio: string
+  valor:           number
+  maneja_iva:      number
+  nombre_prestador: string
+}
+
+export interface VentaResumen {
+  id_venta:    number
+  numero:      number | null
+  fecha:       string
+  estado:      string
+  neto:        number
+  iva:         number
+  total:       number
+  nombre_receptor: string | null
+}
+
+// ── Lectura ───────────────────────────────────────────────────────────────────
+
+/**
+ * Citas ya realizadas que aún no se han cobrado.
+ * RLS acota por empresa; la sucursal es filtro operativo.
+ */
+export async function listAgendaPendiente(
+  idEmpresa: number, idSucursal: number | null, hasta: string,
+): Promise<AgendaPendiente[]> {
+  let q = supabase
+    .from('agendamientos')
+    .select('id_agendamiento, id_servicio, id_prestador, nombre_cliente, fecha, hora_inicio, servicios(nombre_servicio, valor, maneja_iva), prestadores(nombre_prestador)')
+    .eq('id_empresa', idEmpresa)
+    .eq('estado', 'AGENDADA')
+    .eq('estado_pago', 'PENDIENTE')
+    .lte('fecha', hasta)
+    .order('fecha', { ascending: false })
+    .order('hora_inicio', { ascending: false })
+    .limit(50)
+  if (idSucursal) q = q.eq('id_sucursal', idSucursal) as any
+
+  const { data, error } = await q
+  if (error) throw error
+  return (data ?? []).map((a: any) => ({
+    id_agendamiento: a.id_agendamiento,
+    id_servicio:     a.id_servicio,
+    id_prestador:    a.id_prestador,
+    nombre_cliente:  a.nombre_cliente,
+    fecha:           a.fecha,
+    hora_inicio:     a.hora_inicio,
+    nombre_servicio: a.servicios?.nombre_servicio ?? 'Servicio',
+    valor:           Number(a.servicios?.valor ?? 0),
+    maneja_iva:      Number(a.servicios?.maneja_iva ?? 0),
+    nombre_prestador: a.prestadores?.nombre_prestador ?? '—',
+  }))
+}
+
+export async function listVentasRecientes(
+  idEmpresa: number, idSucursal: number | null, limite = 15,
+): Promise<VentaResumen[]> {
+  let q = supabase
+    .from('ventas')
+    .select('id_venta, numero, fecha, estado, neto, iva, total, nombre_receptor')
+    .eq('id_empresa', idEmpresa)
+    .neq('estado', 'BORRADOR')
+    .order('id_venta', { ascending: false })
+    .limit(limite)
+  if (idSucursal) q = q.eq('id_sucursal', idSucursal) as any
+  const { data, error } = await q
+  if (error) throw error
+  return (data ?? []) as VentaResumen[]
+}
+
+// ── Escritura (siempre vía RPC, nunca insert directo) ─────────────────────────
+
+export async function emitirVenta(
+  idEmpresa: number,
+  idSucursal: number,
+  lineas: LineaVenta[],
+  opts: {
+    idCliente?: number | null
+    rutReceptor?: string | null
+    nombreReceptor?: string | null
+    pagos?: PagoInput[]
+    observaciones?: string | null
+  } = {},
+): Promise<ResultadoVenta> {
+  const items = lineas.map(l => ({
+    tipo: l.tipo,
+    id_servicio: l.id_servicio ?? null,
+    id_producto: l.id_producto ?? null,
+    id_agendamiento: l.id_agendamiento ?? null,
+    id_prestador: l.id_prestador ?? null,
+    cantidad: l.cantidad,
+    descuento: l.descuento || 0,
+    // Si el usuario editó el precio en pantalla, se respeta; si no, manda el catálogo.
+    precio_unitario_neto: l.precio_unitario_neto,
+  }))
+
+  const { data, error } = await supabase.rpc('emitir_venta', {
+    p_id_empresa: idEmpresa,
+    p_id_sucursal: idSucursal,
+    p_items: items,
+    p_id_cliente: opts.idCliente ?? null,
+    p_rut_receptor: opts.rutReceptor ?? null,
+    p_nombre_receptor: opts.nombreReceptor ?? null,
+    p_pagos: opts.pagos ?? [],
+    p_observaciones: opts.observaciones ?? null,
+  })
+  if (error) throw error
+  return data as ResultadoVenta
+}
+
+export async function anularVenta(idVenta: number, motivo?: string) {
+  const { data, error } = await supabase.rpc('anular_venta', {
+    p_id_venta: idVenta,
+    p_motivo: motivo ?? null,
+  })
+  if (error) throw error
+  return data
+}
+
+// ── Cálculo de totales (solo vista previa; el servidor es la autoridad) ───────
+
+export function calcularTotales(
+  lineas: LineaVenta[], tasaIva: number, reglaRedondeo: 'LINEA' | 'TOTAL',
+) {
+  const netoDe = (l: LineaVenta) =>
+    Math.round(l.precio_unitario_neto * l.cantidad - (l.descuento || 0))
+
+  const neto = lineas.reduce((a, l) => a + netoDe(l), 0)
+  const netoAfecto = lineas.filter(l => l.aplica_iva).reduce((a, l) => a + netoDe(l), 0)
+
+  const iva = reglaRedondeo === 'LINEA'
+    ? lineas.filter(l => l.aplica_iva).reduce((a, l) => a + Math.round(netoDe(l) * tasaIva / 100), 0)
+    : Math.round(netoAfecto * tasaIva / 100)
+
+  return { neto, iva, total: neto + iva }
+}
+
+/** Ley 20.956: el efectivo se redondea al múltiplo de $10 más cercano. */
+export function redondearEfectivo(monto: number) {
+  const redondeado = Math.round(monto / 10) * 10
+  return { redondeado, ajuste: redondeado - monto }
+}

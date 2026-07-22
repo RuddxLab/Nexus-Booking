@@ -78,4 +78,6 @@ export function useUserRole(): RolUsuario {
 }
 
 export const PUEDE_GESTIONAR_CATALOGO: NombreRol[] = ['admin', 'supervisor']
+/** Quiénes pueden emitir ventas. Anular queda solo en admin/supervisor (RPC). */
+export const PUEDE_VENDER: NombreRol[] = ['admin', 'supervisor', 'recepcionista']
 export const PUEDE_GESTIONAR_CLIENTES: NombreRol[] = ['admin', 'supervisor', 'recepcionista']
