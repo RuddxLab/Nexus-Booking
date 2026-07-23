@@ -64,6 +64,7 @@ export function VentasPage() {
   const [ventas, setVentas] = useState<VentaResumen[]>([])
   const [emitida, setEmitida] = useState<ResultadoVenta | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [aviso, setAviso] = useState<string | null>(null)
   const [ocupado, setOcupado] = useState(false)
 
   // ── Carga de catálogos ──────────────────────────────────────────────────
@@ -152,24 +153,36 @@ export function VentasPage() {
 
   const agregarServicio = (s: ItemCatalogo) => {
     if (!prestadorWalkin) { setError('Elige el prestador que atendió antes de agregar un servicio'); return }
-    setError(null)
+    // No se repite el mismo servicio del mismo prestador: si quiere más de uno,
+    // ajusta la cantidad en el detalle.
+    if (lineas.some(l => l.tipo === 'SERVICIO' && l.id_servicio === s.id && l.id_prestador === prestadorWalkin)) {
+      setAviso(`"${s.nombre}" ya está en el detalle. Ajusta la cantidad ahí mismo.`)
+      return
+    }
+    setError(null); setAviso(null)
     const pr = prestadores.find(p => p.id === prestadorWalkin)
     setLineas(ls => [...ls, {
       uid: uid(), tipo: 'SERVICIO', id_servicio: s.id, id_prestador: prestadorWalkin,
       nombre_prestador: pr?.nombre, descripcion: s.nombre, cantidad: 1,
       precio_unitario_neto: s.valor, descuento: 0, aplica_iva: s.aplica_iva,
     }])
+    // Limpiar la búsqueda y el prestador tras seleccionar.
+    setBuscar(''); setPrestadorWalkin(null)
   }
 
   const agregarProducto = (p: ItemCatalogo) => {
-    setLineas(ls => {
-      const ya = ls.find(l => l.tipo === 'PRODUCTO' && l.id_producto === p.id)
-      if (ya) return ls.map(l => l === ya ? { ...l, cantidad: l.cantidad + 1 } : l)
-      return [...ls, {
-        uid: uid(), tipo: 'PRODUCTO', id_producto: p.id, descripcion: p.nombre,
-        cantidad: 1, precio_unitario_neto: p.valor, descuento: 0, aplica_iva: p.aplica_iva,
-      }]
-    })
+    // No se incrementa desde el catálogo: si ya está, se avisa y el usuario
+    // cambia la cantidad directamente en el detalle.
+    if (lineas.some(l => l.tipo === 'PRODUCTO' && l.id_producto === p.id)) {
+      setAviso(`"${p.nombre}" ya está en el detalle. Ajusta la cantidad ahí mismo.`)
+      return
+    }
+    setError(null); setAviso(null)
+    setLineas(ls => [...ls, {
+      uid: uid(), tipo: 'PRODUCTO', id_producto: p.id, descripcion: p.nombre,
+      cantidad: 1, precio_unitario_neto: p.valor, descuento: 0, aplica_iva: p.aplica_iva,
+    }])
+    setBuscar('')
   }
 
   const cambiarCantidad = (u: string, d: number) =>
@@ -186,7 +199,7 @@ export function VentasPage() {
 
   const limpiar = () => {
     setLineas([]); setPagos([]); setReceptor(''); setRut(''); setIdCliente(null)
-    setClienteQuery(''); setClienteResultados([]); setEmitida(null); setError(null)
+    setClienteQuery(''); setClienteResultados([]); setEmitida(null); setError(null); setAviso(null)
   }
 
   const seleccionarCliente = (c: ClienteBusqueda) => {
@@ -223,7 +236,7 @@ export function VentasPage() {
         pagos,
       })
       setEmitida(res)
-      setLineas([]); setPagos([]); setReceptor(''); setRut(''); setIdCliente(null); setClienteQuery('')
+      setLineas([]); setPagos([]); setReceptor(''); setRut(''); setIdCliente(null); setClienteQuery(''); setAviso(null)
       recargarAgendaYVentas()
     } catch (e: any) {
       setError(e.message ?? 'No se pudo emitir la venta')
@@ -258,6 +271,35 @@ export function VentasPage() {
       />
 
       {error && <div className="pos-error">{error}</div>}
+      {aviso && <div className="pos-aviso">{aviso}</div>}
+
+      {/* ── Cliente (opcional) — encima del detalle de la venta ── */}
+      <section className="pos-card pos-cliente-card">
+        <div className="pos-card-t">Cliente <span className="pos-opt">· opcional</span></div>
+        <div className="pos-cliente">
+          <div className="pos-cli-search">
+            <input className="pos-input" placeholder="Buscar cliente por nombre, RUT, correo o teléfono"
+              value={clienteQuery} onChange={e => setClienteQuery(e.target.value)} />
+            {clienteResultados.length > 0 && (
+              <div className="pos-cli-drop">
+                {clienteResultados.map(c => (
+                  <button key={c.id_cliente} className="pos-cli-op" onClick={() => seleccionarCliente(c)}>
+                    <span className="pos-cli-nom">{c.nombre_cliente}</span>
+                    <span className="pos-cli-meta">{[c.rut, c.telefono, c.email].filter(Boolean).join(' · ') || '—'}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="pos-cli-row">
+            <input className="pos-input" placeholder="Nombre del cliente"
+              value={receptor} onChange={e => { setReceptor(e.target.value); setIdCliente(null) }} />
+            <input className="pos-input" placeholder="RUT"
+              value={rut} onChange={e => { setRut(formatearRut(e.target.value)); setIdCliente(null) }} />
+          </div>
+          {rut.length > 0 && !validarRut(rut) && <div className="pos-cli-warn">RUT inválido</div>}
+        </div>
+      </section>
 
       {emitida && (
         <div className="pos-ok">
@@ -360,30 +402,6 @@ export function VentasPage() {
                 ))}
               </div>
             )}
-
-          <div className="pos-cliente">
-            <div className="pos-cli-search">
-              <input className="pos-input" placeholder="Buscar cliente por nombre, RUT, correo o teléfono"
-                value={clienteQuery} onChange={e => setClienteQuery(e.target.value)} />
-              {clienteResultados.length > 0 && (
-                <div className="pos-cli-drop">
-                  {clienteResultados.map(c => (
-                    <button key={c.id_cliente} className="pos-cli-op" onClick={() => seleccionarCliente(c)}>
-                      <span className="pos-cli-nom">{c.nombre_cliente}</span>
-                      <span className="pos-cli-meta">{[c.rut, c.telefono, c.email].filter(Boolean).join(' · ') || '—'}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="pos-cli-row">
-              <input className="pos-input" placeholder="Nombre del cliente (opcional)"
-                value={receptor} onChange={e => { setReceptor(e.target.value); setIdCliente(null) }} />
-              <input className="pos-input" placeholder="RUT (opcional)"
-                value={rut} onChange={e => { setRut(formatearRut(e.target.value)); setIdCliente(null) }} />
-            </div>
-            {rut.length > 0 && !validarRut(rut) && <div className="pos-cli-warn">RUT inválido</div>}
-          </div>
 
           <div className="pos-tot">
             <div><span>Neto</span><b>{money(totales.neto)}</b></div>
@@ -522,6 +540,9 @@ const CSS = `
 .pos-btn--primary{background:var(--color-primary);color:var(--color-primary-ink);border-color:var(--color-primary);flex:2}
 .pos-btn--primary:hover:not(:disabled){background:var(--color-primary-hover)}
 .pos-error{background:var(--color-danger-soft);color:var(--color-danger);padding:10px 14px;border-radius:var(--radius-sm);font-size:11px;margin-bottom:14px}
+.pos-aviso{background:var(--color-warning-soft);color:var(--color-warning);padding:10px 14px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;margin-bottom:14px}
+.pos-cliente-card{margin-bottom:16px}
+.pos-opt{font-weight:500;color:var(--color-ink-soft);font-size:9.5px;text-transform:none;letter-spacing:0}
 .pos-ok{background:var(--color-success-soft);border:1px solid var(--color-success);border-radius:var(--radius-md);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .pos-ok strong{color:var(--color-success)}
 .pos-ok-sub{font-size:10.5px;color:var(--color-ink-soft);margin-top:2px}
