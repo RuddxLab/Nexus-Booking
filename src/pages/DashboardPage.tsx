@@ -14,10 +14,22 @@ const moneyK = (n: number) => (n >= 1_000_000 ? '$' + (n / 1e6).toFixed(1).repla
 function isoLocal(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
-function rangoFechas(dias: number): { desde: string; hasta: string } {
-  const hasta = new Date()
-  const desde = new Date(); desde.setDate(hasta.getDate() - (dias - 1))
-  return { desde: isoLocal(desde), hasta: isoLocal(hasta) }
+// "Hoy" en Chile (America/Santiago), independiente de la zona del equipo.
+const hoyChile = () =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date())
+// Resta N días a una fecha ISO sin corrimientos de zona horaria.
+function restarDias(iso: string, n: number) {
+  const [y, m, d] = iso.split('-').map(Number)
+  const dt = new Date(Date.UTC(y, m - 1, d)); dt.setUTCDate(dt.getUTCDate() - n)
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`
+}
+type Periodo = 'dia' | 'semana' | 'mes'
+function rangoPeriodo(p: Periodo): { desde: string; hasta: string } {
+  const hasta = hoyChile()
+  const desde = p === 'dia' ? hasta : p === 'semana' ? restarDias(hasta, 6) : restarDias(hasta, 29)
+  return { desde, hasta }
 }
 function fechaCorta(iso: string) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -234,7 +246,7 @@ export function DashboardPage() {
   const esAdmin = rol === 'admin'
 
   const [tab, setTab] = useState<Tab>('resumen')
-  const [dias, setDias] = useState(30)
+  const [periodo, setPeriodo] = useState<Periodo>('dia')
   // scope: admin arranca en consolidado; supervisor/otros fijos a su empresa
   const [scope, setScope] = useState<number>(CONSOLIDADO)
   const [data, setData] = useState<DashboardResumen | null>(null)
@@ -243,7 +255,7 @@ export function DashboardPage() {
 
   useEffect(() => { if (!esAdmin && idEmpresa) setScope(idEmpresa) }, [esAdmin, idEmpresa])
 
-  const { desde, hasta } = useMemo(() => rangoFechas(dias), [dias])
+  const { desde, hasta } = useMemo(() => rangoPeriodo(periodo), [periodo])
 
   useEffect(() => {
     if (loadingRol) return
@@ -278,7 +290,7 @@ export function DashboardPage() {
           <div className="dx-ctx">
             <span className="dx-live" />
             {consolidado ? `Consolidado · ${data?.empresas_visibles ?? 0} empresa(s)` : (nombreEmpresa || 'Tu empresa')}
-            {' · '}{fechaCorta(desde)} – {fechaCorta(hasta)}
+            {' · '}{desde === hasta ? fechaCorta(hasta) : `${fechaCorta(desde)} – ${fechaCorta(hasta)}`}
           </div>
         </div>
         <div className="dx-controls">
@@ -289,8 +301,8 @@ export function DashboardPage() {
             </select>
           )}
           <div className="dx-seg">
-            {[7, 30, 90].map(d => (
-              <button key={d} className={dias === d ? 'on' : ''} onClick={() => setDias(d)}>{d}d</button>
+            {([['dia', 'Día'], ['semana', 'Semana'], ['mes', 'Mes']] as [Periodo, string][]).map(([p, l]) => (
+              <button key={p} className={periodo === p ? 'on' : ''} onClick={() => setPeriodo(p)}>{l}</button>
             ))}
           </div>
         </div>
@@ -319,7 +331,7 @@ export function DashboardPage() {
                 <Stat label="Ingresos est." value={k!.ingresos} fmtFn={money} tone="ink" />
               </div>
               <div className="dx-grid2">
-                <Panel titulo="Agendamientos en el tiempo" sub={`Últimos ${dias} días`}>
+                <Panel titulo="Agendamientos en el tiempo" sub={periodo === 'dia' ? 'Hoy' : periodo === 'semana' ? 'Últimos 7 días' : 'Últimos 30 días'}>
                   <Tendencia serie={data.serie} desde={desde} hasta={hasta} />
                 </Panel>
                 {consolidado ? (
@@ -464,20 +476,21 @@ function Panel({ titulo, sub, children }: { titulo: string; sub?: string; childr
 
 // ── CSS (scoped a .dashx) ─────────────────────────────────────────────────────
 const CSS = `
-.dashx{--mono:ui-monospace,"Cascadia Code","Consolas",monospace}
+.dashx{--mono:ui-monospace,"Cascadia Code","Consolas",monospace;padding:28px 32px;max-width:1400px}
+@media(max-width:720px){.dashx{padding:18px 16px}}
 .dashx *{box-sizing:border-box}
 .dx-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
-.dx-title{margin:0;font-size:24px;font-weight:800;letter-spacing:-.03em;color:var(--color-ink)}
-.dx-ctx{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--color-ink-soft);margin-top:3px}
+.dx-title{margin:0;font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--color-ink)}
+.dx-ctx{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--color-ink-soft);margin-top:3px}
 .dx-live{width:7px;height:7px;border-radius:50%;background:var(--color-success);animation:dxpulse 2.4s infinite}
 @keyframes dxpulse{0%{box-shadow:0 0 0 0 rgba(74,139,98,.4)}70%{box-shadow:0 0 0 7px rgba(74,139,98,0)}100%{box-shadow:0 0 0 0 rgba(74,139,98,0)}}
 .dx-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.dx-select{appearance:none;font:inherit;font-size:13px;font-weight:600;color:var(--color-ink);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:8px 30px 8px 12px;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237A776E' stroke-width='2.4'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 10px center}
+.dx-select{appearance:none;font:inherit;font-size:11px;font-weight:600;color:var(--color-ink);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:8px 30px 8px 12px;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237A776E' stroke-width='2.4'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 10px center}
 .dx-seg{display:inline-flex;background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:3px}
-.dx-seg button{border:0;background:transparent;color:var(--color-ink-soft);font:inherit;font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;transition:.15s}
+.dx-seg button{border:0;background:transparent;color:var(--color-ink-soft);font:inherit;font-size:10.5px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;transition:.15s}
 .dx-seg button.on{background:var(--color-surface);color:var(--color-ink);box-shadow:var(--shadow-card)}
 .dx-tabs{display:flex;gap:2px;border-bottom:1px solid var(--color-border);margin-bottom:20px;overflow-x:auto}
-.dx-tabs button{position:relative;border:0;background:transparent;font:inherit;font-size:13.5px;font-weight:600;color:var(--color-ink-soft);padding:11px 15px;cursor:pointer;white-space:nowrap;transition:color .15s}
+.dx-tabs button{position:relative;border:0;background:transparent;font:inherit;font-size:11.5px;font-weight:600;color:var(--color-ink-soft);padding:11px 15px;cursor:pointer;white-space:nowrap;transition:color .15s}
 .dx-tabs button:hover{color:var(--color-ink)}
 .dx-tabs button.on{color:var(--color-ink)}
 .dx-tabs button.on::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2.5px;border-radius:2px;background:var(--color-accent)}
@@ -487,20 +500,20 @@ const CSS = `
 .dx-kpi{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:15px 16px;transition:transform .2s,box-shadow .2s}
 .dx-kpi:hover{transform:translateY(-3px);box-shadow:var(--shadow-elevated)}
 .dx-kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
-.dx-kpi-label{font-size:11.5px;color:var(--color-ink-soft);font-weight:600}
+.dx-kpi-label{font-size:9.5px;color:var(--color-ink-soft);font-weight:600}
 .dx-kpi-dot{width:22px;height:22px;border-radius:7px}
-.dx-kpi-val{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:25px;font-weight:800;letter-spacing:-.02em;color:var(--color-ink);line-height:1}
-.dx-kpi-sub{font-size:11px;color:var(--color-ink-soft);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dx-kpi-val{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:800;letter-spacing:-.02em;color:var(--color-ink);line-height:1}
+.dx-kpi-sub{font-size:9px;color:var(--color-ink-soft);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dx-grid2{display:grid;grid-template-columns:1.5fr 1fr;gap:18px}
 .dx-panel{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:18px 20px}
 .dx-panel-hd{margin-bottom:16px}
-.dx-panel-t{font-size:15px;font-weight:700;letter-spacing:-.02em;color:var(--color-ink)}
-.dx-panel-s{font-size:12px;color:var(--color-ink-soft);margin-top:2px}
+.dx-panel-t{font-size:13px;font-weight:700;letter-spacing:-.02em;color:var(--color-ink)}
+.dx-panel-s{font-size:10px;color:var(--color-ink-soft);margin-top:2px}
 .dx-bars{display:flex;flex-direction:column;gap:13px}
 .dx-bar-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;gap:10px}
-.dx-bar-name{font-weight:600;font-size:13px;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dx-bar-sub{font-size:11px;color:var(--color-ink-soft);margin-left:8px;font-weight:400}
-.dx-bar-val{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;color:var(--color-ink);white-space:nowrap}
+.dx-bar-name{font-weight:600;font-size:11px;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dx-bar-sub{font-size:9px;color:var(--color-ink-soft);margin-left:8px;font-weight:400}
+.dx-bar-val{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;font-size:11px;color:var(--color-ink);white-space:nowrap}
 .dx-track{height:8px;border-radius:999px;background:var(--color-bg);overflow:hidden}
 .dx-fill{height:100%;border-radius:999px}
 @keyframes dxgrow{to{width:var(--w)}}
@@ -508,37 +521,37 @@ const CSS = `
 .dx-donut{width:150px;height:150px;flex:none;position:relative}
 .dx-donut svg{width:150px;height:150px;transform:rotate(-90deg)}
 .dx-donut-center{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
-.dx-donut-n{font-family:var(--mono);font-size:23px;font-weight:800;color:var(--color-ink);line-height:1}
-.dx-donut-t{font-size:10px;color:var(--color-ink-soft);text-transform:uppercase;letter-spacing:.1em;margin-top:3px}
+.dx-donut-n{font-family:var(--mono);font-size:21px;font-weight:800;color:var(--color-ink);line-height:1}
+.dx-donut-t{font-size:8px;color:var(--color-ink-soft);text-transform:uppercase;letter-spacing:.1em;margin-top:3px}
 .dx-legend{display:flex;flex-direction:column;gap:10px;flex:1;min-width:150px}
-.dx-lg{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--color-ink)}
+.dx-lg{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--color-ink)}
 .dx-sw{width:10px;height:10px;border-radius:3px;flex:none}
-.dx-lg-nm{font-weight:500}.dx-lg-ct{margin-left:auto;color:var(--color-ink-soft);font-size:12px;font-family:var(--mono)}
+.dx-lg-nm{font-weight:500}.dx-lg-ct{margin-left:auto;color:var(--color-ink-soft);font-size:10px;font-family:var(--mono)}
 .dx-lg-pc{font-weight:700;font-family:var(--mono);width:42px;text-align:right}
 .dx-chart{width:100%;height:180px;display:block}
-.dx-chart-leg{display:flex;gap:16px;font-size:11.5px;color:var(--color-ink-soft);margin-top:8px}
+.dx-chart-leg{display:flex;gap:16px;font-size:9.5px;color:var(--color-ink-soft);margin-top:8px}
 .dx-chart-leg span{display:inline-flex;align-items:center;gap:6px}
 .dx-chart-leg i{width:14px;height:0;display:inline-block}
 .dx-heat{display:grid;gap:4px;align-items:center}
-.dx-h-lab{font-size:10.5px;color:var(--color-ink-soft);text-align:right;padding-right:4px;font-family:var(--mono)}
-.dx-h-col{font-size:9.5px;color:var(--color-ink-soft);text-align:center;font-family:var(--mono)}
+.dx-h-lab{font-size:8.5px;color:var(--color-ink-soft);text-align:right;padding-right:4px;font-family:var(--mono)}
+.dx-h-col{font-size:7.5px;color:var(--color-ink-soft);text-align:center;font-family:var(--mono)}
 .dx-cell{aspect-ratio:1;border-radius:5px;transition:transform .15s}
 .dx-cell:hover{transform:scale(1.18);outline:2px solid var(--color-accent)}
 @keyframes dxfade{from{opacity:0}to{opacity:1}}
-.dx-heat-leg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--color-ink-soft);margin-top:12px;justify-content:flex-end}
+.dx-heat-leg{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--color-ink-soft);margin-top:12px;justify-content:flex-end}
 .dx-scale{display:flex;gap:3px}.dx-scale i{width:14px;height:10px;border-radius:3px;display:block}
 .dx-tbl-wrap{overflow-x:auto}
-.dx-tbl{width:100%;border-collapse:collapse;font-size:13px}
-.dx-tbl th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--color-ink-soft);font-weight:600;padding:0 10px 10px}
+.dx-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.dx-tbl th{text-align:left;font-size:8.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--color-ink-soft);font-weight:600;padding:0 10px 10px}
 .dx-tbl th.dx-r,.dx-tbl td.dx-r{text-align:right;font-family:var(--mono)}
 .dx-tbl td{padding:10px;border-top:1px solid var(--color-border);color:var(--color-ink)}
 .dx-tbl tbody tr{transition:background .15s}
 .dx-tbl tbody tr:hover{background:var(--color-bg)}
 .dx-nm{font-weight:600}.dx-muted{color:var(--color-ink-soft)}
-.dx-when{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+.dx-when{font-family:var(--mono);font-size:10.5px;white-space:nowrap}
 .dx-hide{}
-.dx-vacio{padding:28px 10px;text-align:center;color:var(--color-ink-soft);font-size:13px}
-.dx-note{font-size:11.5px;color:var(--color-ink-soft);padding:2px 4px}
+.dx-vacio{padding:28px 10px;text-align:center;color:var(--color-ink-soft);font-size:11px}
+.dx-note{font-size:9.5px;color:var(--color-ink-soft);padding:2px 4px}
 .dx-loading,.dx-error{padding:28px;text-align:center;color:var(--color-ink-soft)}
 .dx-error{color:var(--color-danger)}
 @media (max-width:1100px){.dx-c5{grid-template-columns:repeat(3,1fr)}.dx-grid2{grid-template-columns:1fr}}
