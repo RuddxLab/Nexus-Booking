@@ -63,11 +63,11 @@ export interface VentaResumen {
 // ── Lectura ───────────────────────────────────────────────────────────────────
 
 /**
- * Citas ya realizadas que aún no se han cobrado.
+ * Citas del día indicado que aún no se han cobrado.
  * RLS acota por empresa; la sucursal es filtro operativo.
  */
 export async function listAgendaPendiente(
-  idEmpresa: number, idSucursal: number | null, hasta: string,
+  idEmpresa: number, idSucursal: number | null, fecha: string,
 ): Promise<AgendaPendiente[]> {
   let q = supabase
     .from('agendamientos')
@@ -75,9 +75,8 @@ export async function listAgendaPendiente(
     .eq('id_empresa', idEmpresa)
     .eq('estado', 'AGENDADA')
     .eq('estado_pago', 'PENDIENTE')
-    .lte('fecha', hasta)
-    .order('fecha', { ascending: false })
-    .order('hora_inicio', { ascending: false })
+    .eq('fecha', fecha)
+    .order('hora_inicio', { ascending: true })
     .limit(50)
   if (idSucursal) q = q.eq('id_sucursal', idSucursal) as any
 
@@ -98,19 +97,49 @@ export async function listAgendaPendiente(
 }
 
 export async function listVentasRecientes(
-  idEmpresa: number, idSucursal: number | null, limite = 15,
+  idEmpresa: number, idSucursal: number | null, fecha: string, limite = 30,
 ): Promise<VentaResumen[]> {
   let q = supabase
     .from('ventas')
     .select('id_venta, numero, fecha, estado, neto, iva, total, nombre_receptor')
     .eq('id_empresa', idEmpresa)
     .neq('estado', 'BORRADOR')
+    .eq('fecha', fecha)
     .order('id_venta', { ascending: false })
     .limit(limite)
   if (idSucursal) q = q.eq('id_sucursal', idSucursal) as any
   const { data, error } = await q
   if (error) throw error
   return (data ?? []) as VentaResumen[]
+}
+
+// ── Búsqueda de clientes (para asociar la venta a un cliente existente) ───────
+export interface ClienteBusqueda {
+  id_cliente:     number
+  nombre_cliente: string
+  rut:            string | null
+  email:          string | null
+  telefono:       string | null
+}
+
+/** Busca clientes de la empresa por nombre, RUT, correo o teléfono. */
+export async function buscarClientes(
+  idEmpresa: number, texto: string,
+): Promise<ClienteBusqueda[]> {
+  // Se limpian comas y paréntesis: rompen la sintaxis del filtro .or() de PostgREST.
+  const t = texto.trim().replace(/[(),]/g, '')
+  if (t.length < 2) return []
+  const patron = `%${t}%`
+  const { data, error } = await supabase
+    .from('clientes')
+    .select('id_cliente, nombre_cliente, rut, email, telefono')
+    .eq('id_empresa', idEmpresa)
+    .eq('activo', true)
+    .or(`nombre_cliente.ilike.${patron},rut.ilike.${patron},email.ilike.${patron},telefono.ilike.${patron}`)
+    .order('nombre_cliente')
+    .limit(8)
+  if (error) throw error
+  return (data ?? []) as ClienteBusqueda[]
 }
 
 // ── Escritura (siempre vía RPC, nunca insert directo) ─────────────────────────
