@@ -13,10 +13,12 @@ import {
 
 const money = (n: number) => '$' + Math.round(n || 0).toLocaleString('es-CL')
 const uid = () => Math.random().toString(36).slice(2, 10)
-const hoy = () => {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
+// Fecha de Chile (America/Santiago), independiente de la zona horaria del equipo.
+// en-CA formatea como YYYY-MM-DD, que es lo que espera la BD.
+const hoy = () =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date())
 
 const MEDIOS: { value: MedioPago; label: string }[] = [
   { value: 'EFECTIVO', label: 'Efectivo' },
