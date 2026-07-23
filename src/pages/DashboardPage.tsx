@@ -35,6 +35,8 @@ function fechaCorta(iso: string) {
   const [y, m, d] = iso.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })
 }
+/** Mayor monto de un top, para escalar las barras sin dividir por cero. */
+const topMax = (items: { monto: number }[]) => Math.max(1, ...items.map(i => i.monto))
 
 // ── Animación de números ──────────────────────────────────────────────────────
 function useCountUp(value: number, fmtFn: (n: number) => string) {
@@ -198,44 +200,14 @@ function Tendencia({ serie, desde, hasta }: { serie: DashboardResumen['serie']; 
   )
 }
 
-// ── Heatmap ───────────────────────────────────────────────────────────────────
-function Heatmap({ celdas }: { celdas: DashboardResumen['heatmap'] }) {
-  if (!celdas.length) return <Vacio texto="Sin datos de demanda en este período" />
-  const dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
-  const horas = Array.from(new Set(celdas.map(c => c.hora))).sort((a, b) => a - b)
-  const hMin = Math.min(...horas), hMax = Math.max(...horas)
-  const cols: number[] = []; for (let h = hMin; h <= hMax; h++) cols.push(h)
-  const max = Math.max(1, ...celdas.map(c => c.n))
-  const get = (dow: number, h: number) => celdas.find(c => c.dow === dow && c.hora === h)?.n ?? 0
-  return (
-    <div>
-      <div className="dx-heat" style={{ gridTemplateColumns: `30px repeat(${cols.length}, 1fr)` }}>
-        <span />{cols.map(h => <span key={h} className="dx-h-col">{String(h).padStart(2, '0')}</span>)}
-        {dias.map((d, di) => (
-          <span key={d} style={{ display: 'contents' }}>
-            <span className="dx-h-lab">{d}</span>
-            {cols.map((h, hi) => {
-              const v = get(di + 1, h), a = v === 0 ? 0.05 : 0.12 + (v / max) * 0.88
-              return <div key={h} className="dx-cell" title={`${d} ${String(h).padStart(2, '0')}:00 · ${v} reservas`}
-                style={{ background: `rgba(200,164,106,${a.toFixed(2)})`, animation: REDUCE ? undefined : `dxfade .4s ease ${(di * cols.length + hi) * 0.006}s both` }} />
-            })}
-          </span>
-        ))}
-      </div>
-      <div className="dx-heat-leg">Menos
-        <span className="dx-scale">{[.12, .34, .56, .78, 1].map((o, i) => <i key={i} style={{ background: `rgba(200,164,106,${o})` }} />)}</span>Más</div>
-    </div>
-  )
-}
-
 function Vacio({ texto }: { texto: string }) {
   return <div className="dx-vacio">{texto}</div>
 }
 
 // ── Página ────────────────────────────────────────────────────────────────────
-type Tab = 'resumen' | 'ingresos' | 'prestadores' | 'sucursales' | 'clientes'
+type Tab = 'resumen' | 'ventas' | 'prestadores' | 'sucursales' | 'clientes'
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'resumen', label: 'Resumen' }, { id: 'ingresos', label: 'Ingresos' },
+  { id: 'resumen', label: 'Resumen' }, { id: 'ventas', label: 'Ventas' },
   { id: 'prestadores', label: 'Prestadores' }, { id: 'sucursales', label: 'Sucursales' }, { id: 'clientes', label: 'Clientes' },
 ]
 const CONSOLIDADO = -1
@@ -275,8 +247,6 @@ export function DashboardPage() {
 
   const maxPrest = Math.max(1, ...(data?.por_prestador.map(p => p.agendadas) ?? [1]))
   const maxServ  = Math.max(1, ...(data?.por_servicio.map(s => s.cantidad) ?? [1]))
-  const maxIngServ = Math.max(1, ...(data?.por_servicio.map(s => s.ingresos) ?? [1]))
-  const maxIngSuc  = Math.max(1, ...(data?.por_sucursal.map(s => s.ingresos) ?? [1]))
   const maxEmp   = Math.max(1, ...(data?.por_empresa.map(e => e.agendadas) ?? [1]))
 
   return (
@@ -330,6 +300,14 @@ export function DashboardPage() {
                 <Stat label="Tasa cancelación" value={k!.tasa_cancelacion} fmtFn={n => `${n.toFixed(1)}%`} tone="warning" />
                 <Stat label="Ingresos est." value={k!.ingresos} fmtFn={money} tone="ink" />
               </div>
+
+              {/* Estadísticas de ventas reales (facturadas) */}
+              <div className="dx-kpis dx-c3">
+                <Stat label="Ventas emitidas" value={k!.ventas_emitidas} fmtFn={fmt} tone="success" sub="Documentos del período" />
+                <Stat label="Facturado" value={k!.ingresos_facturados} fmtFn={money} tone="ink" sub="Total cobrado" />
+                <Stat label="Comisiones" value={k!.comisiones} fmtFn={money} tone="warning" sub="Generadas por las ventas" />
+              </div>
+
               <div className="dx-grid2">
                 <Panel titulo="Agendamientos en el tiempo" sub={periodo === 'dia' ? 'Hoy' : periodo === 'semana' ? 'Últimos 7 días' : 'Últimos 30 días'}>
                   <Tendencia serie={data.serie} desde={desde} hasta={hasta} />
@@ -370,20 +348,44 @@ export function DashboardPage() {
             </>
           )}
 
-          {/* ── INGRESOS ── */}
-          {tab === 'ingresos' && (
+          {/* ── VENTAS ── */}
+          {tab === 'ventas' && (
             <>
               <div className="dx-kpis dx-c3">
-                <Stat label="Ingresos estimados" value={k!.ingresos} fmtFn={money} tone="success" sub="Solo citas agendadas" />
-                <Stat label="Ticket promedio" value={k!.ticket_promedio} fmtFn={money} tone="ink" />
-                <Stat label="Agendadas" value={k!.agendadas} fmtFn={fmt} tone="accent" />
+                <Stat label="Ventas emitidas" value={k!.ventas_emitidas} fmtFn={fmt} tone="accent" sub="Documentos del período" />
+                <Stat label="Facturado" value={k!.ingresos_facturados} fmtFn={money} tone="success" sub="Total cobrado" />
+                <Stat label="Comisiones" value={k!.comisiones} fmtFn={money} tone="warning" />
               </div>
-              <Panel titulo="Ingresos por servicio" sub="Qué genera más">
-                <Bars items={[...data.por_servicio].sort((a, b) => b.ingresos - a.ingresos).map(s => ({ name: s.nombre || '—', disp: money(s.ingresos), frac: s.ingresos / maxIngServ }))} />
-              </Panel>
-              <Panel titulo="Ingresos por sucursal" sub="Aporte de cada local">
-                <Bars items={[...data.por_sucursal].sort((a, b) => b.ingresos - a.ingresos).map(s => ({ name: s.nombre, disp: money(s.ingresos), frac: s.ingresos / maxIngSuc, color: 'var(--color-primary)' }))} />
-              </Panel>
+              <div className="dx-grid2e">
+                <Panel titulo="Top 5 servicios vendidos" sub="Por monto facturado">
+                  <Bars items={data.ventas_por_servicio.map((s, i) => ({
+                    name: `#${i + 1}  ${s.nombre}`, sub: `${fmt(s.cantidad)} u.`,
+                    disp: money(s.monto), frac: s.monto / topMax(data.ventas_por_servicio),
+                  }))} />
+                </Panel>
+                <Panel titulo="Top 5 productos vendidos" sub="Por monto facturado">
+                  <Bars items={data.ventas_por_producto.map((p, i) => ({
+                    name: `#${i + 1}  ${p.nombre}`, sub: `${fmt(p.cantidad)} u.`,
+                    disp: money(p.monto), frac: p.monto / topMax(data.ventas_por_producto),
+                    color: 'var(--color-primary)',
+                  }))} />
+                </Panel>
+              </div>
+              <div className="dx-grid2e">
+                <Panel titulo="Top 5 prestadores" sub="Por monto vendido">
+                  <Bars items={data.ventas_por_prestador.map((p, i) => ({
+                    name: `#${i + 1}  ${p.nombre}`, sub: `comisión ${moneyK(p.comision ?? 0)}`,
+                    disp: money(p.monto), frac: p.monto / topMax(data.ventas_por_prestador),
+                  }))} />
+                </Panel>
+                <Panel titulo="Top 5 sucursales" sub="Por monto vendido">
+                  <Bars items={data.ventas_por_sucursal.map((s, i) => ({
+                    name: `#${i + 1}  ${s.nombre}`, sub: `${fmt(s.cantidad)} ventas`,
+                    disp: money(s.monto), frac: s.monto / topMax(data.ventas_por_sucursal),
+                    color: 'var(--color-primary)',
+                  }))} />
+                </Panel>
+              </div>
             </>
           )}
 
@@ -433,9 +435,6 @@ export function DashboardPage() {
                   ) : <Vacio texto="Sin datos" />}
                 </Panel>
               </div>
-              <Panel titulo="Demanda por hora" sub="Reservas por día y franja horaria">
-                <Heatmap celdas={data.heatmap} />
-              </Panel>
             </>
           )}
 

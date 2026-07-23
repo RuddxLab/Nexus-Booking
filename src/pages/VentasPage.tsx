@@ -62,7 +62,11 @@ export function VentasPage() {
   const [clienteResultados, setClienteResultados] = useState<ClienteBusqueda[]>([])
 
   const [ventas, setVentas] = useState<VentaResumen[]>([])
-  const [emitida, setEmitida] = useState<ResultadoVenta | null>(null)
+  // Comprobante del popup: se congela lo pagado al emitir, porque los pagos
+  // se limpian para dejar la pantalla lista para la venta siguiente.
+  const [emitida, setEmitida] = useState<
+    { res: ResultadoVenta; pagos: PagoInput[]; pagado: number; vuelto: number } | null
+  >(null)
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const [ocupado, setOcupado] = useState(false)
@@ -235,7 +239,7 @@ export function VentasPage() {
         nombreReceptor: receptor || null,
         pagos,
       })
-      setEmitida(res)
+      setEmitida({ res, pagos: [...pagos], pagado, vuelto: Math.max(0, pagado - res.total) })
       setLineas([]); setPagos([]); setReceptor(''); setRut(''); setIdCliente(null); setClienteQuery(''); setAviso(null)
       recargarAgendaYVentas()
     } catch (e: any) {
@@ -302,16 +306,44 @@ export function VentasPage() {
       </section>
 
       {emitida && (
-        <div className="pos-ok">
-          <div>
-            <strong>Venta N° {emitida.numero} emitida</strong>
-            <div className="pos-ok-sub">
-              Neto {money(emitida.neto)} · IVA ({emitida.tasa_iva}%) {money(emitida.iva)} · Total <b>{money(emitida.total)}</b>
+        <div className="pos-modal-bg" role="dialog" aria-modal="true">
+          <div className="pos-modal">
+            <div className="pos-modal-hd">
+              <div className="pos-modal-check">✓</div>
+              <div>
+                <div className="pos-modal-t">Venta N° {emitida.res.numero} emitida</div>
+                <div className="pos-modal-s">{new Date().toLocaleString('es-CL')}</div>
+              </div>
             </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="pos-btn" onClick={() => window.print()}>Imprimir</button>
-            <button className="pos-btn pos-btn--primary" onClick={() => setEmitida(null)}>Nueva venta</button>
+
+            <div className="pos-modal-body">
+              <div className="pos-dt"><span>Neto</span><b>{money(emitida.res.neto)}</b></div>
+              <div className="pos-dt"><span>IVA ({emitida.res.tasa_iva}%)</span><b>{money(emitida.res.iva)}</b></div>
+              <div className="pos-dt pos-dt-total"><span>Total</span><b>{money(emitida.res.total)}</b></div>
+
+              <div className="pos-modal-sep">Pagos</div>
+              {emitida.pagos.length === 0
+                ? <div className="pos-dt"><span>Sin pagos registrados</span><b>—</b></div>
+                : emitida.pagos.map((p, i) => (
+                  <div className="pos-dt" key={i}>
+                    <span>{MEDIOS.find(m => m.value === p.medio)?.label}
+                      {!!p.ajuste_redondeo && <em className="pos-dt-aj"> (redondeo {p.ajuste_redondeo > 0 ? '+' : ''}{p.ajuste_redondeo})</em>}
+                    </span>
+                    <b>{money(p.monto)}</b>
+                  </div>
+                ))}
+              <div className="pos-dt"><span>Total pagado</span><b>{money(emitida.pagado)}</b></div>
+
+              <div className="pos-vuelto">
+                <span>Vuelto</span>
+                <strong>{money(emitida.vuelto)}</strong>
+              </div>
+            </div>
+
+            <div className="pos-modal-ft">
+              <button className="pos-btn" onClick={() => window.print()}>Imprimir</button>
+              <button className="pos-btn pos-btn--primary" onClick={() => setEmitida(null)} autoFocus>OK</button>
+            </div>
           </div>
         </div>
       )}
@@ -543,9 +575,27 @@ const CSS = `
 .pos-aviso{background:var(--color-warning-soft);color:var(--color-warning);padding:10px 14px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;margin-bottom:14px}
 .pos-cliente-card{margin-bottom:16px}
 .pos-opt{font-weight:500;color:var(--color-ink-soft);font-size:9.5px;text-transform:none;letter-spacing:0}
-.pos-ok{background:var(--color-success-soft);border:1px solid var(--color-success);border-radius:var(--radius-md);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.pos-ok strong{color:var(--color-success)}
-.pos-ok-sub{font-size:10.5px;color:var(--color-ink-soft);margin-top:2px}
+/* ── Comprobante emitido (modal grande) ── */
+.pos-modal-bg{position:fixed;inset:0;z-index:1000;background:rgba(20,20,18,.55);backdrop-filter:blur(3px);display:grid;place-items:center;padding:20px;animation:posFade .18s ease}
+@keyframes posFade{from{opacity:0}to{opacity:1}}
+.pos-modal{width:100%;max-width:520px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-elevated);overflow:hidden;animation:posUp .22s cubic-bezier(.2,.8,.3,1)}
+@keyframes posUp{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+.pos-modal-hd{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid var(--color-border);background:var(--color-success-soft)}
+.pos-modal-check{width:38px;height:38px;border-radius:50%;background:var(--color-success);color:#fff;display:grid;place-items:center;font-size:20px;font-weight:700;flex:none}
+.pos-modal-t{font-size:17px;font-weight:800;color:var(--color-ink)}
+.pos-modal-s{font-size:11px;color:var(--color-ink-soft);margin-top:2px}
+.pos-modal-body{padding:18px 24px}
+.pos-dt{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:6px 0;font-size:14px;color:var(--color-ink-soft)}
+.pos-dt b{font-family:var(--mono);font-size:15px;color:var(--color-ink);font-weight:700}
+.pos-dt-aj{font-style:normal;font-size:11px;color:var(--color-ink-soft)}
+.pos-dt-total{border-top:1px solid var(--color-border);margin-top:6px;padding-top:10px;color:var(--color-ink);font-weight:700;font-size:16px}
+.pos-dt-total b{font-size:20px}
+.pos-modal-sep{margin:14px 0 4px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--color-ink-soft)}
+/* El vuelto es el dato que el cajero necesita ver de un vistazo */
+.pos-vuelto{margin-top:16px;padding:16px 20px;border-radius:var(--radius-md);background:var(--color-warning-soft);border:2px solid var(--color-warning);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pos-vuelto span{font-size:15px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--color-warning)}
+.pos-vuelto strong{font-family:var(--mono);font-size:38px;line-height:1;font-weight:800;color:var(--color-warning)}
+.pos-modal-ft{display:flex;gap:10px;padding:16px 24px;border-top:1px solid var(--color-border);background:var(--color-bg)}
 .pos-tbl-wrap{overflow-x:auto}
 .pos-tbl{width:100%;border-collapse:collapse;font-size:11px}
 .pos-tbl th{text-align:left;font-size:8.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--color-ink-soft);font-weight:600;padding:0 9px 9px}

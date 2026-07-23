@@ -11,6 +11,10 @@ export interface DashKpis {
   clientes:        number
   nuevos:          number
   recurrentes:     number
+  /** Ventas realmente emitidas en el período (no estimaciones de agenda). */
+  ventas_emitidas:     number
+  ingresos_facturados: number
+  comisiones:          number
 }
 export interface SeriePunto   { fecha: string; agendadas: number; canceladas: number }
 export interface PorPrestador { id: number; nombre: string; agendadas: number; ingresos: number }
@@ -19,6 +23,12 @@ export interface PorServicio  { id: number; nombre: string; cantidad: number; in
 export interface PorEmpresa   { id: number; nombre: string; agendadas: number; ingresos: number }
 export interface HeatCelda    { dow: number; hora: number; n: number }
 export interface Proximo      { nombre_cliente: string; servicio: string | null; prestador: string | null; sucursal: string | null; fecha: string; hora_inicio: string; estado: string }
+
+/** Top 5 basado en ventas EMITIDAS (venta_items), no en agendamientos. */
+export interface TopVenta {
+  id: number; nombre: string; cantidad: number; monto: number
+  comision?: number   // solo en el top por prestador
+}
 
 export interface DashboardResumen {
   empresas_visibles: number
@@ -30,6 +40,10 @@ export interface DashboardResumen {
   por_empresa:   PorEmpresa[]
   heatmap:       HeatCelda[]
   proximos:      Proximo[]
+  ventas_por_producto:  TopVenta[]
+  ventas_por_servicio:  TopVenta[]
+  ventas_por_prestador: TopVenta[]
+  ventas_por_sucursal:  TopVenta[]
 }
 
 /**
