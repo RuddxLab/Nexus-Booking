@@ -24,6 +24,8 @@ export function LiquidacionesPage() {
   const [prestadores, setPrestadores] = useState<PrestadorOpcion[]>([])
 
   const [pendientes, setPendientes] = useState<ComisionPendiente[] | null>(null)
+  // Prestador elegido para liquidar, en espera de confirmación (muestra el resumen).
+  const [porGenerar, setPorGenerar] = useState<ComisionPendiente | null>(null)
   const [hist, setHist] = useState<Liquidacion[]>([])
 
   const [error, setError] = useState<string | null>(null)
@@ -45,7 +47,7 @@ export function LiquidacionesPage() {
   const previsualizar = async () => {
     if (!empresaId) return
     if (desde > hasta) { setError('El rango de fechas es inválido'); return }
-    setOcupado(true); setError(null); setAviso(null)
+    setOcupado(true); setError(null); setAviso(null); setPorGenerar(null)
     try {
       const r = await previsualizarComisiones(empresaId, desde, hasta, idPrestador)
       setPendientes(r)
@@ -54,13 +56,15 @@ export function LiquidacionesPage() {
     } finally { setOcupado(false) }
   }
 
-  const generar = async (p: ComisionPendiente) => {
-    if (!empresaId) return
-    if (!window.confirm(`Generar liquidación de ${p.nombre_prestador} por ${money(p.total_comision)} (${p.cantidad_items} ítems)?`)) return
+  // Paso 2: confirmar la generación del prestador elegido en `porGenerar`.
+  const confirmarGenerar = async () => {
+    if (!empresaId || !porGenerar) return
+    const p = porGenerar
     setOcupado(true); setError(null); setAviso(null)
     try {
       const r = await generarLiquidacion(empresaId, p.id_prestador, desde, hasta)
-      setAviso(`Liquidación #${r.id_liquidacion} generada: ${money(r.total_comision)} (${r.cantidad_items} ítems).`)
+      setAviso(`Liquidación #${r.id_liquidacion} generada para ${p.nombre_prestador}: ${money(r.total_comision)} (${r.cantidad_items} ítems).`)
+      setPorGenerar(null)
       await previsualizar()
       cargarHist()
     } catch (e: any) {
@@ -138,7 +142,7 @@ export function LiquidacionesPage() {
                         <td className="r">{p.cantidad_items}</td>
                         <td className="r"><b>{money(p.total_comision)}</b></td>
                         <td className="r">
-                          <button className="lq-link" onClick={() => generar(p)} disabled={ocupado}>Generar</button>
+                          <button className="lq-link" onClick={() => setPorGenerar(p)} disabled={ocupado}>Generar</button>
                         </td>
                       </tr>
                     ))}
@@ -149,6 +153,28 @@ export function LiquidacionesPage() {
                 </table>
               </div>
             )
+        )}
+
+        {porGenerar && (
+          <div className="lq-confirm">
+            <div className="lq-confirm-t">Revisa antes de generar la liquidación</div>
+            <div className="lq-confirm-body">
+              <div><span>Prestador</span><b>{porGenerar.nombre_prestador}</b></div>
+              <div><span>Período</span><b>{desde} → {hasta}</b></div>
+              <div><span>Ítems</span><b>{porGenerar.cantidad_items}</b></div>
+              <div><span>Comisión a liquidar</span><b>{money(porGenerar.total_comision)}</b></div>
+            </div>
+            <p className="lq-confirm-note">
+              Al confirmar, estas comisiones quedan marcadas como liquidadas y no se vuelven a
+              incluir en otra liquidación. Es reversible por admin o supervisor.
+            </p>
+            <div className="lq-confirm-actions">
+              <button className="lq-btn" onClick={() => setPorGenerar(null)} disabled={ocupado}>Cancelar</button>
+              <button className="lq-btn lq-btn--primary" onClick={confirmarGenerar} disabled={ocupado}>
+                {ocupado ? 'Generando…' : 'Confirmar y generar'}
+              </button>
+            </div>
+          </div>
         )}
       </section>
 
@@ -209,6 +235,15 @@ const CSS = `
 .lq-tbl th.r,.lq-tbl td.r{text-align:right;font-family:var(--mono)}
 .lq-tbl td{padding:9px;border-top:1px solid var(--color-border);color:var(--color-ink)}
 .lq-total td{border-top:2px solid var(--color-border);font-weight:700}
+.lq-confirm{margin-top:16px;border:1px solid var(--color-primary);border-radius:var(--radius-sm);background:var(--color-bg);padding:14px 16px}
+.lq-confirm-t{font-size:13px;font-weight:700;color:var(--color-ink);margin-bottom:10px}
+.lq-confirm-body{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 24px;margin-bottom:10px}
+@media(max-width:560px){.lq-confirm-body{grid-template-columns:1fr}}
+.lq-confirm-body>div{display:flex;justify-content:space-between;font-size:13px;color:var(--color-ink);border-bottom:1px solid var(--color-border);padding-bottom:6px}
+.lq-confirm-body span{color:var(--color-ink-soft)}
+.lq-confirm-body b{font-family:var(--mono)}
+.lq-confirm-note{font-size:11.5px;color:var(--color-ink-soft);line-height:1.5;margin:0 0 12px}
+.lq-confirm-actions{display:flex;gap:8px;justify-content:flex-end}
 .lq-anulada{opacity:.5}
 .lq-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px}
 .lq-pill.ok{background:var(--color-success-soft);color:var(--color-success)}
