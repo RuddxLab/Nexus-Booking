@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useUserRole } from '../hooks/useUserRole'
 import { useEmpresasSucursales } from '../hooks/useEmpresasSucursales'
 import { getDashboardResumen, type DashboardResumen } from '../services/dashboardService'
+import { listAnulaciones, type Anulacion } from '../services/ventasService'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const REDUCE = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion:reduce)').matches
@@ -241,6 +242,19 @@ export function DashboardPage() {
     return () => { vivo = false }
   }, [desde, hasta, scope, loadingRol])
 
+  // Anulaciones del período. Van aparte del resumen porque no son un agregado:
+  // el control sobre las anulaciones consiste justamente en ver el detalle de
+  // quién anuló qué y por qué.
+  const [anulaciones, setAnulaciones] = useState<Anulacion[]>([])
+  useEffect(() => {
+    if (loadingRol || tab !== 'ventas') return
+    let vivo = true
+    listAnulaciones(desde, hasta, scope === CONSOLIDADO ? null : scope)
+      .then(a => { if (vivo) setAnulaciones(a) })
+      .catch(() => { if (vivo) setAnulaciones([]) })
+    return () => { vivo = false }
+  }, [desde, hasta, scope, loadingRol, tab])
+
   const k = data?.kpis
   const consolidado = scope === CONSOLIDADO && esAdmin
   const nombreEmpresa = empresas.find(e => e.id_empresa === scope)?.nombre_empresa
@@ -386,6 +400,37 @@ export function DashboardPage() {
                   }))} />
                 </Panel>
               </div>
+
+              <Panel titulo={`Anulaciones del período (${anulaciones.length})`}
+                     sub="Quién anuló, cuándo y por qué">
+                {anulaciones.length === 0
+                  ? <div className="dx-vacio">Sin anulaciones en el período</div>
+                  : (
+                    <div className="dx-tbl-wrap">
+                      <table className="dx-tbl">
+                        <thead><tr>
+                          <th>N°</th>{consolidado && <th>Empresa</th>}<th>Sucursal</th>
+                          <th className="dx-r">Monto</th><th>Anulada por</th><th>Cuándo</th><th>Motivo</th>
+                        </tr></thead>
+                        <tbody>
+                          {anulaciones.map(a => (
+                            <tr key={a.id_venta}>
+                              <td>{a.numero ?? '—'}</td>
+                              {consolidado && <td>{a.nombre_empresa}</td>}
+                              <td>{a.nombre_sucursal ?? '—'}</td>
+                              <td className="dx-r">{money(a.total)}</td>
+                              <td>{a.correo_anulo ?? '—'}</td>
+                              <td>{a.fecha_anulacion
+                                ? new Date(a.fecha_anulacion.replace(' ', 'T')).toLocaleString('es-CL')
+                                : '—'}</td>
+                              <td className="dx-motivo">{a.motivo ?? '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+              </Panel>
             </>
           )}
 
@@ -550,6 +595,7 @@ const CSS = `
 .dx-when{font-family:var(--mono);font-size:10.5px;white-space:nowrap}
 .dx-hide{}
 .dx-vacio{padding:28px 10px;text-align:center;color:var(--color-ink-soft);font-size:11px}
+.dx-motivo{color:var(--color-ink-soft);max-width:320px}
 .dx-note{font-size:9.5px;color:var(--color-ink-soft);padding:2px 4px}
 .dx-loading,.dx-error{padding:28px;text-align:center;color:var(--color-ink-soft)}
 .dx-error{color:var(--color-danger)}

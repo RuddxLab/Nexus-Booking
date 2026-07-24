@@ -24,6 +24,7 @@ declare
   v_2x1 int; v_cupon int; v_gc int; v_r3 jsonb; v_r4 jsonb; v_v3 int;
   v_saldo numeric;
   v_gc_a int; v_gc_b int; v_gc_c int;
+  v_v_aud int; r_aud record;
 begin
   select id_sucursal into v_suc from sucursales where id_empresa=v_emp;
   select id_prestador into v_ana  from prestadores where id_empresa=v_emp and nombre_prestador='Ana Prueba';
@@ -240,6 +241,34 @@ begin
                         jsonb_build_object('medio','GIFTCARD','monto',6520,'id_gift_card',v_gc_c)));
     insert into res values (31,'Cuadratura','la MISMA gift card dos veces se rechaza', false, 'se permitió (mal)');
   exception when others then insert into res values (31,'Cuadratura','la MISMA gift card dos veces se rechaza', true, sqlerrm); end;
+
+  -- MÓDULO 9 · AUDITORÍA DE ANULACIONES
+  -- Anular es el vector clásico de fuga de caja (se cobra, se anula, se queda
+  -- el efectivo): lo que importa es que quede quién, cuándo y por qué.
+  v_v_aud := (emitir_venta(v_emp, v_suc,
+    jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_barba,'id_prestador',v_beto)),
+    null,null,'Auditoría', jsonb_build_array(jsonb_build_object('medio','EFECTIVO','monto',9520)))->>'id_venta')::int;
+  begin
+    perform anular_venta(v_v_aud);
+    insert into res values (32,'Auditoría','anular sin motivo se rechaza', false, 'se permitió (mal)');
+  exception when others then insert into res values (32,'Auditoría','anular sin motivo se rechaza', true, sqlerrm); end;
+  begin
+    perform anular_venta(v_v_aud, 'ups');
+    insert into res values (33,'Auditoría','motivo demasiado breve se rechaza', false, 'se permitió (mal)');
+  exception when others then insert into res values (33,'Auditoría','motivo demasiado breve se rechaza', true, sqlerrm); end;
+  perform anular_venta(v_v_aud, 'Cobro duplicado por error del cajero');
+  select anulada_por, motivo_anulacion, fecha_anulacion into r_aud from ventas where id_venta = v_v_aud;
+  insert into res values (34,'Auditoría','la anulación registra quién, cuándo y por qué',
+    r_aud.anulada_por = v_admin and r_aud.motivo_anulacion = 'Cobro duplicado por error del cajero'
+      and r_aud.fecha_anulacion is not null,
+    'por='||coalesce(r_aud.anulada_por::text,'null')||' motivo='||coalesce(r_aud.motivo_anulacion,'null'));
+  select count(*) into n from anulaciones_periodo(v_hoy, v_hoy, v_emp) where id_venta = v_v_aud;
+  insert into res values (35,'Auditoría','la anulación aparece en el reporte', n = 1, 'filas='||n);
+  -- El reporte respeta el aislamiento igual que el dashboard
+  perform set_config('request.jwt.claims', json_build_object('sub',v_sup,'role','authenticated')::text, true);
+  select count(*) into n from anulaciones_periodo(v_hoy, v_hoy, v_emp);
+  insert into res values (36,'Auditoría','supervisor ajeno no ve las anulaciones de la 27', n = 0, 'filas='||n);
+  perform set_config('request.jwt.claims', json_build_object('sub',v_admin,'role','authenticated')::text, true);
 end $$;
 
 select paso, modulo, caso, case when ok then '✅ PASS' else '❌ FAIL' end as resultado, detalle

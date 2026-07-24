@@ -84,6 +84,9 @@ export function VentasPage() {
   // Códigos de las tarjetas ya cargadas, solo para mostrarlos en la lista de
   // pagos: el PagoInput que viaja al RPC lleva el id, no el código.
   const [gcCodigos, setGcCodigos] = useState<Record<number, string>>({})
+  // Venta en proceso de anulación y su motivo (obligatorio).
+  const [anulando, setAnulando] = useState<VentaResumen | null>(null)
+  const [motivoAnular, setMotivoAnular] = useState('')
   const [ocupado, setOcupado] = useState(false)
 
   // ── Carga de catálogos ──────────────────────────────────────────────────
@@ -370,13 +373,19 @@ export function VentasPage() {
     } finally { setOcupado(false) }
   }
 
-  const anular = async (v: VentaResumen) => {
-    const motivo = window.prompt(`Anular la venta N° ${v.numero} por ${money(v.total)}.\nMotivo:`)
-    if (motivo === null) return
+  // ── Anulación ───────────────────────────────────────────────────────────
+  // Queda registrado quién anuló, cuándo y por qué: el motivo es obligatorio
+  // y el RPC lo exige aunque alguien se salte esta pantalla.
+  const confirmarAnulacion = async () => {
+    if (!anulando || motivoAnular.trim().length < 5) return
+    setOcupado(true)
     try {
-      await anularVenta(v.id_venta, motivo || undefined)
+      await anularVenta(anulando.id_venta, motivoAnular.trim())
+      setAnulando(null); setMotivoAnular(''); setError(null)
       recargarAgendaYVentas()
-    } catch (e: any) { setError(e.message ?? 'No se pudo anular') }
+    } catch (e: any) {
+      setError(e.message ?? 'No se pudo anular')
+    } finally { setOcupado(false) }
   }
 
   // ── Filtrado de catálogo ────────────────────────────────────────────────
@@ -469,6 +478,44 @@ export function VentasPage() {
             <div className="pos-modal-ft">
               <button className="pos-btn" onClick={() => window.print()}>Imprimir</button>
               <button className="pos-btn pos-btn--primary" onClick={() => setEmitida(null)} autoFocus>OK</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Anulación: el motivo queda registrado con nombre y hora ── */}
+      {anulando && (
+        <div className="pos-modal-bg" role="dialog" aria-modal="true">
+          <div className="pos-modal">
+            <div className="pos-modal-hd pos-modal-hd--peligro">
+              <div className="pos-modal-check pos-modal-check--peligro">!</div>
+              <div>
+                <div className="pos-modal-t">Anular venta N° {anulando.numero}</div>
+                <div className="pos-modal-s">{money(anulando.total)} · {anulando.nombre_receptor || 'sin receptor'}</div>
+              </div>
+            </div>
+            <div className="pos-modal-body">
+              <p className="pos-modal-aviso">
+                La anulación queda registrada con tu nombre y la hora. Si la venta
+                se pagó con gift card, el saldo vuelve a la tarjeta, y la cita
+                asociada queda pendiente de cobro otra vez.
+              </p>
+              <label className="pos-modal-lbl">
+                Motivo de la anulación
+                <textarea className="pos-modal-txt" rows={3} autoFocus
+                  placeholder="Ej: cobro duplicado, el cliente se arrepintió del servicio…"
+                  value={motivoAnular} onChange={e => setMotivoAnular(e.target.value)} />
+              </label>
+              {motivoAnular.trim().length > 0 && motivoAnular.trim().length < 5 && (
+                <div className="pos-nota-exacto">Explica brevemente qué pasó.</div>
+              )}
+            </div>
+            <div className="pos-modal-ft">
+              <button className="pos-btn" onClick={() => { setAnulando(null); setMotivoAnular('') }}>Cancelar</button>
+              <button className="pos-btn pos-btn--peligro" onClick={confirmarAnulacion}
+                disabled={ocupado || motivoAnular.trim().length < 5}>
+                {ocupado ? 'Anulando…' : 'Anular venta'}
+              </button>
             </div>
           </div>
         </div>
@@ -685,9 +732,14 @@ export function VentasPage() {
                       <td className="r">{money(v.neto)}</td>
                       <td className="r">{money(v.iva)}</td>
                       <td className="r"><b>{money(v.total)}</b></td>
-                      <td><span className={'pos-pill ' + (v.estado === 'ANULADA' ? 'ca' : 'ok')}>{v.estado}</span></td>
+                      <td>
+                        <span className={'pos-pill ' + (v.estado === 'ANULADA' ? 'ca' : 'ok')}>{v.estado}</span>
+                        {v.estado === 'ANULADA' && v.motivo_anulacion && (
+                          <div className="pos-motivo" title={v.motivo_anulacion}>{v.motivo_anulacion}</div>
+                        )}
+                      </td>
                       <td>{v.estado === 'EMITIDA' &&
-                        <button className="pos-link" onClick={() => anular(v)}>Anular</button>}</td>
+                        <button className="pos-link" onClick={() => { setAnulando(v); setMotivoAnular('') }}>Anular</button>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -751,6 +803,13 @@ const CSS = `
 .pos-gc-saldo{font-size:11px;font-weight:700;color:var(--color-success);white-space:nowrap;font-family:var(--mono)}
 .pos-saldo{font-size:10px;color:var(--color-warning);font-weight:600}
 .pos-nota-exacto{font-size:10px;color:var(--color-ink-soft)}
+.pos-modal-hd--peligro{background:var(--color-danger-soft)}
+.pos-modal-check--peligro{background:var(--color-danger)}
+.pos-modal-aviso{font-size:12px;color:var(--color-ink-soft);line-height:1.55;margin:0 0 14px;max-width:60ch}
+.pos-modal-lbl{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;color:var(--color-ink-soft)}
+.pos-modal-txt{padding:9px 11px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-bg);color:var(--color-ink);font:inherit;font-size:13px;resize:vertical}
+.pos-btn--peligro{background:var(--color-danger);color:#fff;border-color:var(--color-danger)}
+.pos-motivo{font-size:10px;color:var(--color-ink-soft);margin-top:3px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pos-cubierto{font-size:10px;color:var(--color-success);font-weight:700}
 .pos-cliente{margin-bottom:10px}
 .pos-cli-search{position:relative}

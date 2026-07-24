@@ -61,6 +61,9 @@ export interface VentaResumen {
   iva:         number
   total:       number
   nombre_receptor: string | null
+  /** Solo en las ANULADA: por qué se anuló. */
+  motivo_anulacion: string | null
+  fecha_anulacion:  string | null
 }
 
 // ── Lectura ───────────────────────────────────────────────────────────────────
@@ -104,7 +107,7 @@ export async function listVentasRecientes(
 ): Promise<VentaResumen[]> {
   let q = supabase
     .from('ventas')
-    .select('id_venta, numero, fecha, estado, neto, iva, total, nombre_receptor')
+    .select('id_venta, numero, fecha, estado, neto, iva, total, nombre_receptor, motivo_anulacion, fecha_anulacion')
     .eq('id_empresa', idEmpresa)
     .neq('estado', 'BORRADOR')
     .eq('fecha', fecha)
@@ -271,13 +274,43 @@ export async function emitirGiftCard(
   return data as { id_gift_card: number; codigo: string; saldo: number }
 }
 
-export async function anularVenta(idVenta: number, motivo?: string) {
+/** Anula una venta. El motivo es obligatorio y el RPC lo exige también. */
+export async function anularVenta(idVenta: number, motivo: string) {
   const { data, error } = await supabase.rpc('anular_venta', {
     p_id_venta: idVenta,
-    p_motivo: motivo ?? null,
+    p_motivo: motivo,
   })
   if (error) throw error
   return data
+}
+
+// ── Reporte de anulaciones ────────────────────────────────────────────────────
+export interface Anulacion {
+  id_venta:        number
+  id_empresa:      number
+  nombre_empresa:  string
+  id_sucursal:     number | null
+  nombre_sucursal: string | null
+  numero:          number | null
+  fecha:           string
+  total:           number
+  nombre_receptor: string | null
+  anulada_por:     string | null
+  correo_anulo:    string | null
+  fecha_anulacion: string | null
+  motivo:          string | null
+}
+
+/**
+ * Anulaciones del período. El RPC revalida el tenant server-side: solo
+ * devuelve las empresas donde quien pregunta tiene rol admin o supervisor.
+ */
+export async function listAnulaciones(desde: string, hasta: string, idEmpresa?: number | null) {
+  const { data, error } = await supabase.rpc('anulaciones_periodo', {
+    p_desde: desde, p_hasta: hasta, p_id_empresa: idEmpresa ?? null,
+  })
+  if (error) throw error
+  return (data ?? []) as Anulacion[]
 }
 
 // ── Cálculo de totales (solo vista previa; el servidor es la autoridad) ───────
