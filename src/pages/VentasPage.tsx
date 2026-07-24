@@ -81,6 +81,9 @@ export function VentasPage() {
   // Gift card en curso de cobro (solo cuando el medio elegido es GIFTCARD).
   const [gcTexto, setGcTexto] = useState('')
   const [gc, setGc] = useState<GiftCardSaldo | null>(null)
+  // Códigos de las tarjetas ya cargadas, solo para mostrarlos en la lista de
+  // pagos: el PagoInput que viaja al RPC lleva el id, no el código.
+  const [gcCodigos, setGcCodigos] = useState<Record<number, string>>({})
   const [ocupado, setOcupado] = useState(false)
 
   // ── Carga de catálogos ──────────────────────────────────────────────────
@@ -164,7 +167,12 @@ export function VentasPage() {
 
   // Un medio no se repite: si el cliente paga dos veces en efectivo, es un
   // solo pago en efectivo por la suma. Los ya usados salen de la lista.
-  const mediosDisponibles = MEDIOS.filter(m => !pagos.some(p => p.medio === m.value))
+  // Las gift cards son la excepción: cada tarjeta tiene su propio saldo, así
+  // que el cliente puede traer varias. Lo que no se puede es cargar dos veces
+  // la misma (eso se valida al agregar el pago).
+  const mediosDisponibles = MEDIOS.filter(
+    m => m.value === 'GIFTCARD' || !pagos.some(p => p.medio === m.value),
+  )
 
   // El monto sugerido para el siguiente pago es lo que falta.
   useEffect(() => { setMontoNuevo(Math.max(0, Math.round(saldo))) }, [saldo])
@@ -238,7 +246,7 @@ export function VentasPage() {
   const limpiar = () => {
     setLineas([]); setPagos([]); setReceptor(''); setRut(''); setIdCliente(null)
     setClienteQuery(''); setClienteResultados([]); setEmitida(null); setError(null); setAviso(null); setIdDescuento(null)
-    setCupon(null); setCuponTexto(''); setGc(null); setGcTexto('')
+    setCupon(null); setCuponTexto(''); setGc(null); setGcTexto(''); setGcCodigos({})
   }
 
   const seleccionarCliente = (c: ClienteBusqueda) => {
@@ -272,21 +280,24 @@ export function VentasPage() {
   const agregarPago = () => {
     const monto = Math.round(montoNuevo)
     if (!monto || monto <= 0) return
-    if (pagos.some(p => p.medio === medioNuevo)) {
+    if (medioNuevo !== 'GIFTCARD' && pagos.some(p => p.medio === medioNuevo)) {
       const etiqueta = MEDIOS.find(m => m.value === medioNuevo)?.label ?? medioNuevo
       setError(`${etiqueta} ya está en esta venta: usa un solo pago por medio, por el total de ese medio.`)
+      return
+    }
+    if (medioNuevo === 'GIFTCARD' && gc && pagos.some(p => p.id_gift_card === gc.id_gift_card)) {
+      setError(`La gift card ${gc.codigo} ya está cargada en esta venta: usa un solo cobro por tarjeta.`)
       return
     }
 
     let nuevo: PagoInput
     if (medioNuevo === 'GIFTCARD') {
       if (!gc) { setError('Ingresa el código de la gift card y valídalo antes de cobrar.'); return }
-      // El saldo ya comprometido en otros pagos de esta misma venta también cuenta.
-      const yaUsado = pagos.filter(p => p.id_gift_card === gc.id_gift_card).reduce((a, p) => a + p.monto, 0)
-      if (monto > gc.saldo - yaUsado) {
-        setError(`La gift card solo tiene ${money(gc.saldo - yaUsado)} disponibles.`)
+      if (monto > gc.saldo) {
+        setError(`La gift card ${gc.codigo} solo tiene ${money(gc.saldo)} disponibles.`)
         return
       }
+      setGcCodigos(m => ({ ...m, [gc.id_gift_card]: gc.codigo }))
       nuevo = { medio: 'GIFTCARD', monto, id_gift_card: gc.id_gift_card }
     } else if (medioNuevo === 'EFECTIVO') {
       const { redondeado, ajuste } = redondearEfectivo(monto)
@@ -312,7 +323,7 @@ export function VentasPage() {
 
     setError(null)
     setPagos(resultante)
-    if (nuevo.medio === 'GIFTCARD') { setGc(null); setGcTexto(''); setMedioNuevo('EFECTIVO') }
+    if (nuevo.medio === 'GIFTCARD') { setGc(null); setGcTexto('') }
   }
 
   const validarGiftCard = async () => {
@@ -322,6 +333,9 @@ export function VentasPage() {
       const g = await buscarGiftCard(empresaId, gcTexto, hoy())
       if (!g) { setError('Esa gift card no existe, está desactivada o venció.'); setGc(null); return }
       if (g.saldo <= 0) { setError('Esa gift card ya no tiene saldo.'); setGc(null); return }
+      if (pagos.some(p => p.id_gift_card === g.id_gift_card)) {
+        setError(`La gift card ${g.codigo} ya está cargada en esta venta.`); setGc(null); return
+      }
       setGc(g)
       // Sugerir lo menor entre el saldo y lo que falta por pagar.
       setMontoNuevo(Math.min(g.saldo, Math.max(0, Math.round(saldo))))
@@ -349,7 +363,7 @@ export function VentasPage() {
       })
       setEmitida({ res, pagos: [...pagos], pagado, vuelto: soloEfectivo ? Math.max(0, pagadoNeto - res.total) : 0 })
       setLineas([]); setPagos([]); setReceptor(''); setRut(''); setIdCliente(null); setClienteQuery(''); setAviso(null); setIdDescuento(null)
-      setCupon(null); setCuponTexto(''); setGc(null); setGcTexto('')
+      setCupon(null); setCuponTexto(''); setGc(null); setGcTexto(''); setGcCodigos({})
       recargarAgendaYVentas()
     } catch (e: any) {
       setError(e.message ?? 'No se pudo emitir la venta')
@@ -590,7 +604,10 @@ export function VentasPage() {
           <div className="pos-pagos">
             {pagos.map((p, i) => (
               <div className="pos-pago" key={i}>
-                <span>{MEDIOS.find(m => m.value === p.medio)?.label}</span>
+                <span>
+                  {MEDIOS.find(m => m.value === p.medio)?.label}
+                  {p.id_gift_card && gcCodigos[p.id_gift_card] && ` ${gcCodigos[p.id_gift_card]}`}
+                </span>
                 <b>{money(p.monto)}</b>
                 {!!p.ajuste_redondeo && <em title="Ley 20.956: efectivo al múltiplo de $10">
                   {p.ajuste_redondeo > 0 ? '+' : ''}{p.ajuste_redondeo}</em>}

@@ -23,6 +23,7 @@ declare
   -- Promociones (2x1, cupones, gift cards)
   v_2x1 int; v_cupon int; v_gc int; v_r3 jsonb; v_r4 jsonb; v_v3 int;
   v_saldo numeric;
+  v_gc_a int; v_gc_b int; v_gc_c int;
 begin
   select id_sucursal into v_suc from sucursales where id_empresa=v_emp;
   select id_prestador into v_ana  from prestadores where id_empresa=v_emp and nombre_prestador='Ana Prueba';
@@ -214,6 +215,31 @@ begin
                                                     jsonb_build_object('medio','EFECTIVO','monto',4520,'ajuste_redondeo',0)));
     insert into res values (29,'Cuadratura','el mismo medio repetido se rechaza', false, 'se permitió (mal)');
   exception when others then insert into res values (29,'Cuadratura','el mismo medio repetido se rechaza', true, sqlerrm); end;
+
+  -- Las gift cards son la excepción a la regla anterior: son instrumentos al
+  -- portador con saldo propio, así que se pueden usar varias en una venta.
+  -- Cada tarjeta se emite con saldo de sobra para que un rechazo no pueda
+  -- confundirse con falta de saldo.
+  v_gc_a := (emitir_gift_card(v_emp,'GC-A-E2E',5000)->>'id_gift_card')::int;
+  v_gc_b := (emitir_gift_card(v_emp,'GC-B-E2E',5000)->>'id_gift_card')::int;
+  v_gc_c := (emitir_gift_card(v_emp,'GC-C-E2E',50000)->>'id_gift_card')::int;
+  begin
+    perform emitir_venta(v_emp, v_suc,
+      jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_barba,'id_prestador',v_beto)),
+      null,null,'Dos gift cards',
+      jsonb_build_array(jsonb_build_object('medio','GIFTCARD','monto',5000,'id_gift_card',v_gc_a),
+                        jsonb_build_object('medio','GIFTCARD','monto',4520,'id_gift_card',v_gc_b)));
+    select saldo into v_saldo from gift_cards where id_gift_card = v_gc_b;
+    insert into res values (30,'Cuadratura','dos gift cards DISTINTAS se aceptan', v_saldo = 480, 'saldo B='||v_saldo);
+  exception when others then insert into res values (30,'Cuadratura','dos gift cards distintas se aceptan', false, 'rechazo: '||sqlerrm); end;
+  begin
+    perform emitir_venta(v_emp, v_suc,
+      jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_barba,'id_prestador',v_beto)),
+      null,null,'Misma gift card dos veces',
+      jsonb_build_array(jsonb_build_object('medio','GIFTCARD','monto',3000,'id_gift_card',v_gc_c),
+                        jsonb_build_object('medio','GIFTCARD','monto',6520,'id_gift_card',v_gc_c)));
+    insert into res values (31,'Cuadratura','la MISMA gift card dos veces se rechaza', false, 'se permitió (mal)');
+  exception when others then insert into res values (31,'Cuadratura','la MISMA gift card dos veces se rechaza', true, sqlerrm); end;
 end $$;
 
 select paso, modulo, caso, case when ok then '✅ PASS' else '❌ FAIL' end as resultado, detalle
