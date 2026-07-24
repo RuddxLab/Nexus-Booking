@@ -13,6 +13,7 @@ import { ClientesPage } from './pages/ClientesPage'
 import { PrestadoresPage } from './pages/PrestadoresPage'
 import { ServiciosPage } from './pages/ServiciosPage'
 import { ProductosPage } from './pages/ProductosPage'
+import { DescuentosPage } from './pages/DescuentosPage'
 import { VentasPage } from './pages/VentasPage'
 import { SucursalesPage } from './pages/SucursalesPage'
 import { EmpresasPage } from './pages/EmpresasPage'
@@ -93,6 +94,7 @@ function RutasProtegidas() {
         <Route path="/prestador-sucursales" element={<RutaSoloCatalogo><PrestadorSucursalesPage /></RutaSoloCatalogo>} />
         <Route path="/servicios"           element={<RutaSoloCatalogo><ServiciosPage /></RutaSoloCatalogo>} />
         <Route path="/productos"           element={<RutaSoloCatalogo><ProductosPage /></RutaSoloCatalogo>} />
+        <Route path="/descuentos"          element={<RutaSoloCatalogo><DescuentosPage /></RutaSoloCatalogo>} />
         <Route path="/ventas"              element={<RutaVentas><VentasPage /></RutaVentas>} />
         <Route path="/prestador-servicios" element={<RutaSoloCatalogo><PrestadorServiciosPage /></RutaSoloCatalogo>} />
         <Route path="/categorias"          element={<RutaSoloCatalogo><CategoriasPage /></RutaSoloCatalogo>} />

@@ -30,6 +30,10 @@ export interface Empresa {
   /** Tasa de IVA en porcentaje (Chile: 19). Se aplica a servicios y
    *  productos marcados como afectos. */
   tasa_iva: number
+  /** true  = la comisión se calcula sobre el neto YA con descuento (el
+   *          prestador comparte el descuento).
+   *  false = se calcula sobre el precio de lista (la empresa lo absorbe). */
+  descuento_afecta_comision: boolean
   activo: boolean
   fecha_creacion: string
 }
@@ -177,6 +181,23 @@ export interface DiaBloqueado {
   hora_fin: string | null        // null = día completo
   descripcion: string | null
   created_at: string
+}
+
+export interface Descuento {
+  id_descuento: number
+  id_empresa:   number
+  nombre:       string
+  /** PORCENTAJE = % sobre el neto · MONTO = rebaja fija en $ */
+  tipo:         'PORCENTAJE' | 'MONTO'
+  valor:        number
+  /** A qué líneas de la venta se aplica. */
+  aplica_a:     'TODO' | 'SERVICIOS' | 'PRODUCTOS'
+  /** Tope en $ del descuento (opcional). */
+  tope_monto:   number | null
+  /** null = sin límite de vigencia. */
+  fecha_desde:  string | null
+  fecha_hasta:  string | null
+  activo:       boolean
 }
 
 export interface Producto {

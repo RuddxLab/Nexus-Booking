@@ -6,9 +6,10 @@ import { supabase } from '../services/supabaseClient'
 import { formatearRut, validarRut, limpiarRut } from '../utils/validators'
 import {
   listAgendaPendiente, listVentasRecientes, emitirVenta, anularVenta,
-  calcularTotales, redondearEfectivo, buscarClientes,
+  calcularTotales, redondearEfectivo, buscarClientes, listDescuentosVigentes,
   type LineaVenta, type PagoInput, type MedioPago,
   type AgendaPendiente, type VentaResumen, type ResultadoVenta, type ClienteBusqueda,
+  type DescuentoVigente,
 } from '../services/ventasService'
 
 const money = (n: number) => '$' + Math.round(n || 0).toLocaleString('es-CL')
@@ -69,6 +70,8 @@ export function VentasPage() {
   >(null)
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
+  const [descuentos, setDescuentos] = useState<DescuentoVigente[]>([])
+  const [idDescuento, setIdDescuento] = useState<number | null>(null)
   const [ocupado, setOcupado] = useState(false)
 
   // ── Carga de catálogos ──────────────────────────────────────────────────
@@ -116,6 +119,7 @@ export function VentasPage() {
     // Solo el día actual, en ambos listados.
     listAgendaPendiente(empresaId, sucursalId, hoy()).then(setAgenda).catch(() => setAgenda([]))
     listVentasRecientes(empresaId, sucursalId, hoy()).then(setVentas).catch(() => setVentas([]))
+    listDescuentosVigentes(empresaId, hoy()).then(setDescuentos).catch(() => setDescuentos([]))
   }
   useEffect(recargarAgendaYVentas, [empresaId, sucursalId]) // eslint-disable-line
 
@@ -131,9 +135,10 @@ export function VentasPage() {
   }, [clienteQuery, empresaId])
 
   // ── Totales (vista previa; el RPC recalcula y manda) ────────────────────
+  const descuentoSel = descuentos.find(d => d.id_descuento === idDescuento) ?? null
   const totales = useMemo(
-    () => calcularTotales(lineas, tasaIva, reglaRedondeo),
-    [lineas, tasaIva, reglaRedondeo],
+    () => calcularTotales(lineas, tasaIva, reglaRedondeo, descuentoSel),
+    [lineas, tasaIva, reglaRedondeo, descuentoSel],
   )
   const pagado = pagos.reduce((a, p) => a + p.monto, 0)
   const saldo = totales.total - pagado
@@ -203,7 +208,7 @@ export function VentasPage() {
 
   const limpiar = () => {
     setLineas([]); setPagos([]); setReceptor(''); setRut(''); setIdCliente(null)
-    setClienteQuery(''); setClienteResultados([]); setEmitida(null); setError(null); setAviso(null)
+    setClienteQuery(''); setClienteResultados([]); setEmitida(null); setError(null); setAviso(null); setIdDescuento(null)
   }
 
   const seleccionarCliente = (c: ClienteBusqueda) => {
@@ -238,9 +243,10 @@ export function VentasPage() {
         rutReceptor: rut ? limpiarRut(rut) : null,
         nombreReceptor: receptor || null,
         pagos,
+        idDescuento,
       })
       setEmitida({ res, pagos: [...pagos], pagado, vuelto: Math.max(0, pagado - res.total) })
-      setLineas([]); setPagos([]); setReceptor(''); setRut(''); setIdCliente(null); setClienteQuery(''); setAviso(null)
+      setLineas([]); setPagos([]); setReceptor(''); setRut(''); setIdCliente(null); setClienteQuery(''); setAviso(null); setIdDescuento(null)
       recargarAgendaYVentas()
     } catch (e: any) {
       setError(e.message ?? 'No se pudo emitir la venta')
@@ -317,6 +323,9 @@ export function VentasPage() {
             </div>
 
             <div className="pos-modal-body">
+              {emitida.res.descuento > 0 && (
+                <div className="pos-dt pos-dt-desc"><span>Descuento aplicado</span><b>−{money(emitida.res.descuento)}</b></div>
+              )}
               <div className="pos-dt"><span>Neto</span><b>{money(emitida.res.neto)}</b></div>
               <div className="pos-dt"><span>IVA ({emitida.res.tasa_iva}%)</span><b>{money(emitida.res.iva)}</b></div>
               <div className="pos-dt pos-dt-total"><span>Total</span><b>{money(emitida.res.total)}</b></div>
@@ -435,8 +444,24 @@ export function VentasPage() {
               </div>
             )}
 
+          {descuentos.length > 0 && (
+            <select className="pos-input pos-desc-sel" value={idDescuento ?? ''}
+              onChange={e => setIdDescuento(e.target.value ? Number(e.target.value) : null)}>
+              <option value="">Sin descuento</option>
+              {descuentos.map(d => (
+                <option key={d.id_descuento} value={d.id_descuento}>
+                  {d.nombre} · {d.tipo === 'PORCENTAJE' ? `${d.valor}%` : money(d.valor)}
+                  {d.aplica_a !== 'TODO' ? ` (solo ${d.aplica_a.toLowerCase()})` : ''}
+                </option>
+              ))}
+            </select>
+          )}
+
           <div className="pos-tot">
             <div><span>Neto</span><b>{money(totales.neto)}</b></div>
+            {totales.descuento > 0 && (
+              <div className="pos-tot-desc"><span>Descuento</span><b>−{money(totales.descuento)}</b></div>
+            )}
             <div><span>IVA ({tasaIva}%)</span><b>{money(totales.iva)}</b></div>
             <div className="pos-tot-g"><span>Total</span><b>{money(totales.total)}</b></div>
           </div>

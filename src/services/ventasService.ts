@@ -28,12 +28,13 @@ export interface PagoInput {
 }
 
 export interface ResultadoVenta {
-  id_venta: number
-  numero:   number
-  neto:     number
-  iva:      number
-  total:    number
-  tasa_iva: number
+  id_venta:  number
+  numero:    number
+  neto:      number
+  iva:       number
+  total:     number
+  descuento: number
+  tasa_iva:  number
 }
 
 export interface AgendaPendiente {
@@ -154,6 +155,8 @@ export async function emitirVenta(
     nombreReceptor?: string | null
     pagos?: PagoInput[]
     observaciones?: string | null
+    /** Descuento del catálogo. El servidor lo valida y lo reparte por línea. */
+    idDescuento?: number | null
   } = {},
 ): Promise<ResultadoVenta> {
   const items = lineas.map(l => ({
@@ -177,9 +180,28 @@ export async function emitirVenta(
     p_nombre_receptor: opts.nombreReceptor ?? null,
     p_pagos: opts.pagos ?? [],
     p_observaciones: opts.observaciones ?? null,
+    p_id_descuento: opts.idDescuento ?? null,
   })
   if (error) throw error
   return data as ResultadoVenta
+}
+
+/** Descuentos vigentes de la empresa, para ofrecerlos en el punto de venta. */
+export async function listDescuentosVigentes(idEmpresa: number, hoy: string) {
+  const { data, error } = await supabase
+    .from('descuentos')
+    .select('id_descuento, nombre, tipo, valor, aplica_a, tope_monto')
+    .eq('id_empresa', idEmpresa)
+    .eq('activo', true)
+    .or(`fecha_desde.is.null,fecha_desde.lte.${hoy}`)
+    .or(`fecha_hasta.is.null,fecha_hasta.gte.${hoy}`)
+    .order('nombre')
+  if (error) throw error
+  return (data ?? []) as {
+    id_descuento: number; nombre: string
+    tipo: 'PORCENTAJE' | 'MONTO'; valor: number
+    aplica_a: 'TODO' | 'SERVICIOS' | 'PRODUCTOS'; tope_monto: number | null
+  }[]
 }
 
 export async function anularVenta(idVenta: number, motivo?: string) {
@@ -193,20 +215,62 @@ export async function anularVenta(idVenta: number, motivo?: string) {
 
 // ── Cálculo de totales (solo vista previa; el servidor es la autoridad) ───────
 
+export interface DescuentoVigente {
+  id_descuento: number; nombre: string
+  tipo: 'PORCENTAJE' | 'MONTO'; valor: number
+  aplica_a: 'TODO' | 'SERVICIOS' | 'PRODUCTOS'; tope_monto: number | null
+}
+
+/**
+ * Vista previa de los totales. Replica paso a paso lo que hace emitir_venta
+ * (incluido el reparto proporcional del descuento) para que lo que ve el
+ * cajero coincida con lo que el servidor termina guardando.
+ */
 export function calcularTotales(
   lineas: LineaVenta[], tasaIva: number, reglaRedondeo: 'LINEA' | 'TOTAL',
+  descuento?: DescuentoVigente | null,
 ) {
-  const netoDe = (l: LineaVenta) =>
-    Math.round(l.precio_unitario_neto * l.cantidad - (l.descuento || 0))
+  const filas = lineas.map(l => ({
+    aplica_iva: l.aplica_iva,
+    tipo: l.tipo,
+    neto: Math.round(l.precio_unitario_neto * l.cantidad - (l.descuento || 0)),
+  }))
 
-  const neto = lineas.reduce((a, l) => a + netoDe(l), 0)
-  const netoAfecto = lineas.filter(l => l.aplica_iva).reduce((a, l) => a + netoDe(l), 0)
+  const afecta = (f: { tipo: TipoLinea }) =>
+    !descuento || descuento.aplica_a === 'TODO'
+    || (descuento.aplica_a === 'SERVICIOS' && f.tipo === 'SERVICIO')
+    || (descuento.aplica_a === 'PRODUCTOS' && f.tipo === 'PRODUCTO')
 
+  let montoDesc = 0
+  if (descuento) {
+    const afectadas = filas.filter(afecta)
+    const base = afectadas.reduce((a, f) => a + f.neto, 0)
+    if (base > 0) {
+      montoDesc = descuento.tipo === 'PORCENTAJE'
+        ? Math.round(base * descuento.valor / 100)
+        : descuento.valor
+      if (descuento.tope_monto != null) montoDesc = Math.min(montoDesc, descuento.tope_monto)
+      montoDesc = Math.min(montoDesc, base)
+
+      // Reparto proporcional; el resto cae en la última línea (igual que el RPC)
+      let acum = 0
+      afectadas.forEach((f, i) => {
+        const cuota = i === afectadas.length - 1
+          ? montoDesc - acum
+          : Math.round(montoDesc * f.neto / base)
+        if (i < afectadas.length - 1) acum += cuota
+        f.neto -= cuota
+      })
+    }
+  }
+
+  const neto = filas.reduce((a, f) => a + f.neto, 0)
+  const netoAfecto = filas.filter(f => f.aplica_iva).reduce((a, f) => a + f.neto, 0)
   const iva = reglaRedondeo === 'LINEA'
-    ? lineas.filter(l => l.aplica_iva).reduce((a, l) => a + Math.round(netoDe(l) * tasaIva / 100), 0)
+    ? filas.filter(f => f.aplica_iva).reduce((a, f) => a + Math.round(f.neto * tasaIva / 100), 0)
     : Math.round(netoAfecto * tasaIva / 100)
 
-  return { neto, iva, total: neto + iva }
+  return { neto, iva, total: neto + iva, descuento: montoDesc }
 }
 
 /** Ley 20.956: el efectivo se redondea al múltiplo de $10 más cercano. */
