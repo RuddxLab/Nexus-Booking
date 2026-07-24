@@ -46,6 +46,7 @@ export interface Sucursal {
   slug: string | null
   config_ui: Record<string, string> | null
   activo: boolean
+  usa_caja: boolean
 }
 
 export interface Cliente {
@@ -220,6 +221,8 @@ export interface GiftCard {
   fecha_vencimiento: string | null
   activo:            boolean
   observaciones:     string | null
+  correo_destinatario: string | null
+  nombre_remitente:    string | null
 }
 
 export interface Producto {

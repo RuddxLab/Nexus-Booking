@@ -260,7 +260,10 @@ export async function buscarGiftCard(
 /** Emite una gift card (deja el movimiento de EMISIÓN registrado). */
 export async function emitirGiftCard(
   idEmpresa: number, codigo: string, monto: number,
-  opts: { idCliente?: number | null; vencimiento?: string | null; observaciones?: string | null } = {},
+  opts: {
+    idCliente?: number | null; vencimiento?: string | null; observaciones?: string | null
+    correoDestinatario?: string | null; nombreRemitente?: string | null
+  } = {},
 ) {
   const { data, error } = await supabase.rpc('emitir_gift_card', {
     p_id_empresa: idEmpresa,
@@ -269,6 +272,8 @@ export async function emitirGiftCard(
     p_id_cliente: opts.idCliente ?? null,
     p_vencimiento: opts.vencimiento ?? null,
     p_observaciones: opts.observaciones ?? null,
+    p_correo_destinatario: opts.correoDestinatario ?? null,
+    p_nombre_remitente: opts.nombreRemitente ?? null,
   })
   if (error) throw error
   return data as { id_gift_card: number; codigo: string; saldo: number }

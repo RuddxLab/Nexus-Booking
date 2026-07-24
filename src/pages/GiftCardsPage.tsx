@@ -4,7 +4,10 @@ import { SelectorFiltro } from '../components/Common/SelectorFiltro'
 import { useFiltroEmpresa } from '../hooks/useFiltroEmpresa'
 import { supabase } from '../services/supabaseClient'
 import { emitirGiftCard } from '../services/ventasService'
+import { enviarCorreoGiftCard } from '../services/correoService'
 import type { GiftCard } from '../types'
+
+const emailValido = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim())
 
 const money = (n: number) => '$' + Math.round(n || 0).toLocaleString('es-CL')
 const hoy = () =>
@@ -27,6 +30,8 @@ export function GiftCardsPage() {
   const [monto, setMonto] = useState<number>(0)
   const [vence, setVence] = useState('')
   const [obs, setObs] = useState('')
+  const [remitente, setRemitente] = useState('')
+  const [correo, setCorreo] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const [ocupado, setOcupado] = useState(false)
@@ -46,14 +51,31 @@ export function GiftCardsPage() {
     if (!empresaId) return
     if (!codigo.trim()) { setError('La gift card necesita un código'); return }
     if (!monto || monto <= 0) { setError('El monto debe ser mayor a cero'); return }
+    if (!remitente.trim()) { setError('Indica el nombre de quien envía'); return }
+    if (!correo.trim() || !emailValido(correo)) { setError('Ingresa un correo válido del destinatario'); return }
     setOcupado(true); setError(null); setAviso(null)
     try {
       const r = await emitirGiftCard(empresaId, codigo.trim(), Math.round(monto), {
         vencimiento: vence || null,
         observaciones: obs || null,
+        correoDestinatario: correo.trim(),
+        nombreRemitente: remitente.trim(),
       })
-      setAviso(`Gift card ${r.codigo} emitida por ${money(r.saldo)}`)
-      setCodigo(codigoSugerido()); setMonto(0); setVence(''); setObs('')
+      // Envío del correo al destinatario (no bloquea la emisión si falla).
+      const nombreEmpresa = filtro.empresas.find(e => e.id_empresa === empresaId)?.nombre_empresa
+      const correoRes = await enviarCorreoGiftCard({
+        email: correo.trim(),
+        nombre_remitente: remitente.trim(),
+        valor: r.saldo,
+        codigo: r.codigo,
+        observaciones: obs || null,
+        fecha_vencimiento: vence || null,
+        nombre_empresa: nombreEmpresa,
+      })
+      setAviso(correoRes.ok
+        ? `Gift card ${r.codigo} emitida por ${money(r.saldo)}. Correo enviado a ${correo.trim()}.`
+        : `Gift card ${r.codigo} emitida por ${money(r.saldo)}, pero no se pudo enviar el correo (${correoRes.error ?? 'error'}).`)
+      setCodigo(codigoSugerido()); setMonto(0); setVence(''); setObs(''); setRemitente(''); setCorreo('')
       cargar()
     } catch (e: any) {
       setError(e.message ?? 'No se pudo emitir la gift card')
@@ -101,8 +123,14 @@ export function GiftCardsPage() {
           <label>Vence (opcional)
             <input type="date" value={vence} onChange={e => setVence(e.target.value)} />
           </label>
+          <label>Quien envía
+            <input value={remitente} onChange={e => setRemitente(e.target.value)} placeholder="Nombre del remitente" />
+          </label>
+          <label>Correo del destinatario
+            <input type="email" value={correo} onChange={e => setCorreo(e.target.value)} placeholder="destinatario@correo.com" />
+          </label>
           <label className="gc-wide">Observaciones (opcional)
-            <input value={obs} onChange={e => setObs(e.target.value)} />
+            <input value={obs} onChange={e => setObs(e.target.value)} placeholder="Mensaje que verá el destinatario" />
           </label>
         </div>
         <button className="gc-btn gc-btn--primary" onClick={emitir} disabled={ocupado || !empresaId}>

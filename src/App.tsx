@@ -16,6 +16,8 @@ import { ProductosPage } from './pages/ProductosPage'
 import { DescuentosPage } from './pages/DescuentosPage'
 import { GiftCardsPage } from './pages/GiftCardsPage'
 import { VentasPage } from './pages/VentasPage'
+import { CajaPage } from './pages/CajaPage'
+import { LiquidacionesPage } from './pages/LiquidacionesPage'
 import { SucursalesPage } from './pages/SucursalesPage'
 import { EmpresasPage } from './pages/EmpresasPage'
 import { HorariosPage } from './pages/HorariosPage'
@@ -97,11 +99,13 @@ function RutasProtegidas() {
         <Route path="/productos"           element={<RutaSoloCatalogo><ProductosPage /></RutaSoloCatalogo>} />
         <Route path="/descuentos"          element={<RutaSoloCatalogo><DescuentosPage /></RutaSoloCatalogo>} />
         <Route path="/gift-cards"          element={<RutaVentas><GiftCardsPage /></RutaVentas>} />
+        <Route path="/caja"                element={<RutaVentas><CajaPage /></RutaVentas>} />
         <Route path="/ventas"              element={<RutaVentas><VentasPage /></RutaVentas>} />
         <Route path="/prestador-servicios" element={<RutaSoloCatalogo><PrestadorServiciosPage /></RutaSoloCatalogo>} />
         <Route path="/categorias"          element={<RutaSoloCatalogo><CategoriasPage /></RutaSoloCatalogo>} />
         <Route path="/tipo-categorias"     element={<RutaSoloCatalogo><TipoCategoriasPage /></RutaSoloCatalogo>} />
         <Route path="/sucursales"  element={<RutaSoloCatalogo><SucursalesPage /></RutaSoloCatalogo>} />
+        <Route path="/liquidaciones" element={<RutaSoloCatalogo><LiquidacionesPage /></RutaSoloCatalogo>} />
         <Route path="/empresas"    element={<RutaSoloAdmin><EmpresasPage /></RutaSoloAdmin>} />
         <Route path="/usuarios"    element={<RutaSoloCatalogo><UsuariosPage /></RutaSoloCatalogo>} />
         <Route path="/horarios"    element={<RutaSoloCatalogo><HorariosPage /></RutaSoloCatalogo>} />

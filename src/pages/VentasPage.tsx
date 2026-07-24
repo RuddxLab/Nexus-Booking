@@ -12,6 +12,8 @@ import {
   type AgendaPendiente, type VentaResumen, type ResultadoVenta, type ClienteBusqueda,
   type DescuentoVigente, type GiftCardSaldo,
 } from '../services/ventasService'
+import { sucursalUsaCaja, getCajaAbierta } from '../services/cajaService'
+import { Link } from 'react-router-dom'
 
 const money = (n: number) => '$' + Math.round(n || 0).toLocaleString('es-CL')
 const uid = () => Math.random().toString(36).slice(2, 10)
@@ -87,6 +89,9 @@ export function VentasPage() {
   // Venta en proceso de anulación y su motivo (obligatorio).
   const [anulando, setAnulando] = useState<VentaResumen | null>(null)
   const [motivoAnular, setMotivoAnular] = useState('')
+  // Control de caja: si la sucursal la usa y el usuario no tiene una abierta,
+  // no se puede vender (el RPC también lo bloquea; esto es solo UX).
+  const [cajaBloqueada, setCajaBloqueada] = useState(false)
   const [ocupado, setOcupado] = useState(false)
 
   // ── Carga de catálogos ──────────────────────────────────────────────────
@@ -137,6 +142,17 @@ export function VentasPage() {
     listDescuentosVigentes(empresaId, hoy()).then(setDescuentos).catch(() => setDescuentos([]))
   }
   useEffect(recargarAgendaYVentas, [empresaId, sucursalId]) // eslint-disable-line
+
+  // Estado de la caja para la sucursal seleccionada.
+  const revisarCaja = () => {
+    if (!empresaId || !sucursalId) { setCajaBloqueada(false); return }
+    sucursalUsaCaja(sucursalId).then(async usa => {
+      if (!usa) { setCajaBloqueada(false); return }
+      const c = await getCajaAbierta(empresaId, sucursalId)
+      setCajaBloqueada(!c)
+    }).catch(() => setCajaBloqueada(false))
+  }
+  useEffect(revisarCaja, [empresaId, sucursalId]) // eslint-disable-line
 
   // ── Búsqueda de clientes (debounced) ────────────────────────────────────
   useEffect(() => {
@@ -348,6 +364,7 @@ export function VentasPage() {
   // ── Emitir ──────────────────────────────────────────────────────────────
   const emitir = async () => {
     if (!empresaId || !sucursalId || lineas.length === 0) return
+    if (cajaBloqueada) { setError('Debes abrir una caja en esta sucursal antes de vender.'); return }
     if (rut && !validarRut(rut)) { setError('El RUT del cliente no es válido.'); return }
     if (!cubierto) {
       setError(soloEfectivo
@@ -703,11 +720,16 @@ export function VentasPage() {
             {lineas.length > 0 && cubierto && <div className="pos-cubierto">Pago completo ✓</div>}
           </div>
 
+          {cajaBloqueada && (
+            <div className="pos-caja-aviso">
+              No tienes una caja abierta en esta sucursal. <Link to="/admin/caja">Abrir caja</Link> para poder vender.
+            </div>
+          )}
           <div className="pos-acciones">
             <button className="pos-btn" onClick={limpiar} disabled={lineas.length === 0}>Limpiar</button>
             <button className="pos-btn pos-btn--primary" onClick={emitir}
-              disabled={ocupado || lineas.length === 0 || !sucursalId || !cubierto}
-              title={!cubierto ? 'Los pagos deben cubrir el total' : undefined}>
+              disabled={ocupado || lineas.length === 0 || !sucursalId || !cubierto || cajaBloqueada}
+              title={cajaBloqueada ? 'Abre una caja antes de vender' : !cubierto ? 'Los pagos deben cubrir el total' : undefined}>
               {ocupado ? 'Emitiendo…' : `Emitir venta ${money(totales.total)}`}
             </button>
           </div>
@@ -820,6 +842,8 @@ const CSS = `
 .pos-cli-meta{font-size:9px;color:var(--color-ink-soft)}
 .pos-cli-row{display:flex;gap:8px}
 .pos-cli-warn{font-size:9px;color:var(--color-danger);margin:-6px 0 4px;font-weight:600}
+.pos-caja-aviso{margin-top:12px;background:var(--color-danger-soft);color:var(--color-danger);padding:9px 12px;border-radius:var(--radius-sm);font-size:11.5px;font-weight:600}
+.pos-caja-aviso a{color:var(--color-danger);font-weight:700;text-decoration:underline}
 .pos-acciones{display:flex;gap:8px;margin-top:14px}
 .pos-btn{flex:1;padding:10px 14px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-ink);font:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:.15s}
 .pos-btn:hover:not(:disabled){border-color:var(--color-ink-soft)}

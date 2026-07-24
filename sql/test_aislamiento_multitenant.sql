@@ -14,10 +14,13 @@
 WITH
 -- Whitelist de objetos que anon PUEDE leer (ajustar solo si se agrega una
 -- vista/tabla pública nueva a propósito).
+-- El catálogo público se lee vía RPCs SECURITY DEFINER (servicios_publico,
+-- prestadores_publico, categorias_publico), no por SELECT directo de anon.
+-- Las vistas v_*_publico ya NO son leíbles por anon (se revocó su grant), por
+-- eso no están en la whitelist.
 anon_whitelist(obj) AS (
   VALUES ('categorias'),('dias_bloqueados'),('prestador_ausencias'),
-         ('prestador_horarios'),('prestador_servicios'),
-         ('v_prestadores_publico'),('v_servicios_publico'),('v_sucursales_publico')
+         ('prestador_horarios'),('prestador_servicios')
 ),
 -- Tablas tenant que DEBEN tener RLS activo.
 tenant_tables(t) AS (

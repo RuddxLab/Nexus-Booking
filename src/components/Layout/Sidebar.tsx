@@ -9,6 +9,7 @@ const COLORS: Record<string, { glow: string; grad: string; pill: string }> = {
   panel:         { glow: '#0ea5e9', grad: 'linear-gradient(135deg,#7dd3fc,#0ea5e9)', pill: '#0ea5e9' },
   productos:     { glow: '#f97316', grad: 'linear-gradient(135deg,#fdba74,#f97316)', pill: '#f97316' },
   ventas:        { glow: '#22c55e', grad: 'linear-gradient(135deg,#86efac,#22c55e)', pill: '#22c55e' },
+  caja:          { glow: '#16a34a', grad: 'linear-gradient(135deg,#6ee7b7,#16a34a)', pill: '#16a34a' },
   descuentos:    { glow: '#e11d48', grad: 'linear-gradient(135deg,#fda4af,#e11d48)', pill: '#e11d48' },
   giftcards:     { glow: '#d946ef', grad: 'linear-gradient(135deg,#f0abfc,#d946ef)', pill: '#d946ef' },
   agenda:        { glow: '#6366f1', grad: 'linear-gradient(135deg,#a5b4fc,#6366f1)', pill: '#6366f1' },
@@ -23,6 +24,7 @@ const COLORS: Record<string, { glow: string; grad: string; pill: string }> = {
   sucursales:    { glow: '#84cc16', grad: 'linear-gradient(135deg,#bef264,#84cc16)', pill: '#84cc16' },
   empresa:       { glow: '#a78bfa', grad: 'linear-gradient(135deg,#ddd6fe,#a78bfa)', pill: '#a78bfa' },
   usuarios:      { glow: '#fb923c', grad: 'linear-gradient(135deg,#fed7aa,#fb923c)', pill: '#fb923c' },
+  liquidaciones: { glow: '#0d9488', grad: 'linear-gradient(135deg,#5eead4,#0d9488)', pill: '#0d9488' },
   tema:          { glow: '#e879f9', grad: 'linear-gradient(135deg,#f5d0fe,#e879f9)', pill: '#e879f9' },
   correo:        { glow: '#06b6d4', grad: 'linear-gradient(135deg,#67e8f9,#06b6d4)', pill: '#06b6d4' },
   reservas:      { glow: '#64748b', grad: 'linear-gradient(135deg,#cbd5e1,#64748b)', pill: '#64748b' },
@@ -41,6 +43,7 @@ const Icons: Record<string, React.ReactNode> = {
   panel:      <Ico d="M4 4h7v7H4zM13 4h7v4h-7zM13 11h7v9h-7zM4 14h7v6H4z"/>,
   productos:  <Ico d="M20 7L12 3 4 7m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>,
   ventas:     <Ico d="M3 3h2l2.6 12.4a2 2 0 002 1.6h7.7a2 2 0 002-1.6L21 8H6M9 21h.01M18 21h.01"/>,
+  caja:       <Ico d="M3 10h18M3 10l1.5-5h15L21 10M4 10v9a1 1 0 001 1h14a1 1 0 001-1v-9M8 14h4"/>,
   descuentos: <Ico d="M9 15l6-6M9.5 9.5h.01M14.5 14.5h.01M7 3h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7a4 4 0 014-4z"/>,
   giftcards:  <Ico d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>,
   agenda:     <Ico d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>,
@@ -55,6 +58,7 @@ const Icons: Record<string, React.ReactNode> = {
   sucursales: <Ico d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>,
   empresa:    <Ico d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4z"/>,
   usuarios:   <Ico d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>,
+  liquidaciones: <Ico d="M9 7h6m-6 4h6m-6 4h4M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/>,
   tema:       <Ico d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>,
   correo:     <Ico d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>,
   reservas:   <Ico d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>,
@@ -322,6 +326,9 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
           <SidebarBtn to="/admin/ventas" label="Vender" colorKey="ventas" onClick={onNavegar}/>
         )}
         {puedeVender && (
+          <SidebarBtn to="/admin/caja" label="Caja" colorKey="caja" onClick={onNavegar}/>
+        )}
+        {puedeVender && (
           <SidebarBtn to="/admin/gift-cards" label="Gift Cards" colorKey="giftcards" onClick={onNavegar}/>
         )}
 
@@ -374,12 +381,13 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
             titulo="Administración"
             icono={Icons.empresa}
             colorKey="empresa"
-            rutas={['/admin/sucursales', '/admin/empresas', '/admin/usuarios', '/admin/tema']}
+            rutas={['/admin/sucursales', '/admin/empresas', '/admin/usuarios', '/admin/tema', '/admin/liquidaciones']}
           >
-            <SidebarBtn to="/admin/empresas"   label="Empresa"      colorKey="empresa"    onClick={onNavegar}/>
-            <SidebarBtn to="/admin/sucursales" label="Sucursales"   colorKey="sucursales" onClick={onNavegar}/>
-            <SidebarBtn to="/admin/usuarios"   label="Usuarios"     colorKey="usuarios"   onClick={onNavegar}/>
-            <SidebarBtn to="/admin/tema"       label="Tema visual"  colorKey="tema"       onClick={onNavegar}/>
+            <SidebarBtn to="/admin/empresas"      label="Empresa"      colorKey="empresa"       onClick={onNavegar}/>
+            <SidebarBtn to="/admin/sucursales"    label="Sucursales"   colorKey="sucursales"    onClick={onNavegar}/>
+            <SidebarBtn to="/admin/usuarios"      label="Usuarios"     colorKey="usuarios"      onClick={onNavegar}/>
+            <SidebarBtn to="/admin/liquidaciones" label="Liquidaciones" colorKey="liquidaciones" onClick={onNavegar}/>
+            <SidebarBtn to="/admin/tema"          label="Tema visual"  colorKey="tema"          onClick={onNavegar}/>
           </SidebarSection>
         )}
 
@@ -389,11 +397,12 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
             titulo="Administración"
             icono={Icons.empresa}
             colorKey="empresa"
-            rutas={['/admin/usuarios', '/admin/sucursales', '/admin/tema']}
+            rutas={['/admin/usuarios', '/admin/sucursales', '/admin/tema', '/admin/liquidaciones']}
           >
-            <SidebarBtn to="/admin/usuarios"  label="Usuarios"    colorKey="usuarios"   onClick={onNavegar}/>
-            <SidebarBtn to="/admin/sucursales" label="Sucursales" colorKey="sucursales" onClick={onNavegar}/>
-            <SidebarBtn to="/admin/tema"      label="Tema visual" colorKey="tema"       onClick={onNavegar}/>
+            <SidebarBtn to="/admin/usuarios"      label="Usuarios"     colorKey="usuarios"      onClick={onNavegar}/>
+            <SidebarBtn to="/admin/sucursales"    label="Sucursales"   colorKey="sucursales"    onClick={onNavegar}/>
+            <SidebarBtn to="/admin/liquidaciones" label="Liquidaciones" colorKey="liquidaciones" onClick={onNavegar}/>
+            <SidebarBtn to="/admin/tema"          label="Tema visual"  colorKey="tema"          onClick={onNavegar}/>
           </SidebarSection>
         )}
       </div>

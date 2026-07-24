@@ -35,6 +35,7 @@ export function SucursalesPage() {
         { key: 'id_empresa',      label: 'Empresa', render: r => nombreEmpresa(r.id_empresa) },
         { key: 'slug',            label: 'Slug (URL)' },
         { key: 'ciudad',          label: 'Región' },
+        { key: 'usa_caja',        label: 'Caja',    render: r => r.usa_caja ? 'Sí' : 'No' },
         { key: 'activo',          label: 'Activa',  render: r => r.activo ? 'Sí' : 'No' },
       ]}
       campos={[
@@ -46,6 +47,7 @@ export function SucursalesPage() {
         { key: 'comuna',          label: 'Comuna',        type: 'comuna', dependsOn: 'ciudad' },
         { key: 'telefono1',       label: 'Teléfono 1',   type: 'telefono', required: true },
         { key: 'telefono2',       label: 'Teléfono 2',   type: 'telefono' },
+        { key: 'usa_caja',        label: 'Usa control de caja', type: 'checkbox' },
         { key: 'activo',          label: 'Activa',        type: 'checkbox' },
       ]}
     />
