@@ -21,6 +21,7 @@ export function LiquidacionesPage() {
   const [desde, setDesde] = useState(hoy())
   const [hasta, setHasta] = useState(hoy())
   const [idPrestador, setIdPrestador] = useState<number | null>(null)
+  const [idSucursal, setIdSucursal] = useState<number | null>(null)
   const [prestadores, setPrestadores] = useState<PrestadorOpcion[]>([])
 
   const [pendientes, setPendientes] = useState<ComisionPendiente[] | null>(null)
@@ -36,7 +37,7 @@ export function LiquidacionesPage() {
     if (!empresaId) return
     listPrestadoresEmpresa(empresaId).then(setPrestadores).catch(() => setPrestadores([]))
     cargarHist()
-    setPendientes(null); setAviso(null)
+    setPendientes(null); setAviso(null); setIdSucursal(null)
   }, [empresaId]) // eslint-disable-line
 
   const cargarHist = () => {
@@ -49,7 +50,7 @@ export function LiquidacionesPage() {
     if (desde > hasta) { setError('El rango de fechas es inválido'); return }
     setOcupado(true); setError(null); setAviso(null); setPorGenerar(null)
     try {
-      const r = await previsualizarComisiones(empresaId, desde, hasta, idPrestador)
+      const r = await previsualizarComisiones(empresaId, desde, hasta, idPrestador, idSucursal)
       setPendientes(r)
     } catch (e: any) {
       setError(e.message ?? 'No se pudieron cargar las comisiones')
@@ -62,7 +63,7 @@ export function LiquidacionesPage() {
     const p = porGenerar
     setOcupado(true); setError(null); setAviso(null)
     try {
-      const r = await generarLiquidacion(empresaId, p.id_prestador, desde, hasta)
+      const r = await generarLiquidacion(empresaId, p.id_prestador, desde, hasta, idSucursal)
       setAviso(`Liquidación #${r.id_liquidacion} generada para ${p.nombre_prestador}: ${money(r.total_comision)} (${r.cantidad_items} ítems).`)
       setPorGenerar(null)
       await previsualizar()
@@ -86,6 +87,9 @@ export function LiquidacionesPage() {
   }
 
   const totalPend = (pendientes ?? []).reduce((a, p) => a + p.total_comision, 0)
+  const nombreSucursalSel = idSucursal
+    ? (filtro.sucursalesDeEmpresa.find(s => s.id_sucursal === idSucursal)?.nombre_sucursal ?? '—')
+    : 'Todas'
 
   return (
     <div className="lqx">
@@ -111,6 +115,12 @@ export function LiquidacionesPage() {
           </label>
           <label>Hasta
             <input type="date" value={hasta} onChange={e => setHasta(e.target.value)} />
+          </label>
+          <label>Sucursal (opcional)
+            <select value={idSucursal ?? ''} onChange={e => setIdSucursal(e.target.value ? Number(e.target.value) : null)}>
+              <option value="">Todas</option>
+              {filtro.sucursalesDeEmpresa.map(s => <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre_sucursal}</option>)}
+            </select>
           </label>
           <label>Prestador (opcional)
             <select value={idPrestador ?? ''} onChange={e => setIdPrestador(e.target.value ? Number(e.target.value) : null)}>
@@ -160,6 +170,7 @@ export function LiquidacionesPage() {
             <div className="lq-confirm-t">Revisa antes de generar la liquidación</div>
             <div className="lq-confirm-body">
               <div><span>Prestador</span><b>{porGenerar.nombre_prestador}</b></div>
+              <div><span>Sucursal</span><b>{nombreSucursalSel}</b></div>
               <div><span>Período</span><b>{desde} → {hasta}</b></div>
               <div><span>Ítems</span><b>{porGenerar.cantidad_items}</b></div>
               <div><span>Comisión a liquidar</span><b>{money(porGenerar.total_comision)}</b></div>
@@ -186,7 +197,7 @@ export function LiquidacionesPage() {
             <div className="lq-tbl-wrap">
               <table className="lq-tbl">
                 <thead><tr>
-                  <th>#</th><th>Prestador</th><th>Período</th><th className="r">Ítems</th>
+                  <th>#</th><th>Prestador</th><th>Sucursal</th><th>Período</th><th className="r">Ítems</th>
                   <th className="r">Comisión</th><th>Estado</th><th />
                 </tr></thead>
                 <tbody>
@@ -194,6 +205,7 @@ export function LiquidacionesPage() {
                     <tr key={l.id_liquidacion} className={l.estado === 'ANULADA' ? 'lq-anulada' : ''}>
                       <td>{l.id_liquidacion}</td>
                       <td>{l.nombre_prestador}</td>
+                      <td>{l.nombre_sucursal ?? 'Todas'}</td>
                       <td>{l.fecha_desde} → {l.fecha_hasta}</td>
                       <td className="r">{l.cantidad_items}</td>
                       <td className="r"><b>{money(l.total_comision)}</b></td>
@@ -218,8 +230,8 @@ const CSS = `
 .lqx *{box-sizing:border-box}
 .lq-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:18px 20px;margin-bottom:16px}
 .lq-card-t{font-size:14px;font-weight:700;color:var(--color-ink);margin-bottom:12px}
-.lq-form{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:12px;align-items:end;margin-bottom:14px}
-@media(max-width:760px){.lq-form{grid-template-columns:1fr 1fr}}
+.lq-form{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:12px;align-items:end;margin-bottom:14px}
+@media(max-width:900px){.lq-form{grid-template-columns:1fr 1fr}}
 .lq-form label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;color:var(--color-ink-soft)}
 .lq-form input,.lq-form select{padding:8px 11px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-bg);color:var(--color-ink);font:inherit;font-size:13px}
 .lq-form-actions{display:flex;gap:8px}

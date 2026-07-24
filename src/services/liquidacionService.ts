@@ -12,6 +12,8 @@ export interface Liquidacion {
   id_empresa:      number
   id_prestador:    number
   nombre_prestador: string
+  id_sucursal:     number | null
+  nombre_sucursal: string | null
   fecha_desde:     string
   fecha_hasta:     string
   total_comision:  number
@@ -20,13 +22,15 @@ export interface Liquidacion {
   fecha_creacion:  string
 }
 
-/** Comisiones aún no liquidadas, agrupadas por prestador, en el rango. */
+/** Comisiones aún no liquidadas, agrupadas por prestador, en el rango (opcionalmente por sucursal). */
 export async function previsualizarComisiones(
-  idEmpresa: number, desde: string, hasta: string, idPrestador?: number | null,
+  idEmpresa: number, desde: string, hasta: string,
+  idPrestador?: number | null, idSucursal?: number | null,
 ): Promise<ComisionPendiente[]> {
   const { data, error } = await supabase.rpc('previsualizar_comisiones', {
     p_id_empresa: idEmpresa, p_desde: desde, p_hasta: hasta,
     p_id_prestador: idPrestador ?? null,
+    p_id_sucursal: idSucursal ?? null,
   })
   if (error) throw error
   return (data ?? []) as ComisionPendiente[]
@@ -35,9 +39,11 @@ export async function previsualizarComisiones(
 /** Genera la liquidación de un prestador en el rango (bloquea reliquidar). */
 export async function generarLiquidacion(
   idEmpresa: number, idPrestador: number, desde: string, hasta: string,
+  idSucursal?: number | null,
 ): Promise<{ id_liquidacion: number; total_comision: number; cantidad_items: number }> {
   const { data, error } = await supabase.rpc('generar_liquidacion', {
     p_id_empresa: idEmpresa, p_id_prestador: idPrestador, p_desde: desde, p_hasta: hasta,
+    p_id_sucursal: idSucursal ?? null,
   })
   if (error) throw error
   return data
@@ -53,7 +59,7 @@ export async function revertirLiquidacion(idLiquidacion: number): Promise<void> 
 export async function listLiquidaciones(idEmpresa: number, limite = 50): Promise<Liquidacion[]> {
   const { data, error } = await supabase
     .from('liquidaciones')
-    .select('id_liquidacion, id_empresa, id_prestador, fecha_desde, fecha_hasta, total_comision, cantidad_items, estado, fecha_creacion, prestadores(nombre_prestador)')
+    .select('id_liquidacion, id_empresa, id_prestador, id_sucursal, fecha_desde, fecha_hasta, total_comision, cantidad_items, estado, fecha_creacion, prestadores(nombre_prestador), sucursales(nombre_sucursal)')
     .eq('id_empresa', idEmpresa)
     .order('id_liquidacion', { ascending: false })
     .limit(limite)
@@ -63,6 +69,8 @@ export async function listLiquidaciones(idEmpresa: number, limite = 50): Promise
     id_empresa:     l.id_empresa,
     id_prestador:   l.id_prestador,
     nombre_prestador: l.prestadores?.nombre_prestador ?? '—',
+    id_sucursal:    l.id_sucursal,
+    nombre_sucursal: l.sucursales?.nombre_sucursal ?? null,
     fecha_desde:    l.fecha_desde,
     fecha_hasta:    l.fecha_hasta,
     total_comision: Number(l.total_comision),
