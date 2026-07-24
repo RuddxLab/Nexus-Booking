@@ -150,9 +150,17 @@ export function VentasPage() {
     [lineas, tasaIva, reglaRedondeo, descuentoSel],
   )
   const pagado = pagos.reduce((a, p) => a + p.monto, 0)
-  const saldo = totales.total - pagado
-  // Los pagos deben cubrir el total para poder emitir (efectivo puede dar vuelto).
-  const cubierto = lineas.length > 0 && pagado + 0.5 >= totales.total
+  // El ajuste de la Ley 20.956 no es pago de más ni de menos: se descuenta
+  // antes de comparar contra el total.
+  const pagadoNeto = pagos.reduce((a, p) => a + p.monto - (p.ajuste_redondeo ?? 0), 0)
+  const saldo = totales.total - pagadoNeto
+  // Solo el efectivo admite vuelto. Con cualquier otro medio —o mezclando
+  // medios— el monto tiene que ser exacto. Esto también se valida en el RPC.
+  const soloEfectivo = pagos.length > 0 && pagos.every(p => p.medio === 'EFECTIVO')
+  const cubierto = lineas.length > 0 && (
+    soloEfectivo ? pagadoNeto + 0.5 >= totales.total : Math.abs(saldo) < 0.5
+  )
+  const vuelto = soloEfectivo ? Math.max(0, pagadoNeto - totales.total) : 0
 
   // El monto sugerido para el siguiente pago es lo que falta.
   useEffect(() => { setMontoNuevo(Math.max(0, Math.round(saldo))) }, [saldo])
@@ -245,9 +253,15 @@ export function VentasPage() {
 
   // ── Pagos ───────────────────────────────────────────────────────────────
   // Varias modalidades por venta: el cajero ingresa el monto de cada pago.
+  //
+  // Regla de caja: el vuelto es privilegio exclusivo del efectivo. Si el pago
+  // mezcla medios —o es de un medio distinto al efectivo— el monto tiene que
+  // calzar exacto con el total, porque no hay nada que devolver.
   const agregarPago = () => {
     const monto = Math.round(montoNuevo)
     if (!monto || monto <= 0) return
+
+    let nuevo: PagoInput
     if (medioNuevo === 'GIFTCARD') {
       if (!gc) { setError('Ingresa el código de la gift card y valídalo antes de cobrar.'); return }
       // El saldo ya comprometido en otros pagos de esta misma venta también cuenta.
@@ -256,17 +270,32 @@ export function VentasPage() {
         setError(`La gift card solo tiene ${money(gc.saldo - yaUsado)} disponibles.`)
         return
       }
-      setError(null)
-      setPagos(ps => [...ps, { medio: 'GIFTCARD', monto, id_gift_card: gc.id_gift_card }])
-      setGc(null); setGcTexto(''); setMedioNuevo('EFECTIVO')
+      nuevo = { medio: 'GIFTCARD', monto, id_gift_card: gc.id_gift_card }
+    } else if (medioNuevo === 'EFECTIVO') {
+      const { redondeado, ajuste } = redondearEfectivo(monto)
+      nuevo = { medio: 'EFECTIVO', monto: redondeado, ajuste_redondeo: ajuste }
+    } else {
+      nuevo = { medio: medioNuevo, monto }
+    }
+
+    const resultante = [...pagos, nuevo]
+    const netoResultante = resultante.reduce((a, p) => a + p.monto - (p.ajuste_redondeo ?? 0), 0)
+    const todoEfectivo = resultante.every(p => p.medio === 'EFECTIVO')
+    if (!todoEfectivo && netoResultante - totales.total > 0.5) {
+      const etiqueta = MEDIOS.find(m => m.value === nuevo.medio)?.label ?? nuevo.medio
+      setError(
+        pagos.length === 0
+          ? `${etiqueta} no admite vuelto: cobra exactamente ${money(totales.total)}.`
+          : saldo <= 0
+            ? 'Ya hay efectivo de más. Al sumar otro medio de pago no se puede dar vuelto: ajusta primero el monto en efectivo.'
+            : `Al combinar medios de pago no se puede dar vuelto: este pago no debe superar ${money(saldo)}.`,
+      )
       return
     }
-    if (medioNuevo === 'EFECTIVO') {
-      const { redondeado, ajuste } = redondearEfectivo(monto)
-      setPagos(ps => [...ps, { medio: 'EFECTIVO', monto: redondeado, ajuste_redondeo: ajuste }])
-    } else {
-      setPagos(ps => [...ps, { medio: medioNuevo, monto }])
-    }
+
+    setError(null)
+    setPagos(resultante)
+    if (nuevo.medio === 'GIFTCARD') { setGc(null); setGcTexto(''); setMedioNuevo('EFECTIVO') }
   }
 
   const validarGiftCard = async () => {
@@ -286,7 +315,12 @@ export function VentasPage() {
   const emitir = async () => {
     if (!empresaId || !sucursalId || lineas.length === 0) return
     if (rut && !validarRut(rut)) { setError('El RUT del cliente no es válido.'); return }
-    if (!cubierto) { setError('Los pagos deben cubrir el total de la venta.'); return }
+    if (!cubierto) {
+      setError(soloEfectivo
+        ? 'Los pagos deben cubrir el total de la venta.'
+        : 'Con medios distintos al efectivo el monto pagado debe ser exacto: no se puede dar vuelto.')
+      return
+    }
     setOcupado(true); setError(null)
     try {
       const res = await emitirVenta(empresaId, sucursalId, lineas, {
@@ -296,7 +330,7 @@ export function VentasPage() {
         pagos,
         idDescuento: descuentoSel?.id_descuento ?? null,
       })
-      setEmitida({ res, pagos: [...pagos], pagado, vuelto: Math.max(0, pagado - res.total) })
+      setEmitida({ res, pagos: [...pagos], pagado, vuelto: soloEfectivo ? Math.max(0, pagadoNeto - res.total) : 0 })
       setLineas([]); setPagos([]); setReceptor(''); setRut(''); setIdCliente(null); setClienteQuery(''); setAviso(null); setIdDescuento(null)
       setCupon(null); setCuponTexto(''); setGc(null); setGcTexto('')
       recargarAgendaYVentas()
@@ -571,7 +605,14 @@ export function VentasPage() {
               </>
             )}
             {lineas.length > 0 && saldo !== 0 && pagos.length > 0 && (
-              <div className="pos-saldo">{saldo > 0 ? `Falta por pagar ${money(saldo)}` : `Vuelto ${money(-saldo)}`}</div>
+              <div className="pos-saldo">
+                {saldo > 0 ? `Falta por pagar ${money(saldo)}`
+                  : soloEfectivo ? `Vuelto ${money(-saldo)}`
+                  : `Sobran ${money(-saldo)}: sin efectivo el monto debe ser exacto`}
+              </div>
+            )}
+            {lineas.length > 0 && saldo > 0 && pagos.length === 0 && medioNuevo !== 'EFECTIVO' && (
+              <div className="pos-nota-exacto">Solo el efectivo admite vuelto: cobra exactamente {money(totales.total)}.</div>
             )}
             {lineas.length > 0 && cubierto && <div className="pos-cubierto">Pago completo ✓</div>}
           </div>
@@ -670,6 +711,7 @@ const CSS = `
 .pos-gc .pos-input{flex:1;text-transform:uppercase;font-family:var(--mono);font-size:11px;padding:7px 10px}
 .pos-gc-saldo{font-size:11px;font-weight:700;color:var(--color-success);white-space:nowrap;font-family:var(--mono)}
 .pos-saldo{font-size:10px;color:var(--color-warning);font-weight:600}
+.pos-nota-exacto{font-size:10px;color:var(--color-ink-soft)}
 .pos-cubierto{font-size:10px;color:var(--color-success);font-weight:700}
 .pos-cliente{margin-bottom:10px}
 .pos-cli-search{position:relative}

@@ -162,6 +162,50 @@ begin
   insert into res values (21,'Gift cards','anular devuelve el saldo a $50.000', v_saldo = 50000, 'saldo='||v_saldo);
   select count(*) into n from gift_card_movimientos where id_gift_card = v_gc;
   insert into res values (22,'Gift cards','quedan 3 movimientos (emisión, consumo, reversa)', n = 3, 'movimientos='||n);
+
+  -- MÓDULO 8 · CUADRATURA DE PAGOS · el vuelto es exclusivo del efectivo
+  -- (barba: neto $8.000 + IVA = total $9.520)
+  begin
+    perform emitir_venta(v_emp, v_suc,
+      jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_barba,'id_prestador',v_beto)),
+      null,null,'Vuelto efectivo', jsonb_build_array(jsonb_build_object('medio','EFECTIVO','monto',20000,'ajuste_redondeo',0)));
+    insert into res values (23,'Cuadratura','efectivo $20.000 sobre $9.520 → permite vuelto', true, 'ok');
+  exception when others then insert into res values (23,'Cuadratura','efectivo permite vuelto', false, 'rechazo: '||sqlerrm); end;
+  begin
+    perform emitir_venta(v_emp, v_suc,
+      jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_barba,'id_prestador',v_beto)),
+      null,null,'Débito de más', jsonb_build_array(jsonb_build_object('medio','DEBITO','monto',10000)));
+    insert into res values (24,'Cuadratura','débito de más se rechaza', false, 'se permitió (mal)');
+  exception when others then insert into res values (24,'Cuadratura','débito de más se rechaza', true, sqlerrm); end;
+  begin
+    perform emitir_venta(v_emp, v_suc,
+      jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_barba,'id_prestador',v_beto)),
+      null,null,'Mezcla de más', jsonb_build_array(jsonb_build_object('medio','EFECTIVO','monto',5000,'ajuste_redondeo',0),
+                                                   jsonb_build_object('medio','DEBITO','monto',5000)));
+    insert into res values (25,'Cuadratura','mezcla con exceso se rechaza', false, 'se permitió (mal)');
+  exception when others then insert into res values (25,'Cuadratura','mezcla con exceso se rechaza', true, sqlerrm); end;
+  begin
+    perform emitir_venta(v_emp, v_suc,
+      jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_barba,'id_prestador',v_beto)),
+      null,null,'Mezcla exacta', jsonb_build_array(jsonb_build_object('medio','EFECTIVO','monto',5000,'ajuste_redondeo',0),
+                                                   jsonb_build_object('medio','DEBITO','monto',4520)));
+    insert into res values (26,'Cuadratura','mezcla exacta se acepta', true, 'ok');
+  exception when others then insert into res values (26,'Cuadratura','mezcla exacta se acepta', false, 'rechazo: '||sqlerrm); end;
+  begin
+    perform emitir_venta(v_emp, v_suc,
+      jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_barba,'id_prestador',v_beto)),
+      null,null,'Insuficiente', jsonb_build_array(jsonb_build_object('medio','EFECTIVO','monto',5000,'ajuste_redondeo',0)));
+    insert into res values (27,'Cuadratura','pago insuficiente se rechaza', false, 'se permitió (mal)');
+  exception when others then insert into res values (27,'Cuadratura','pago insuficiente se rechaza', true, sqlerrm); end;
+  begin
+    -- El ajuste de la Ley 20.956 no es vuelto: $4.517 débito + $5.003 en efectivo
+    -- que se entregan como $5.000 (ajuste −3) siguen cuadrando los $9.520.
+    perform emitir_venta(v_emp, v_suc,
+      jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_barba,'id_prestador',v_beto)),
+      null,null,'Redondeo legal', jsonb_build_array(jsonb_build_object('medio','DEBITO','monto',4517),
+                                                    jsonb_build_object('medio','EFECTIVO','monto',5000,'ajuste_redondeo',-3)));
+    insert into res values (28,'Cuadratura','el redondeo Ley 20.956 no se confunde con vuelto', true, 'ok');
+  exception when others then insert into res values (28,'Cuadratura','redondeo Ley 20.956', false, 'rechazo: '||sqlerrm); end;
 end $$;
 
 select paso, modulo, caso, case when ok then '✅ PASS' else '❌ FAIL' end as resultado, detalle
