@@ -162,8 +162,20 @@ export function VentasPage() {
   )
   const vuelto = soloEfectivo ? Math.max(0, pagadoNeto - totales.total) : 0
 
+  // Un medio no se repite: si el cliente paga dos veces en efectivo, es un
+  // solo pago en efectivo por la suma. Los ya usados salen de la lista.
+  const mediosDisponibles = MEDIOS.filter(m => !pagos.some(p => p.medio === m.value))
+
   // El monto sugerido para el siguiente pago es lo que falta.
   useEffect(() => { setMontoNuevo(Math.max(0, Math.round(saldo))) }, [saldo])
+
+  // Si el medio elegido acaba de usarse, saltar al primero que quede libre.
+  useEffect(() => {
+    if (mediosDisponibles.length > 0 && !mediosDisponibles.some(m => m.value === medioNuevo)) {
+      setMedioNuevo(mediosDisponibles[0].value)
+      setGc(null); setGcTexto('')
+    }
+  }, [pagos]) // eslint-disable-line
 
   // ── Acciones sobre líneas ──────────────────────────────────────────────
   const agregarDesdeAgenda = (a: AgendaPendiente) => {
@@ -260,6 +272,11 @@ export function VentasPage() {
   const agregarPago = () => {
     const monto = Math.round(montoNuevo)
     if (!monto || monto <= 0) return
+    if (pagos.some(p => p.medio === medioNuevo)) {
+      const etiqueta = MEDIOS.find(m => m.value === medioNuevo)?.label ?? medioNuevo
+      setError(`${etiqueta} ya está en esta venta: usa un solo pago por medio, por el total de ese medio.`)
+      return
+    }
 
     let nuevo: PagoInput
     if (medioNuevo === 'GIFTCARD') {
@@ -580,13 +597,13 @@ export function VentasPage() {
                 <button className="pos-x" onClick={() => setPagos(ps => ps.filter((_, j) => j !== i))}>×</button>
               </div>
             ))}
-            {lineas.length > 0 && saldo > 0 && (
+            {lineas.length > 0 && saldo > 0 && mediosDisponibles.length > 0 && (
               <>
                 <div className="pos-pago-add">
                   <select value={medioNuevo} onChange={e => {
                     setMedioNuevo(e.target.value as MedioPago); setGc(null); setGcTexto('')
                   }}>
-                    {MEDIOS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    {mediosDisponibles.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                   </select>
                   <input className="pos-pago-monto" type="number" min="0" step="1"
                     value={montoNuevo || ''} onChange={e => setMontoNuevo(Number(e.target.value))} />
@@ -613,6 +630,11 @@ export function VentasPage() {
             )}
             {lineas.length > 0 && saldo > 0 && pagos.length === 0 && medioNuevo !== 'EFECTIVO' && (
               <div className="pos-nota-exacto">Solo el efectivo admite vuelto: cobra exactamente {money(totales.total)}.</div>
+            )}
+            {lineas.length > 0 && saldo > 0 && mediosDisponibles.length === 0 && (
+              <div className="pos-nota-exacto">
+                Ya usaste todos los medios de pago. Corrige el monto de alguno para completar {money(saldo)}.
+              </div>
             )}
             {lineas.length > 0 && cubierto && <div className="pos-cubierto">Pago completo ✓</div>}
           </div>

@@ -206,6 +206,14 @@ begin
                                                     jsonb_build_object('medio','EFECTIVO','monto',5000,'ajuste_redondeo',-3)));
     insert into res values (28,'Cuadratura','el redondeo Ley 20.956 no se confunde con vuelto', true, 'ok');
   exception when others then insert into res values (28,'Cuadratura','redondeo Ley 20.956', false, 'rechazo: '||sqlerrm); end;
+  begin
+    -- Un medio no se repite: dos pagos en efectivo son un solo pago por la suma
+    perform emitir_venta(v_emp, v_suc,
+      jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_barba,'id_prestador',v_beto)),
+      null,null,'Doble efectivo', jsonb_build_array(jsonb_build_object('medio','EFECTIVO','monto',5000,'ajuste_redondeo',0),
+                                                    jsonb_build_object('medio','EFECTIVO','monto',4520,'ajuste_redondeo',0)));
+    insert into res values (29,'Cuadratura','el mismo medio repetido se rechaza', false, 'se permitió (mal)');
+  exception when others then insert into res values (29,'Cuadratura','el mismo medio repetido se rechaza', true, sqlerrm); end;
 end $$;
 
 select paso, modulo, caso, case when ok then '✅ PASS' else '❌ FAIL' end as resultado, detalle
