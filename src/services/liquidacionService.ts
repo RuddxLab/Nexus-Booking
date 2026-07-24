@@ -80,12 +80,12 @@ export async function listLiquidaciones(idEmpresa: number, limite = 50): Promise
   })) as Liquidacion[]
 }
 
-export interface PrestadorOpcion { id_prestador: number; nombre_prestador: string }
+export interface PrestadorOpcion { id_prestador: number; nombre_prestador: string; id_sucursal: number | null }
 
 export async function listPrestadoresEmpresa(idEmpresa: number): Promise<PrestadorOpcion[]> {
   const { data } = await supabase
     .from('prestadores')
-    .select('id_prestador, nombre_prestador')
+    .select('id_prestador, nombre_prestador, id_sucursal')
     .eq('id_empresa', idEmpresa)
     .eq('activo', true)
     .order('nombre_prestador')

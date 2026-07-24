@@ -90,19 +90,36 @@ export function LiquidacionesPage() {
   const nombreSucursalSel = idSucursal
     ? (filtro.sucursalesDeEmpresa.find(s => s.id_sucursal === idSucursal)?.nombre_sucursal ?? '—')
     : 'Todas'
+  // El prestador se acota a la sucursal elegida (o todos si es "Todas").
+  const prestadoresFiltrados = idSucursal
+    ? prestadores.filter(p => p.id_sucursal === idSucursal)
+    : prestadores
+  // Cambiar la sucursal reinicia el prestador (podría no pertenecer a la nueva).
+  const cambiarSucursal = (v: number | null) => { setIdSucursal(v); setIdPrestador(null) }
 
   return (
     <div className="lqx">
       <style>{CSS}</style>
       <PageHeader titulo="Liquidación de comisiones" />
 
-      <SelectorFiltro
-        esAdmin={filtro.esAdmin} esSupervisor={filtro.esSupervisor}
-        empresas={filtro.empresas} sucursalesDeEmpresa={filtro.sucursalesDeEmpresa}
-        empresaId={empresaId} sucursalId={filtro.sucursalId}
-        onEmpresaChange={filtro.setEmpresaId} onSucursalChange={filtro.setSucursalId}
-        mostrarSucursal={false}
-      />
+      <div className="lq-topbar">
+        <SelectorFiltro
+          esAdmin={filtro.esAdmin} esSupervisor={filtro.esSupervisor}
+          empresas={filtro.empresas} sucursalesDeEmpresa={filtro.sucursalesDeEmpresa}
+          empresaId={empresaId} sucursalId={filtro.sucursalId}
+          onEmpresaChange={filtro.setEmpresaId} onSucursalChange={filtro.setSucursalId}
+          mostrarSucursal={false}
+        />
+        <div className="lq-suc-top">
+          <label>Sucursal:</label>
+          <select value={idSucursal ?? ''} onChange={e => cambiarSucursal(e.target.value ? Number(e.target.value) : null)}>
+            <option value="">Todas</option>
+            {filtro.sucursalesDeEmpresa.map(s => (
+              <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre_sucursal}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {error && <div className="lq-error">{error}</div>}
       {aviso && <div className="lq-ok">{aviso}</div>}
@@ -116,16 +133,10 @@ export function LiquidacionesPage() {
           <label>Hasta
             <input type="date" value={hasta} onChange={e => setHasta(e.target.value)} />
           </label>
-          <label>Sucursal (opcional)
-            <select value={idSucursal ?? ''} onChange={e => setIdSucursal(e.target.value ? Number(e.target.value) : null)}>
-              <option value="">Todas</option>
-              {filtro.sucursalesDeEmpresa.map(s => <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre_sucursal}</option>)}
-            </select>
-          </label>
           <label>Prestador (opcional)
             <select value={idPrestador ?? ''} onChange={e => setIdPrestador(e.target.value ? Number(e.target.value) : null)}>
               <option value="">Todos</option>
-              {prestadores.map(p => <option key={p.id_prestador} value={p.id_prestador}>{p.nombre_prestador}</option>)}
+              {prestadoresFiltrados.map(p => <option key={p.id_prestador} value={p.id_prestador}>{p.nombre_prestador}</option>)}
             </select>
           </label>
           <div className="lq-form-actions">
@@ -230,8 +241,12 @@ const CSS = `
 .lqx *{box-sizing:border-box}
 .lq-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:18px 20px;margin-bottom:16px}
 .lq-card-t{font-size:14px;font-weight:700;color:var(--color-ink);margin-bottom:12px}
-.lq-form{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:12px;align-items:end;margin-bottom:14px}
-@media(max-width:900px){.lq-form{grid-template-columns:1fr 1fr}}
+.lq-topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.lq-suc-top{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.lq-suc-top label{font-size:13px;font-weight:600;color:var(--color-ink-soft);white-space:nowrap}
+.lq-suc-top select{padding:7px 12px;border-radius:var(--radius-sm);border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-ink);font-size:13px;cursor:pointer;min-width:180px}
+.lq-form{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:12px;align-items:end;margin-bottom:14px}
+@media(max-width:760px){.lq-form{grid-template-columns:1fr 1fr}}
 .lq-form label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;color:var(--color-ink-soft)}
 .lq-form input,.lq-form select{padding:8px 11px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-bg);color:var(--color-ink);font:inherit;font-size:13px}
 .lq-form-actions{display:flex;gap:8px}
