@@ -3,8 +3,8 @@ import { PageHeader } from '../components/Common/PageHeader'
 import { SelectorFiltro } from '../components/Common/SelectorFiltro'
 import { useFiltroEmpresa } from '../hooks/useFiltroEmpresa'
 import {
-  sucursalUsaCaja, getCajaAbierta, getCualquierCajaAbierta, abrirCaja, cerrarCaja, listCajas,
-  type CajaAbierta, type ResultadoCierre, type CajaHistorial,
+  sucursalUsaCaja, getCajaAbierta, getCualquierCajaAbierta, abrirCaja, cerrarCaja, resumenCaja, listCajas,
+  type CajaAbierta, type TotalesCierre, type ResultadoCierre, type CajaHistorial,
 } from '../services/cajaService'
 import { enviarCorreoCierreCaja } from '../services/correoService'
 
@@ -27,6 +27,8 @@ export function CajaPage() {
   const [otraCaja, setOtraCaja] = useState<CajaAbierta | null>(null)
   const [hist, setHist]         = useState<CajaHistorial[]>([])
   const [cierre, setCierre]     = useState<ResultadoCierre | null>(null)
+  // Resumen del día mostrado ANTES de confirmar el cierre.
+  const [resumenPrevio, setResumenPrevio] = useState<TotalesCierre | null>(null)
 
   const [montoAp, setMontoAp] = useState<number>(0)
   const [obsAp, setObsAp]     = useState('')
@@ -49,7 +51,7 @@ export function CajaPage() {
     // "otra caja" = una abierta que NO es la de esta sucursal
     setOtraCaja(otra && (!c || otra.id_caja !== c.id_caja) ? otra : null)
     setHist(h)
-    setCierre(null); setAvisoCorreo(null); setObsCierre('')
+    setCierre(null); setResumenPrevio(null); setAvisoCorreo(null); setObsCierre('')
   }
   useEffect(() => { cargar() }, [empresaId, sucursalId]) // eslint-disable-line
 
@@ -65,13 +67,25 @@ export function CajaPage() {
     } finally { setOcupado(false) }
   }
 
-  const cerrar = async () => {
+  // Paso 1: mostrar el resumen del día por forma de pago (sin cerrar todavía).
+  const verResumen = async () => {
     if (!caja) return
-    if (!window.confirm('¿Cerrar la caja? Se calcularán los totales del día y se enviará el correo al supervisor.')) return
+    setOcupado(true); setError(null)
+    try {
+      const t = await resumenCaja(caja.id_caja)
+      setResumenPrevio(t)
+    } catch (e: any) {
+      setError(e.message ?? 'No se pudo calcular el resumen')
+    } finally { setOcupado(false) }
+  }
+
+  // Paso 2: confirmar el cierre definitivo (calcula, marca CERRADA y envía correo).
+  const confirmarCierre = async () => {
+    if (!caja) return
     setOcupado(true); setError(null); setAvisoCorreo(null)
     try {
       const r = await cerrarCaja(caja.id_caja, obsCierre || null)
-      setCierre(r); setCaja(null)
+      setCierre(r); setCaja(null); setResumenPrevio(null)
       const correo = await enviarCorreoCierreCaja(r.id_caja)
       setAvisoCorreo(correo.ok
         ? `Correo de cierre enviado (${correo.enviados ?? 0} destinatario${(correo.enviados ?? 0) === 1 ? '' : 's'}).`
@@ -82,6 +96,21 @@ export function CajaPage() {
       setError(e.message ?? 'No se pudo cerrar la caja')
     } finally { setOcupado(false) }
   }
+
+  // Bloque de totales del día, reutilizado en la previsualización y en el cierre.
+  const Totales = ({ t }: { t: TotalesCierre }) => (
+    <div className="cj-tot">
+      <div className="cj-tot-row"><span>Monto de apertura</span><b>{money(t.monto_apertura)}</b></div>
+      <div className="cj-tot-sub">Vendido hoy por forma de pago</div>
+      {Object.keys(MEDIOS).filter(k => t.por_medio?.[k]).length === 0
+        ? <div className="cj-tot-empty">Sin pagos registrados</div>
+        : Object.keys(MEDIOS).filter(k => t.por_medio?.[k]).map(k => (
+          <div className="cj-tot-row" key={k}><span>{MEDIOS[k]}</span><b>{money(t.por_medio[k])}</b></div>
+        ))}
+      <div className="cj-tot-row"><span>Ventas ({t.cantidad_ventas})</span><b>{money(t.total_ventas)}</b></div>
+      <div className="cj-tot-row cj-tot-big"><span>Efectivo esperado en caja</span><b>{money(t.efectivo_esperado)}</b></div>
+    </div>
+  )
 
   return (
     <div className="cjx">
@@ -117,12 +146,26 @@ export function CajaPage() {
                 <div><span className="cj-lbl">Monto de apertura</span><b>{money(caja.monto_apertura)}</b></div>
               </div>
               {caja.observacion_apertura && <p className="cj-obs">“{caja.observacion_apertura}”</p>}
-              <label className="cj-field">Observación de cierre (opcional)
-                <input value={obsCierre} onChange={e => setObsCierre(e.target.value)} placeholder="Diferencias, notas…" />
-              </label>
-              <button className="cj-btn cj-btn--danger" onClick={cerrar} disabled={ocupado}>
-                {ocupado ? 'Cerrando…' : 'Cerrar caja'}
-              </button>
+
+              {!resumenPrevio ? (
+                <button className="cj-btn cj-btn--primary" onClick={verResumen} disabled={ocupado}>
+                  {ocupado ? 'Calculando…' : 'Ver resumen del día y cerrar'}
+                </button>
+              ) : (
+                <div className="cj-cierre">
+                  <div className="cj-sub">Revisa el resumen del día antes de confirmar el cierre.</div>
+                  <Totales t={resumenPrevio} />
+                  <label className="cj-field">Observación de cierre (opcional)
+                    <input value={obsCierre} onChange={e => setObsCierre(e.target.value)} placeholder="Diferencias, notas…" />
+                  </label>
+                  <div className="cj-acciones">
+                    <button className="cj-btn" onClick={() => setResumenPrevio(null)} disabled={ocupado}>Cancelar</button>
+                    <button className="cj-btn cj-btn--danger" onClick={confirmarCierre} disabled={ocupado}>
+                      {ocupado ? 'Cerrando…' : 'Confirmar cierre'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </section>
           )}
 
@@ -157,17 +200,7 @@ export function CajaPage() {
               <div className="cj-head">
                 <span className="cj-pill off">Caja cerrada</span>
               </div>
-              <div className="cj-tot">
-                <div className="cj-tot-row"><span>Monto de apertura</span><b>{money(cierre.monto_apertura)}</b></div>
-                <div className="cj-tot-sub">Recibido por forma de pago</div>
-                {Object.keys(MEDIOS).filter(k => cierre.por_medio?.[k]).length === 0
-                  ? <div className="cj-tot-empty">Sin pagos registrados</div>
-                  : Object.keys(MEDIOS).filter(k => cierre.por_medio?.[k]).map(k => (
-                    <div className="cj-tot-row" key={k}><span>{MEDIOS[k]}</span><b>{money(cierre.por_medio[k])}</b></div>
-                  ))}
-                <div className="cj-tot-row"><span>Ventas ({cierre.cantidad_ventas})</span><b>{money(cierre.total_ventas)}</b></div>
-                <div className="cj-tot-row cj-tot-big"><span>Efectivo esperado en caja</span><b>{money(cierre.efectivo_esperado)}</b></div>
-              </div>
+              <Totales t={cierre} />
               {avisoCorreo && <div className="cj-ok">{avisoCorreo}</div>}
             </section>
           )}
@@ -218,6 +251,10 @@ const CSS = `
 .cj-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--color-ink-soft);font-weight:600}
 .cj-grid b{font-size:18px;color:var(--color-ink);font-family:var(--mono)}
 .cj-obs{font-size:12px;color:var(--color-ink-soft);font-style:italic;margin:4px 0 12px}
+.cj-cierre{margin-top:6px}
+.cj-sub{font-size:12px;color:var(--color-ink-soft);margin-bottom:10px}
+.cj-acciones{display:flex;gap:8px;margin-top:12px}
+.cj-acciones .cj-btn{flex:1}
 .cj-form{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
 @media(max-width:640px){.cj-form{grid-template-columns:1fr}}
 .cj-field,.cj-form label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;color:var(--color-ink-soft);margin-bottom:12px}

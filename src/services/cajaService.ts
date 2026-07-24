@@ -75,6 +75,13 @@ export async function abrirCaja(
   return data
 }
 
+/** Totales del día de la caja por forma de pago, SIN cerrarla (para previsualizar). */
+export async function resumenCaja(idCaja: number): Promise<TotalesCierre> {
+  const { data, error } = await supabase.rpc('resumen_caja', { p_id_caja: idCaja })
+  if (error) throw error
+  return data as TotalesCierre
+}
+
 export async function cerrarCaja(idCaja: number, observacion?: string | null): Promise<ResultadoCierre> {
   const { data, error } = await supabase.rpc('cerrar_caja', {
     p_id_caja: idCaja,
