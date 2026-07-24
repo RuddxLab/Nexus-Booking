@@ -2,7 +2,7 @@ import { supabase } from './supabaseClient'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 export type TipoLinea = 'SERVICIO' | 'PRODUCTO'
-export type MedioPago = 'EFECTIVO' | 'DEBITO' | 'CREDITO' | 'TRANSFERENCIA' | 'OTRO'
+export type MedioPago = 'EFECTIVO' | 'DEBITO' | 'CREDITO' | 'TRANSFERENCIA' | 'GIFTCARD' | 'OTRO'
 
 /** Línea que se está armando en pantalla (aún no emitida). */
 export interface LineaVenta {
@@ -25,6 +25,8 @@ export interface PagoInput {
   monto:            number
   referencia?:      string
   ajuste_redondeo?: number
+  /** Obligatorio cuando el medio es GIFTCARD. */
+  id_gift_card?:    number | null
 }
 
 export interface ResultadoVenta {
@@ -186,22 +188,87 @@ export async function emitirVenta(
   return data as ResultadoVenta
 }
 
-/** Descuentos vigentes de la empresa, para ofrecerlos en el punto de venta. */
+const CAMPOS_DESC =
+  'id_descuento, nombre, tipo, valor, aplica_a, tope_monto, id_servicio, id_producto, nx_lleva, nx_paga, codigo'
+
+/**
+ * Promociones vigentes que se ofrecen en la lista del POS.
+ * Los cupones quedan fuera a propósito: se ingresan por código.
+ */
 export async function listDescuentosVigentes(idEmpresa: number, hoy: string) {
   const { data, error } = await supabase
     .from('descuentos')
-    .select('id_descuento, nombre, tipo, valor, aplica_a, tope_monto')
+    .select(CAMPOS_DESC)
     .eq('id_empresa', idEmpresa)
     .eq('activo', true)
+    .is('codigo', null)
     .or(`fecha_desde.is.null,fecha_desde.lte.${hoy}`)
     .or(`fecha_hasta.is.null,fecha_hasta.gte.${hoy}`)
     .order('nombre')
   if (error) throw error
-  return (data ?? []) as {
-    id_descuento: number; nombre: string
-    tipo: 'PORCENTAJE' | 'MONTO'; valor: number
-    aplica_a: 'TODO' | 'SERVICIOS' | 'PRODUCTOS'; tope_monto: number | null
-  }[]
+  return (data ?? []) as unknown as DescuentoVigente[]
+}
+
+/** Busca un cupón por código. Devuelve null si no existe o está agotado. */
+export async function buscarCupon(idEmpresa: number, codigo: string, hoy: string) {
+  const c = codigo.trim().toUpperCase()
+  if (!c) return null
+  const { data, error } = await supabase
+    .from('descuentos')
+    .select(CAMPOS_DESC + ', max_usos, usos')
+    .eq('id_empresa', idEmpresa)
+    .eq('activo', true)
+    .ilike('codigo', c)
+    .or(`fecha_desde.is.null,fecha_desde.lte.${hoy}`)
+    .or(`fecha_hasta.is.null,fecha_hasta.gte.${hoy}`)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  const d = data as any
+  if (d.max_usos != null && d.usos >= d.max_usos) return null   // agotado
+  return d as DescuentoVigente
+}
+
+// ── Gift cards ───────────────────────────────────────────────────────────────
+export interface GiftCardSaldo {
+  id_gift_card: number; codigo: string; saldo: number; fecha_vencimiento: string | null
+}
+
+/** Busca una gift card por código y devuelve su saldo disponible. */
+export async function buscarGiftCard(
+  idEmpresa: number, codigo: string, hoy: string,
+): Promise<GiftCardSaldo | null> {
+  const c = codigo.trim().toUpperCase()
+  if (!c) return null
+  const { data, error } = await supabase
+    .from('gift_cards')
+    .select('id_gift_card, codigo, saldo, fecha_vencimiento')
+    .eq('id_empresa', idEmpresa)
+    .eq('activo', true)
+    .ilike('codigo', c)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  const g = data as GiftCardSaldo
+  if (g.fecha_vencimiento && g.fecha_vencimiento < hoy) return null   // vencida
+  return g
+}
+
+/** Emite una gift card (deja el movimiento de EMISIÓN registrado). */
+export async function emitirGiftCard(
+  idEmpresa: number, codigo: string, monto: number,
+  opts: { idCliente?: number | null; vencimiento?: string | null; observaciones?: string | null } = {},
+) {
+  const { data, error } = await supabase.rpc('emitir_gift_card', {
+    p_id_empresa: idEmpresa,
+    p_codigo: codigo,
+    p_monto: monto,
+    p_id_cliente: opts.idCliente ?? null,
+    p_vencimiento: opts.vencimiento ?? null,
+    p_observaciones: opts.observaciones ?? null,
+  })
+  if (error) throw error
+  return data as { id_gift_card: number; codigo: string; saldo: number }
 }
 
 export async function anularVenta(idVenta: number, motivo?: string) {
@@ -217,8 +284,11 @@ export async function anularVenta(idVenta: number, motivo?: string) {
 
 export interface DescuentoVigente {
   id_descuento: number; nombre: string
-  tipo: 'PORCENTAJE' | 'MONTO'; valor: number
+  tipo: 'PORCENTAJE' | 'MONTO' | 'NXM'; valor: number
   aplica_a: 'TODO' | 'SERVICIOS' | 'PRODUCTOS'; tope_monto: number | null
+  id_servicio: number | null; id_producto: number | null
+  nx_lleva: number | null; nx_paga: number | null
+  codigo?: string | null
 }
 
 /**
@@ -233,6 +303,10 @@ export function calcularTotales(
   const filas = lineas.map(l => ({
     aplica_iva: l.aplica_iva,
     tipo: l.tipo,
+    id_servicio: l.id_servicio,
+    id_producto: l.id_producto,
+    cantidad: l.cantidad,
+    precio: l.precio_unitario_neto,
     neto: Math.round(l.precio_unitario_neto * l.cantidad - (l.descuento || 0)),
   }))
 
@@ -242,7 +316,17 @@ export function calcularTotales(
     || (descuento.aplica_a === 'PRODUCTOS' && f.tipo === 'PRODUCTO')
 
   let montoDesc = 0
-  if (descuento) {
+  if (descuento?.tipo === 'NXM' && descuento.nx_lleva && descuento.nx_paga) {
+    // 2x1 = lleva 2, paga 1 → por cada N unidades, (N−M) salen gratis
+    filas.forEach(f => {
+      const coincide = (descuento.id_servicio != null && f.id_servicio === descuento.id_servicio)
+        || (descuento.id_producto != null && f.id_producto === descuento.id_producto)
+      if (!coincide) return
+      const gratis = Math.floor(f.cantidad / descuento.nx_lleva!) * (descuento.nx_lleva! - descuento.nx_paga!)
+      const cuota = Math.round(gratis * f.precio)
+      if (cuota > 0) { f.neto -= cuota; montoDesc += cuota }
+    })
+  } else if (descuento) {
     const afectadas = filas.filter(afecta)
     const base = afectadas.reduce((a, f) => a + f.neto, 0)
     if (base > 0) {

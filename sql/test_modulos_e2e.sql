@@ -20,6 +20,9 @@ declare
   v_hoy date := hoy_chile();
   v_res json; v_ag int; v_r1 jsonb; v_r2 jsonb; v_v1 int; v_v2 int;
   v_com numeric; v_ori text; v_pago text; n int;
+  -- Promociones (2x1, cupones, gift cards)
+  v_2x1 int; v_cupon int; v_gc int; v_r3 jsonb; v_r4 jsonb; v_v3 int;
+  v_saldo numeric;
 begin
   select id_sucursal into v_suc from sucursales where id_empresa=v_emp;
   select id_prestador into v_ana  from prestadores where id_empresa=v_emp and nombre_prestador='Ana Prueba';
@@ -95,6 +98,70 @@ begin
   exception when insufficient_privilege then
     insert into res values (13,'Aislamiento','supervisor ajeno NO puede emitir en la 27', true, 'bloqueado');
   end;
+
+  -- MÓDULO 7 · PROMOCIONES (2x1, cupones, gift cards) — de vuelta como admin
+  perform set_config('request.jwt.claims', json_build_object('sub',v_admin,'role','authenticated')::text, true);
+
+  -- 7.1 · 2x1 sobre el corte ($12.000 neto): lleva 2 paga 1 → regala uno
+  insert into descuentos (id_empresa, nombre, tipo, valor, aplica_a, id_servicio, nx_lleva, nx_paga, activo)
+  values (v_emp,'2x1 en cortes','NXM',0,'SERVICIOS',v_corte,2,1,true)
+  returning id_descuento into v_2x1;
+  v_r3 := emitir_venta(v_emp, v_suc,
+    jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_corte,'id_prestador',v_ana,'cantidad',2)),
+    null,null,'Promo 2x1', jsonb_build_array(jsonb_build_object('medio','DEBITO','monto',14280)),
+    null, v_2x1);
+  insert into res values (14,'Promociones','2x1: 2 cortes de $12.000 → descuento $12.000, total $14.280',
+    (v_r3->>'descuento')::numeric = 12000 and (v_r3->>'total')::numeric = 14280,
+    'descuento='||(v_r3->>'descuento')||' total='||(v_r3->>'total'));
+
+  -- 7.2 · Cupón de un solo uso
+  insert into descuentos (id_empresa, nombre, tipo, valor, aplica_a, codigo, max_usos, activo)
+  values (v_emp,'Cupón bienvenida','PORCENTAJE',50,'TODO','BIENVENIDA',1,true)
+  returning id_descuento into v_cupon;
+  v_r4 := emitir_venta(v_emp, v_suc,
+    jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_barba,'id_prestador',v_beto)),
+    null,null,'Cupón 1', jsonb_build_array(jsonb_build_object('medio','DEBITO','monto',4760)),
+    null, v_cupon);
+  insert into res values (15,'Promociones','cupón 50% descuenta $4.000 sobre el neto de $8.000',
+    (v_r4->>'descuento')::numeric = 4000 and (v_r4->>'total')::numeric = 4760,
+    'descuento='||(v_r4->>'descuento')||' total='||(v_r4->>'total'));
+  select usos into n from descuentos where id_descuento = v_cupon;
+  insert into res values (16,'Promociones','el uso del cupón queda contabilizado', n = 1, 'usos='||n);
+  begin
+    perform emitir_venta(v_emp, v_suc,
+      jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_barba,'id_prestador',v_beto)),
+      null,null,'Cupón 2', jsonb_build_array(jsonb_build_object('medio','DEBITO','monto',4760)),
+      null, v_cupon);
+    insert into res values (17,'Promociones','cupón agotado se rechaza en el segundo uso', false, 'se permitió (mal)');
+  exception when others then
+    insert into res values (17,'Promociones','cupón agotado se rechaza en el segundo uso', true, 'bloqueado: '||sqlerrm);
+  end;
+
+  -- 7.3 · Gift card: emitir, cobrar con ella y recuperar el saldo al anular
+  v_gc := (emitir_gift_card(v_emp,'GC-TEST-E2E',50000)->>'id_gift_card')::int;
+  select saldo into v_saldo from gift_cards where id_gift_card = v_gc;
+  insert into res values (18,'Gift cards','se emite con saldo $50.000', v_saldo = 50000, 'saldo='||v_saldo);
+  v_r3 := emitir_venta(v_emp, v_suc,
+    jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_barba,'id_prestador',v_beto)),
+    null,null,'Pago con gift card',
+    jsonb_build_array(jsonb_build_object('medio','GIFTCARD','monto',9520,'id_gift_card',v_gc)));
+  v_v3 := (v_r3->>'id_venta')::int;
+  select saldo into v_saldo from gift_cards where id_gift_card = v_gc;
+  insert into res values (19,'Gift cards','cobrar $9.520 deja saldo $40.480', v_saldo = 40480, 'saldo='||v_saldo);
+  begin
+    perform emitir_venta(v_emp, v_suc,
+      jsonb_build_array(jsonb_build_object('tipo','SERVICIO','id_servicio',v_corte,'id_prestador',v_ana,'cantidad',5)),
+      null,null,'Sin saldo',
+      jsonb_build_array(jsonb_build_object('medio','GIFTCARD','monto',71400,'id_gift_card',v_gc)));
+    insert into res values (20,'Gift cards','sin saldo suficiente se rechaza', false, 'se permitió (mal)');
+  exception when others then
+    insert into res values (20,'Gift cards','sin saldo suficiente se rechaza', true, 'bloqueado: '||sqlerrm);
+  end;
+  perform anular_venta(v_v3,'prueba gift card');
+  select saldo into v_saldo from gift_cards where id_gift_card = v_gc;
+  insert into res values (21,'Gift cards','anular devuelve el saldo a $50.000', v_saldo = 50000, 'saldo='||v_saldo);
+  select count(*) into n from gift_card_movimientos where id_gift_card = v_gc;
+  insert into res values (22,'Gift cards','quedan 3 movimientos (emisión, consumo, reversa)', n = 3, 'movimientos='||n);
 end $$;
 
 select paso, modulo, caso, case when ok then '✅ PASS' else '❌ FAIL' end as resultado, detalle

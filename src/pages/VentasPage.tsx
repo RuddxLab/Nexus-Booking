@@ -7,9 +7,10 @@ import { formatearRut, validarRut, limpiarRut } from '../utils/validators'
 import {
   listAgendaPendiente, listVentasRecientes, emitirVenta, anularVenta,
   calcularTotales, redondearEfectivo, buscarClientes, listDescuentosVigentes,
+  buscarCupon, buscarGiftCard,
   type LineaVenta, type PagoInput, type MedioPago,
   type AgendaPendiente, type VentaResumen, type ResultadoVenta, type ClienteBusqueda,
-  type DescuentoVigente,
+  type DescuentoVigente, type GiftCardSaldo,
 } from '../services/ventasService'
 
 const money = (n: number) => '$' + Math.round(n || 0).toLocaleString('es-CL')
@@ -26,6 +27,7 @@ const MEDIOS: { value: MedioPago; label: string }[] = [
   { value: 'DEBITO', label: 'Débito' },
   { value: 'CREDITO', label: 'Crédito' },
   { value: 'TRANSFERENCIA', label: 'Transferencia' },
+  { value: 'GIFTCARD', label: 'Gift card' },
   { value: 'OTRO', label: 'Otro' },
 ]
 
@@ -72,6 +74,13 @@ export function VentasPage() {
   const [aviso, setAviso] = useState<string | null>(null)
   const [descuentos, setDescuentos] = useState<DescuentoVigente[]>([])
   const [idDescuento, setIdDescuento] = useState<number | null>(null)
+  // Un cupón no aparece en la lista: se ingresa por código y, una vez validado,
+  // ocupa el mismo cupo de descuento que la promoción elegida en el combo.
+  const [cuponTexto, setCuponTexto] = useState('')
+  const [cupon, setCupon] = useState<DescuentoVigente | null>(null)
+  // Gift card en curso de cobro (solo cuando el medio elegido es GIFTCARD).
+  const [gcTexto, setGcTexto] = useState('')
+  const [gc, setGc] = useState<GiftCardSaldo | null>(null)
   const [ocupado, setOcupado] = useState(false)
 
   // ── Carga de catálogos ──────────────────────────────────────────────────
@@ -135,7 +144,7 @@ export function VentasPage() {
   }, [clienteQuery, empresaId])
 
   // ── Totales (vista previa; el RPC recalcula y manda) ────────────────────
-  const descuentoSel = descuentos.find(d => d.id_descuento === idDescuento) ?? null
+  const descuentoSel = cupon ?? descuentos.find(d => d.id_descuento === idDescuento) ?? null
   const totales = useMemo(
     () => calcularTotales(lineas, tasaIva, reglaRedondeo, descuentoSel),
     [lineas, tasaIva, reglaRedondeo, descuentoSel],
@@ -209,6 +218,7 @@ export function VentasPage() {
   const limpiar = () => {
     setLineas([]); setPagos([]); setReceptor(''); setRut(''); setIdCliente(null)
     setClienteQuery(''); setClienteResultados([]); setEmitida(null); setError(null); setAviso(null); setIdDescuento(null)
+    setCupon(null); setCuponTexto(''); setGc(null); setGcTexto('')
   }
 
   const seleccionarCliente = (c: ClienteBusqueda) => {
@@ -218,17 +228,58 @@ export function VentasPage() {
     setClienteQuery(''); setClienteResultados([])
   }
 
+  // ── Cupones ─────────────────────────────────────────────────────────────
+  const aplicarCupon = async () => {
+    if (!empresaId || !cuponTexto.trim()) return
+    setError(null); setAviso(null)
+    try {
+      const c = await buscarCupon(empresaId, cuponTexto, hoy())
+      if (!c) { setError('Ese cupón no existe, ya venció o se agotó.'); return }
+      setCupon(c)
+      setIdDescuento(null)           // el cupón manda sobre la promo del combo
+      setAviso(`Cupón ${cuponTexto.trim().toUpperCase()} aplicado.`)
+    } catch (e: any) { setError(e.message ?? 'No se pudo validar el cupón') }
+  }
+
+  const quitarCupon = () => { setCupon(null); setCuponTexto(''); setAviso(null) }
+
   // ── Pagos ───────────────────────────────────────────────────────────────
   // Varias modalidades por venta: el cajero ingresa el monto de cada pago.
   const agregarPago = () => {
     const monto = Math.round(montoNuevo)
     if (!monto || monto <= 0) return
+    if (medioNuevo === 'GIFTCARD') {
+      if (!gc) { setError('Ingresa el código de la gift card y valídalo antes de cobrar.'); return }
+      // El saldo ya comprometido en otros pagos de esta misma venta también cuenta.
+      const yaUsado = pagos.filter(p => p.id_gift_card === gc.id_gift_card).reduce((a, p) => a + p.monto, 0)
+      if (monto > gc.saldo - yaUsado) {
+        setError(`La gift card solo tiene ${money(gc.saldo - yaUsado)} disponibles.`)
+        return
+      }
+      setError(null)
+      setPagos(ps => [...ps, { medio: 'GIFTCARD', monto, id_gift_card: gc.id_gift_card }])
+      setGc(null); setGcTexto(''); setMedioNuevo('EFECTIVO')
+      return
+    }
     if (medioNuevo === 'EFECTIVO') {
       const { redondeado, ajuste } = redondearEfectivo(monto)
       setPagos(ps => [...ps, { medio: 'EFECTIVO', monto: redondeado, ajuste_redondeo: ajuste }])
     } else {
       setPagos(ps => [...ps, { medio: medioNuevo, monto }])
     }
+  }
+
+  const validarGiftCard = async () => {
+    if (!empresaId || !gcTexto.trim()) return
+    setError(null)
+    try {
+      const g = await buscarGiftCard(empresaId, gcTexto, hoy())
+      if (!g) { setError('Esa gift card no existe, está desactivada o venció.'); setGc(null); return }
+      if (g.saldo <= 0) { setError('Esa gift card ya no tiene saldo.'); setGc(null); return }
+      setGc(g)
+      // Sugerir lo menor entre el saldo y lo que falta por pagar.
+      setMontoNuevo(Math.min(g.saldo, Math.max(0, Math.round(saldo))))
+    } catch (e: any) { setError(e.message ?? 'No se pudo validar la gift card') }
   }
 
   // ── Emitir ──────────────────────────────────────────────────────────────
@@ -243,10 +294,11 @@ export function VentasPage() {
         rutReceptor: rut ? limpiarRut(rut) : null,
         nombreReceptor: receptor || null,
         pagos,
-        idDescuento,
+        idDescuento: descuentoSel?.id_descuento ?? null,
       })
       setEmitida({ res, pagos: [...pagos], pagado, vuelto: Math.max(0, pagado - res.total) })
       setLineas([]); setPagos([]); setReceptor(''); setRut(''); setIdCliente(null); setClienteQuery(''); setAviso(null); setIdDescuento(null)
+      setCupon(null); setCuponTexto(''); setGc(null); setGcTexto('')
       recargarAgendaYVentas()
     } catch (e: any) {
       setError(e.message ?? 'No se pudo emitir la venta')
@@ -445,16 +497,33 @@ export function VentasPage() {
             )}
 
           {descuentos.length > 0 && (
-            <select className="pos-input pos-desc-sel" value={idDescuento ?? ''}
+            <select className="pos-input pos-desc-sel" value={idDescuento ?? ''} disabled={!!cupon}
+              title={cupon ? 'Hay un cupón aplicado' : undefined}
               onChange={e => setIdDescuento(e.target.value ? Number(e.target.value) : null)}>
               <option value="">Sin descuento</option>
               {descuentos.map(d => (
                 <option key={d.id_descuento} value={d.id_descuento}>
-                  {d.nombre} · {d.tipo === 'PORCENTAJE' ? `${d.valor}%` : money(d.valor)}
-                  {d.aplica_a !== 'TODO' ? ` (solo ${d.aplica_a.toLowerCase()})` : ''}
+                  {d.nombre} · {d.tipo === 'NXM' ? `${d.nx_lleva}x${d.nx_paga}`
+                    : d.tipo === 'PORCENTAJE' ? `${d.valor}%` : money(d.valor)}
+                  {d.tipo !== 'NXM' && d.aplica_a !== 'TODO' ? ` (solo ${d.aplica_a.toLowerCase()})` : ''}
                 </option>
               ))}
             </select>
+          )}
+
+          {/* Cupón: no se lista, se ingresa a mano */}
+          {cupon ? (
+            <div className="pos-cupon-on">
+              <span>🎟 {cupon.nombre} · {cupon.tipo === 'PORCENTAJE' ? `${cupon.valor}%` : money(cupon.valor)}</span>
+              <button className="pos-x" onClick={quitarCupon} aria-label="Quitar cupón">×</button>
+            </div>
+          ) : (
+            <div className="pos-cupon">
+              <input className="pos-input" placeholder="Código de cupón" value={cuponTexto}
+                onChange={e => setCuponTexto(e.target.value.toUpperCase())}
+                onKeyDown={e => { if (e.key === 'Enter') aplicarCupon() }} />
+              <button className="pos-btn" onClick={aplicarCupon} disabled={!cuponTexto.trim()}>Aplicar</button>
+            </div>
           )}
 
           <div className="pos-tot">
@@ -478,14 +547,28 @@ export function VentasPage() {
               </div>
             ))}
             {lineas.length > 0 && saldo > 0 && (
-              <div className="pos-pago-add">
-                <select value={medioNuevo} onChange={e => setMedioNuevo(e.target.value as MedioPago)}>
-                  {MEDIOS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                </select>
-                <input className="pos-pago-monto" type="number" min="0" step="1"
-                  value={montoNuevo || ''} onChange={e => setMontoNuevo(Number(e.target.value))} />
-                <button className="pos-btn" onClick={agregarPago}>Agregar</button>
-              </div>
+              <>
+                <div className="pos-pago-add">
+                  <select value={medioNuevo} onChange={e => {
+                    setMedioNuevo(e.target.value as MedioPago); setGc(null); setGcTexto('')
+                  }}>
+                    {MEDIOS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                  </select>
+                  <input className="pos-pago-monto" type="number" min="0" step="1"
+                    value={montoNuevo || ''} onChange={e => setMontoNuevo(Number(e.target.value))} />
+                  <button className="pos-btn" onClick={agregarPago}
+                    disabled={medioNuevo === 'GIFTCARD' && !gc}>Agregar</button>
+                </div>
+                {medioNuevo === 'GIFTCARD' && (
+                  <div className="pos-gc">
+                    <input className="pos-input" placeholder="Código de la gift card" value={gcTexto}
+                      onChange={e => { setGcTexto(e.target.value.toUpperCase()); setGc(null) }}
+                      onKeyDown={e => { if (e.key === 'Enter') validarGiftCard() }} />
+                    <button className="pos-btn" onClick={validarGiftCard} disabled={!gcTexto.trim()}>Validar</button>
+                    {gc && <span className="pos-gc-saldo">Saldo {money(gc.saldo)}</span>}
+                  </div>
+                )}
+              </>
             )}
             {lineas.length > 0 && saldo !== 0 && pagos.length > 0 && (
               <div className="pos-saldo">{saldo > 0 ? `Falta por pagar ${money(saldo)}` : `Vuelto ${money(-saldo)}`}</div>
@@ -579,6 +662,13 @@ const CSS = `
 .pos-pago-add{display:flex;gap:8px}
 .pos-pago-add select{flex:1;padding:7px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-ink);font:inherit;font-size:11px}
 .pos-pago-monto{width:96px;padding:7px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-ink);font:inherit;font-size:11px;font-family:var(--mono);text-align:right}
+.pos-cupon{display:flex;gap:8px;margin-bottom:10px}
+.pos-cupon .pos-input{flex:1;text-transform:uppercase;font-family:var(--mono)}
+.pos-cupon-on{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:7px 10px;border-radius:var(--radius-sm);background:var(--color-success-soft);color:var(--color-success);font-size:11.5px;font-weight:700}
+.pos-cupon-on span{flex:1}
+.pos-gc{display:flex;align-items:center;gap:8px;margin-top:6px}
+.pos-gc .pos-input{flex:1;text-transform:uppercase;font-family:var(--mono);font-size:11px;padding:7px 10px}
+.pos-gc-saldo{font-size:11px;font-weight:700;color:var(--color-success);white-space:nowrap;font-family:var(--mono)}
 .pos-saldo{font-size:10px;color:var(--color-warning);font-weight:600}
 .pos-cubierto{font-size:10px;color:var(--color-success);font-weight:700}
 .pos-cliente{margin-bottom:10px}

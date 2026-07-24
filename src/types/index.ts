@@ -187,8 +187,8 @@ export interface Descuento {
   id_descuento: number
   id_empresa:   number
   nombre:       string
-  /** PORCENTAJE = % sobre el neto · MONTO = rebaja fija en $ */
-  tipo:         'PORCENTAJE' | 'MONTO'
+  /** PORCENTAJE = % · MONTO = rebaja fija en $ · NXM = promo 2x1, 3x2… */
+  tipo:         'PORCENTAJE' | 'MONTO' | 'NXM'
   valor:        number
   /** A qué líneas de la venta se aplica. */
   aplica_a:     'TODO' | 'SERVICIOS' | 'PRODUCTOS'
@@ -197,7 +197,29 @@ export interface Descuento {
   /** null = sin límite de vigencia. */
   fecha_desde:  string | null
   fecha_hasta:  string | null
+  /** Si tiene código es un CUPÓN: no se lista, se ingresa a mano. */
+  codigo:       string | null
+  max_usos:     number | null
+  usos:         number
+  /** NXM: sobre qué ítem aplica la promo (uno de los dos). */
+  id_servicio:  number | null
+  id_producto:  number | null
+  /** NXM: lleva N, paga M. 2x1 → lleva 2, paga 1. */
+  nx_lleva:     number | null
+  nx_paga:      number | null
   activo:       boolean
+}
+
+export interface GiftCard {
+  id_gift_card:      number
+  id_empresa:        number
+  codigo:            string
+  saldo_inicial:     number
+  saldo:             number
+  id_cliente:        number | null
+  fecha_vencimiento: string | null
+  activo:            boolean
+  observaciones:     string | null
 }
 
 export interface Producto {

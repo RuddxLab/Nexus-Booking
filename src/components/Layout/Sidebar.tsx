@@ -10,6 +10,7 @@ const COLORS: Record<string, { glow: string; grad: string; pill: string }> = {
   productos:     { glow: '#f97316', grad: 'linear-gradient(135deg,#fdba74,#f97316)', pill: '#f97316' },
   ventas:        { glow: '#22c55e', grad: 'linear-gradient(135deg,#86efac,#22c55e)', pill: '#22c55e' },
   descuentos:    { glow: '#e11d48', grad: 'linear-gradient(135deg,#fda4af,#e11d48)', pill: '#e11d48' },
+  giftcards:     { glow: '#d946ef', grad: 'linear-gradient(135deg,#f0abfc,#d946ef)', pill: '#d946ef' },
   agenda:        { glow: '#6366f1', grad: 'linear-gradient(135deg,#a5b4fc,#6366f1)', pill: '#6366f1' },
   clientes:      { glow: '#10b981', grad: 'linear-gradient(135deg,#6ee7b7,#10b981)', pill: '#10b981' },
   staff:         { glow: '#f59e0b', grad: 'linear-gradient(135deg,#fcd34d,#f59e0b)', pill: '#f59e0b' },
@@ -41,6 +42,7 @@ const Icons: Record<string, React.ReactNode> = {
   productos:  <Ico d="M20 7L12 3 4 7m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>,
   ventas:     <Ico d="M3 3h2l2.6 12.4a2 2 0 002 1.6h7.7a2 2 0 002-1.6L21 8H6M9 21h.01M18 21h.01"/>,
   descuentos: <Ico d="M9 15l6-6M9.5 9.5h.01M14.5 14.5h.01M7 3h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7a4 4 0 014-4z"/>,
+  giftcards:  <Ico d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>,
   agenda:     <Ico d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>,
   clientes:   <Ico d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>,
   staff:      <Ico d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>,
@@ -318,6 +320,9 @@ export function Sidebar({ abierto = false, onNavegar }: Props) {
         {/* Punto de venta: admin, supervisor y recepcionista */}
         {puedeVender && (
           <SidebarBtn to="/admin/ventas" label="Vender" colorKey="ventas" onClick={onNavegar}/>
+        )}
+        {puedeVender && (
+          <SidebarBtn to="/admin/gift-cards" label="Gift Cards" colorKey="giftcards" onClick={onNavegar}/>
         )}
 
         {/* Sección Clientes */}
